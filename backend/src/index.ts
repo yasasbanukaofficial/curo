@@ -3,14 +3,18 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
-const app = express();
+import { AuthRouter } from "./routes/index";
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 dotenv.config();
 
 const PORT = process.env.PORT;
 const DB_URL = process.env.MONGODB_URL as string;
+const API_VER = process.env.API_VER;
+
+app.use(`/api/${API_VER}/auth`, AuthRouter);
 
 app.get("/", (req, res) => {
   res.send("CURO API. Unauthorized requests are not allowed.");
