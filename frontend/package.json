@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "curo-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Unified Intelligence Platform — React frontend for the Curo workspace that connects all your tools in one intelligent dashboard",
   "type": "module",
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
@@ -14,6 +15,7 @@
     "node": ">=20",
     "pnpm": ">=10"
   },
+  "keywords": ["curo", "unified-intelligence", "react", "dashboard", "productivity", "typescript", "vite"],
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "react": "^19.2.6",
