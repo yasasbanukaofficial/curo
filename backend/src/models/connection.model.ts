@@ -27,7 +27,7 @@ export const _connectionModel = new Schema<IConnection>(
   },
 );
 
-export const connectionModel = model<IConnection>(
+export const ConnectionModel = model<IConnection>(
   "Connection",
   _connectionModel,
 );
