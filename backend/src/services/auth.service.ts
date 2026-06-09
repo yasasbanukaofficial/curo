@@ -19,7 +19,7 @@ export const authService = {
       };
     }
 
-    const hashedPass = bcrypt.hashSync(password, 10);
+    const hashedPass = await bcrypt.hashSync(password, 10);
     const newUser = await UserModel.create({
       name,
       email,
@@ -53,6 +53,8 @@ export const authService = {
 
     const accessToken = tokenGen.genAccessToken(existingUser);
     const refreshToken = tokenGen.genRefreshToken(existingUser);
+
+    await existingUser.updateOne({ $push: { refreshTokens: [refreshToken] } });
 
     return {
       success: true,
