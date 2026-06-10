@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   refreshTokens: string[];
+  provider: string;
   createdAt: Date;
   updatedAt: Date;
 }

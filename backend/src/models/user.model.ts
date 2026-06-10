@@ -26,13 +26,18 @@ const _userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: false,
       minlength: [8, "Password must be at least 8 characters"],
     },
     refreshTokens: {
       type: [String],
       required: true,
       default: [],
+    },
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
   },
   { timestamps: true },
