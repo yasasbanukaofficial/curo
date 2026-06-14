@@ -13,9 +13,13 @@ const _unifiedEventSchema = new Schema<IUnifiedEvent>(
       enum: ["github", "slack", "calendar", "clickup", "whatsapp"],
       required: true,
     },
+    sourceEventId: {
+      type: String,
+      required: true,
+    },
     type: {
       type: String,
-      enum: ["message", "commit", "task", "event", "pr", "comment"],
+      enum: ["message", "commit", "task", "pr", "issue", "comment"],
       required: true,
     },
     content: {
@@ -43,7 +47,7 @@ const _unifiedEventSchema = new Schema<IUnifiedEvent>(
   { timestamps: true },
 );
 
-_unifiedEventSchema.index({ userId: 1, source: 1, type: 1 });
+_unifiedEventSchema.index({ userId: 1, source: 1, sourceEventId: 1 }, { unique: true });
 
 export const UnifiedEventModel = model<IUnifiedEvent>(
   "UnifiedEvent",
