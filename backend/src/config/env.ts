@@ -32,4 +32,6 @@ export const {
   GITHUB_APP_PEM,
   GITHUB_APP_ID_VALUE,
   ENCRYPTION_KEY,
+  SYNC_REPO_DAYS,
+  SYNC_EVENT_DAYS,
 } = process.env;

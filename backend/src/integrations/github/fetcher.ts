@@ -39,9 +39,12 @@ async function fetchEndpoint<T>(
 export const fetchRepoActivity = async (
   accessToken: string,
   repoFullName: string,
+  since?: string,
 ) => {
   const octokit = createClient(accessToken);
   const [owner, repo] = repoFullName.split("/");
+
+  const sinceParam = since ? { since } : {};
 
   const baseParams = {
     owner,
@@ -51,9 +54,9 @@ export const fetchRepoActivity = async (
   };
 
   const [commitsResult, pullsResult, issuesResult] = await Promise.all([
-    fetchEndpoint<any>(octokit, "GET /repos/{owner}/{repo}/commits", baseParams, "Commits", repoFullName),
-    fetchEndpoint<any>(octokit, "GET /repos/{owner}/{repo}/pulls", { ...baseParams, state: "all" }, "PRs", repoFullName),
-    fetchEndpoint<any>(octokit, "GET /repos/{owner}/{repo}/issues", { ...baseParams, state: "all" }, "Issues", repoFullName),
+    fetchEndpoint<any>(octokit, "GET /repos/{owner}/{repo}/commits", { ...baseParams, ...sinceParam, per_page: 30 }, "Commits", repoFullName),
+    fetchEndpoint<any>(octokit, "GET /repos/{owner}/{repo}/pulls", { ...baseParams, state: "all", sort: "updated", direction: "desc" }, "PRs", repoFullName),
+    fetchEndpoint<any>(octokit, "GET /repos/{owner}/{repo}/issues", { ...baseParams, state: "all", sort: "updated", direction: "desc" }, "Issues", repoFullName),
   ]);
 
   return {

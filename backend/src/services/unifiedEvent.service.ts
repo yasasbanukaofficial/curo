@@ -1,5 +1,8 @@
 import { UserModel, ConnectedRepoModel, UnifiedEventModel } from "../models";
-import { fetchRepoList, fetchRepoActivity } from "../integrations/github/fetcher";
+import {
+  fetchRepoList,
+  fetchRepoActivity,
+} from "../integrations/github/fetcher";
 import {
   normalizeCommit,
   normalizePR,
@@ -11,6 +14,31 @@ import {
 } from "../integrations/github/normalizer";
 import { encrypt } from "../util";
 import { AppError } from "../middlewares";
+import { SYNC_EVENT_DAYS } from "../config/env";
+
+interface RawRepo {
+  id: number;
+  full_name: string;
+  html_url: string;
+  language: string | null;
+  private: boolean;
+  default_branch: string;
+  fork: boolean;
+  pushed_at: string;
+}
+
+const getSyncEventDays = () => {
+  const days = parseInt(SYNC_EVENT_DAYS ?? "30", 10);
+  return isNaN(days) || days < 1 ? 30 : days;
+};
+
+const daysAgo = (days: number): string =>
+  new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+const isWithinDays = (dateStr: string, days: number): boolean => {
+  const then = new Date(dateStr).getTime();
+  return Date.now() - then < days * 24 * 60 * 60 * 1000;
+};
 
 interface RepoSyncResult {
   repoName: string;
@@ -22,14 +50,23 @@ export const unifiedEventService = {
   syncGithubRepos: async (userId: string) => {
     const user = await UserModel.findById(userId);
     if (!user) throw new AppError(404, "User not found");
-    if (!user.githubAccessToken) throw new AppError(400, "No GitHub access token found for this user");
+    if (!user.githubAccessToken)
+      throw new AppError(400, "No GitHub access token found for this user");
 
     const token = encrypt.compare(user.githubAccessToken);
-    if (!token) throw new AppError(500, "Failed to decrypt GitHub access token");
+    if (!token)
+      throw new AppError(500, "Failed to decrypt GitHub access token");
+
+    const eventDays = getSyncEventDays();
+    const since = daysAgo(eventDays);
 
     const repos = await fetchRepoList(token);
 
-    const repoDocs = repos.map((r: any) => normalizeRepoDoc(r, userId));
+    const activeRepos = repos.filter((r: RawRepo) =>
+      isWithinDays(r.pushed_at, eventDays),
+    );
+
+    const repoDocs = activeRepos.map((r: RawRepo) => normalizeRepoDoc(r, userId));
 
     await ConnectedRepoModel.bulkWrite(
       repoDocs.map((doc) => ({
@@ -41,47 +78,60 @@ export const unifiedEventService = {
       })),
     );
 
-    const tracked = repos
-      .filter((r: any) => !r.fork && !r.private)
-      .slice(0, 3);
-
     const allEvents: any[] = [];
     const results: RepoSyncResult[] = [];
 
-    for (const repo of tracked) {
+    for (const repo of activeRepos) {
       try {
-        const activity = await fetchRepoActivity(token, repo.full_name);
-        const reasons: string[] = [];
+        const activity = await fetchRepoActivity(token, repo.full_name, since);
 
-        if (activity.commits.length === 0 && activity.pulls.length === 0 && activity.issues.length === 0) {
-          reasons.push("No activity found");
+        if (activity.commits.length === 0) {
+          results.push({
+            repoName: repo.full_name,
+            status: "skipped",
+            reasons: ["No commits in the last 30 days"],
+          });
+          continue;
         }
 
-        allEvents.push(
+        const repoEvents: any[] = [
           ...activity.commits.map((c: RawCommit) => ({
             userId,
             source: "github" as const,
             ...normalizeCommit(c, repo.full_name),
           })),
-          ...activity.pulls.map((p: RawPR) => ({
+        ];
+
+        for (const pr of activity.pulls as RawPR[]) {
+          if (!isWithinDays(pr.updated_at, eventDays)) continue;
+          repoEvents.push({
             userId,
             source: "github" as const,
-            ...normalizePR(p, repo.full_name),
-          })),
-          ...activity.issues.map((i: RawIssue) => ({
+            ...normalizePR(pr, repo.full_name),
+          });
+        }
+
+        for (const issue of activity.issues as RawIssue[]) {
+          if (!isWithinDays(issue.updated_at, eventDays)) continue;
+          repoEvents.push({
             userId,
             source: "github" as const,
-            ...normalizeIssue(i, repo.full_name),
-          })),
-        );
+            ...normalizeIssue(issue, repo.full_name),
+          });
+        }
+
+        allEvents.push(...repoEvents);
 
         results.push({
           repoName: repo.full_name,
-          status: reasons.length > 0 ? "partial" : "synced",
-          reasons,
+          status: "synced",
+          reasons: [],
         });
       } catch (err: any) {
-        console.error(`[Sync] Unexpected error processing repo ${repo.full_name}:`, err.message);
+        console.error(
+          `[Sync] Unexpected error processing repo ${repo.full_name}:`,
+          err.message,
+        );
         results.push({
           repoName: repo.full_name,
           status: "partial",
@@ -94,7 +144,11 @@ export const unifiedEventService = {
       await UnifiedEventModel.bulkWrite(
         allEvents.map((event) => ({
           updateOne: {
-            filter: { userId: event.userId, source: event.source, sourceEventId: event.sourceEventId },
+            filter: {
+              userId: event.userId,
+              source: event.source,
+              sourceEventId: event.sourceEventId,
+            },
             update: { $set: event },
             upsert: true,
           },
@@ -103,11 +157,17 @@ export const unifiedEventService = {
     }
 
     const synced = results.filter((r) => r.status === "synced").length;
+    const skipped = results.filter((r) => r.status === "skipped").length;
     const partial = results.filter((r) => r.status === "partial").length;
-    const skipped = tracked.length - results.length;
 
-    console.log(`[Sync] Complete: ${synced} repos synced fully, ${partial} repos partial, ${skipped} repos skipped`);
+    console.log(
+      `[Sync] Complete: ${synced} synced, ${skipped} skipped (no recent commits), ${partial} partial`,
+    );
 
-    return { reposSynced: repoDocs.length, eventsSynced: allEvents.length, results };
+    return {
+      reposSynced: repoDocs.length,
+      eventsSynced: allEvents.length,
+      results,
+    };
   },
 };
