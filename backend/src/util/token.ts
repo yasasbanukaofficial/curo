@@ -1,12 +1,22 @@
 import { IUser } from "../types";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config/env";
+import {
+  JWT_SECRET,
+  JWT_ACCESS_EXPIRY,
+  JWT_REFRESH_EXPIRY,
+} from "../config/env";
 
 const SECRET_KEY = JWT_SECRET as string;
-export const tokenGen = {
-  genAccessToken: (user: IUser) => generateToken(user, SECRET_KEY, "15m"),
+const ACCESS_EXPIRY = (JWT_ACCESS_EXPIRY ??
+  "15m") as jwt.SignOptions["expiresIn"];
+const REFRESH_EXPIRY = (JWT_REFRESH_EXPIRY ??
+  "7d") as jwt.SignOptions["expiresIn"];
 
-  genRefreshToken: (user: IUser) => generateToken(user, SECRET_KEY, "7d"),
+export const tokenGen = {
+  genAccessToken: (user: IUser) =>
+    generateToken(user, SECRET_KEY, ACCESS_EXPIRY),
+  genRefreshToken: (user: IUser) =>
+    generateToken(user, SECRET_KEY, REFRESH_EXPIRY),
 };
 
 const generateToken = (
