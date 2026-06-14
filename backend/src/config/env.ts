@@ -15,6 +15,7 @@ export const {
   GITHUB_REDIRECT_URL,
   GITHUB_APP_PEM,
   GITHUB_APP_ID_VALUE,
+  ENCRYPTION_KEY,
 } = process.env as {
   PORT: string | undefined;
   MONGODB_URL: string | undefined;
@@ -32,4 +33,5 @@ export const {
   GITHUB_REDIRECT_URL: string | undefined;
   GITHUB_APP_PEM: string | undefined;
   GITHUB_APP_ID_VALUE: string | undefined;
+  ENCRYPTION_KEY: string | undefined;
 };

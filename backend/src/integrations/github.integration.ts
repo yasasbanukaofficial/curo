@@ -33,9 +33,15 @@ export const getGithubUserData = async (accessToken: string) => {
 };
 
 export const getGithubEmail = async (accessToken: string) => {
-  return await axios.get("https://api.github.com/user/emails", {
+  const { data } = await axios.get("https://api.github.com/user/emails", {
     headers: {
       Authorization: `token ${accessToken}`,
     },
   });
+
+  const primary = data.find(
+    (e: any) => e.primary === true && e.verified === true,
+  );
+
+  return primary?.email ?? null;
 };

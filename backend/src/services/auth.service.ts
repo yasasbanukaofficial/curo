@@ -8,7 +8,7 @@ import {
   getGithubEmail,
 } from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
-import { hash } from "../util";
+import { hash, encrypt } from "../util";
 
 export const authService = {
   register: async (user: IUser) => {
@@ -59,7 +59,7 @@ export const authService = {
     const accessToken = tokenGen.genAccessToken(existingUser);
     const refreshToken = tokenGen.genRefreshToken(existingUser);
 
-    await existingUser.updateOne({ $push: { refreshTokens: [refreshToken] } });
+    await existingUser.updateOne({ $push: { refreshTokens: refreshToken } });
 
     return {
       success: true,
@@ -92,24 +92,38 @@ export const authService = {
 
     const { sub: googleId, name, email } = payload;
 
-    let user = await UserModel.findOne({ email });
+    let user = await UserModel.findOne({
+      $or: [{ email }, { googleId }],
+    });
 
     if (!user) {
       user = await UserModel.create({
-        _id: googleId,
         name,
         email,
+        googleId,
         provider: ["google"],
       });
+    } else if (!user.googleId) {
+      await user.updateOne({
+        $set: { googleId },
+        $addToSet: { provider: "google" },
+      });
+      user.googleId = googleId;
+      user.provider.push("google");
     }
 
     const accessToken = tokenGen.genAccessToken(user);
     const refreshToken = tokenGen.genRefreshToken(user);
-    const googleRefreshToken = await hash.gen(tokens.refresh_token || "");
 
-    await user.updateOne({
-      $push: { refreshTokens: [refreshToken, googleRefreshToken] },
-    });
+    const update: Record<string, any> = {
+      $push: { refreshTokens: refreshToken },
+    };
+
+    if (tokens.refresh_token) {
+      update.$set = { googleRefreshToken: encrypt.gen(tokens.refresh_token) };
+    }
+
+    await user.updateOne(update);
 
     return {
       id: user._id,
@@ -120,37 +134,48 @@ export const authService = {
     };
   },
   githubCallback: async (code: string) => {
-    const token = await getGithubAccessToken(code);
-    const resp = await getGithubUserData(token);
+    const githubToken = await getGithubAccessToken(code);
+    const githubUser = await getGithubUserData(githubToken);
 
-    if (!resp) {
+    if (!githubUser) {
       throw new Error("The github authentication seem to have failed!");
     }
 
-    const { id, name } = resp.data;
-    const email = await getGithubEmail(token);
+    const { id: githubId, name } = githubUser.data;
+    const email = await getGithubEmail(githubToken);
 
-    if (!email || typeof email !== "string") {
-      throw new Error("Failed ro fetch user's mail address");
+    if (!email) {
+      throw new Error("No verified primary email found on GitHub");
     }
 
-    let user = await UserModel.findOne({ email });
+    let user = await UserModel.findOne({
+      $or: [{ email }, { githubId }],
+    });
 
     if (!user) {
       user = await UserModel.create({
-        _id: id,
         name,
         email,
+        githubId,
         provider: ["github"],
       });
+    } else if (!user.githubId) {
+      await user.updateOne({
+        $set: { githubId },
+        $addToSet: { provider: "github" },
+      });
+      user.githubId = githubId;
+      user.provider.push("github");
     }
 
     const accessToken = tokenGen.genAccessToken(user);
     const refreshToken = tokenGen.genRefreshToken(user);
-    const githubAccessToken = await hash.gen(token);
 
     await user.updateOne({
-      $each: { refreshTokens: [refreshToken, githubAccessToken] },
+      $push: { refreshTokens: refreshToken },
+      $set: {
+        githubAccessToken: encrypt.gen(githubToken),
+      },
     });
 
     return {

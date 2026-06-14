@@ -74,23 +74,32 @@ export const githubLogin = (req: Request, res: Response) => {
 };
 
 export const githubCallback = async (req: Request, res: Response) => {
-  const { code, state } = req.query;
-  if (!code || typeof code !== "string") {
-    return sendResponse(res, {
-      success: false,
-      status: 400,
-      msg: "Authorization code is missing or invalid | Github",
+  try {
+    const { code, state } = req.query;
+    if (!code || typeof code !== "string") {
+      return sendResponse(res, {
+        success: false,
+        status: 400,
+        msg: "Authorization code is missing or invalid | Github",
+      });
+    }
+
+    if (state !== req.cookies.github_oauth_state) {
+      return sendResponse(res, {
+        success: false,
+        status: 401,
+        msg: "Invalid oauth state",
+      });
+    }
+
+    const resp = await authService.githubCallback(code);
+    setCookie(res, "token", resp.accessToken);
+
+    return redirect(res, `${FRONTEND_URL}/dashboard`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "OAuth failed",
     });
   }
-
-  if (state !== req.cookies.github_oauth_state) {
-    return sendResponse(res, {
-      success: false,
-      status: 401,
-      msg: "Invalid oauth state",
-    });
-  }
-
-  const resp = await authService.githubCallback(code);
-  console.log("Response", resp);
 };

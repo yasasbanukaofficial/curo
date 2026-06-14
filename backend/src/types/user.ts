@@ -5,6 +5,10 @@ export interface IUser extends Document {
   email: string;
   password: string;
   refreshTokens: string[];
+  googleId?: string;
+  githubId?: string;
+  googleRefreshToken?: string;
+  githubAccessToken?: string;
   provider: string[];
   createdAt: Date;
   updatedAt: Date;

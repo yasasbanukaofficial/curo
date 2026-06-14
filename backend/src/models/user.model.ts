@@ -34,6 +34,22 @@ const _userSchema = new Schema<IUser>(
       required: true,
       default: [],
     },
+    googleId: {
+      type: String,
+      required: false,
+    },
+    githubId: {
+      type: String,
+      required: false,
+    },
+    googleRefreshToken: {
+      type: String,
+      required: false,
+    },
+    githubAccessToken: {
+      type: String,
+      required: false,
+    },
     provider: {
       type: [String],
       default: ["local"],
