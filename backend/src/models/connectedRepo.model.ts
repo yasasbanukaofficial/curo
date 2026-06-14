@@ -32,6 +32,11 @@ const _connectedRepoSchema = new Schema<IConnectedRepo>(
       type: String,
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["active", "deleted"],
+      default: "active",
+    },
     tracked: {
       type: Boolean,
       default: false,

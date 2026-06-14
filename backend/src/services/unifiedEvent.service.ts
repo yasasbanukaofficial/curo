@@ -62,11 +62,20 @@ export const unifiedEventService = {
 
     const repos = await fetchRepoList(token);
 
+    const fetchedRepoIds = repos.map((r: RawRepo) => r.id);
+
+    await ConnectedRepoModel.updateMany(
+      { userId, repoId: { $nin: fetchedRepoIds }, status: { $ne: "deleted" } },
+      { $set: { status: "deleted", tracked: false } },
+    );
+
     const activeRepos = repos.filter((r: RawRepo) =>
       isWithinDays(r.pushed_at, eventDays),
     );
 
-    const repoDocs = activeRepos.map((r: RawRepo) => normalizeRepoDoc(r, userId));
+    const repoDocs = activeRepos.map((r: RawRepo) =>
+      normalizeRepoDoc(r, userId),
+    );
 
     await ConnectedRepoModel.bulkWrite(
       repoDocs.map((doc) => ({

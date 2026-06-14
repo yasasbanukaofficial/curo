@@ -92,4 +92,5 @@ export const normalizeRepoDoc = (repo: any, userId: string) => ({
   language: repo.language ?? null,
   private: repo.private,
   defaultBranch: repo.default_branch,
+  status: "active" as const,
 });
