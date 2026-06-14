@@ -1,9 +1,14 @@
-import bcrypt from "bcryptjs";
 import { UserModel } from "../models";
 import { IUser } from "../types";
 import { tokenGen } from "../util/token";
-import { oauth2Client } from "../controller";
+import {
+  oauth2Client,
+  getGithubAccessToken,
+  getGithubUserData,
+  getGithubEmail,
+} from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
+import { hash } from "../util";
 
 export const authService = {
   register: async (user: IUser) => {
@@ -19,7 +24,7 @@ export const authService = {
       };
     }
 
-    const hashedPass = await bcrypt.hashSync(password, 10);
+    const hashedPass = await hash.gen(password);
     const newUser = await UserModel.create({
       name,
       email,
@@ -42,7 +47,7 @@ export const authService = {
         msg: "User not found",
       };
     }
-    const passwordMatches = bcrypt.compareSync(password, existingUser.password);
+    const passwordMatches = await hash.compare(password, existingUser.password);
     if (!passwordMatches) {
       return {
         success: false,
@@ -91,16 +96,63 @@ export const authService = {
 
     if (!user) {
       user = await UserModel.create({
+        _id: googleId,
         name,
         email,
-        provider: "google",
+        provider: ["google"],
       });
     }
 
     const accessToken = tokenGen.genAccessToken(user);
     const refreshToken = tokenGen.genRefreshToken(user);
+    const googleRefreshToken = await hash.gen(tokens.refresh_token || "");
 
-    await user.updateOne({ $push: { refreshTokens: [refreshToken] } });
+    await user.updateOne({
+      $push: { refreshTokens: [refreshToken, googleRefreshToken] },
+    });
+
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+  },
+  githubCallback: async (code: string) => {
+    const token = await getGithubAccessToken(code);
+    const resp = await getGithubUserData(token);
+
+    if (!resp) {
+      throw new Error("The github authentication seem to have failed!");
+    }
+
+    const { id, name } = resp.data;
+    const email = await getGithubEmail(token);
+
+    if (!email || typeof email !== "string") {
+      throw new Error("Failed ro fetch user's mail address");
+    }
+
+    let user = await UserModel.findOne({ email });
+
+    if (!user) {
+      user = await UserModel.create({
+        _id: id,
+        name,
+        email,
+        provider: ["github"],
+      });
+    }
+
+    const accessToken = tokenGen.genAccessToken(user);
+    const refreshToken = tokenGen.genRefreshToken(user);
+    const githubAccessToken = await hash.gen(token);
+
+    await user.updateOne({
+      $each: { refreshTokens: [refreshToken, githubAccessToken] },
+    });
+
     return {
       id: user._id,
       name: user.name,
