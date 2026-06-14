@@ -3,7 +3,7 @@ import {
   GITHUB_OAUTH_CLIENT_ID,
   GITHUB_OAUTH_CLIENT_SECRET,
   FRONTEND_URL,
-} from "../config/env";
+} from "../../config/env";
 
 export const getGithubAccessToken = async (code: string) => {
   const params = new URLSearchParams([

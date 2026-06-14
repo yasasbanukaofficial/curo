@@ -1,2 +1,2 @@
-export * from "./google.integration";
-export * from "./github.integration";
+export * from "./google";
+export * from "./github";
