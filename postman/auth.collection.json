@@ -6,14 +6,7 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{accessToken}}",
-        "type": "string"
-      }
-    ]
+    "type": "noauth"
   },
   "variable": [
     {
@@ -21,12 +14,8 @@
       "value": "http://localhost:5000/api/v1"
     },
     {
-      "key": "token",
-      "value": ""
-    },
-    {
       "key": "accessToken",
-      "value": ""
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMmVmZGNmZWEzZTA4MjQxYmNkMDg1NiIsImVtYWlsIjoieWl4YmluZm9AZ21haWwuY29tIiwiaWF0IjoxNzgxNDY0NTI3LCJleHAiOjE3ODE0NjU0Mjd9.A7PZyMGmfhOFhg1fcuHE28OiDLguFdbRE0XvHO1KkTo"
     },
     {
       "key": "refreshToken",
@@ -34,7 +23,7 @@
     },
     {
       "key": "userId",
-      "value": ""
+      "value": "6a2efdcfea3e08241bcd0856"
     }
   ],
   "item": [
@@ -258,11 +247,6 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res?.data?.accessToken) {",
-                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
-                  "  pm.collectionVariables.set('token', res.data.accessToken);",
-                  "}",
-                  "if (res?.data?.refreshToken) pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
                   "if (res?.data?.id) pm.collectionVariables.set('userId', res.data.id);"
                 ],
                 "type": "text/javascript"
@@ -521,7 +505,7 @@
       "name": "Unified Events",
       "item": [
         {
-          "name": "POST /unified/test/github-sync",
+          "name": "POST /unified/github-data",
           "event": [
             {
               "listen": "test",
@@ -540,16 +524,6 @@
             }
           ],
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
               {
@@ -559,12 +533,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
+              "raw": "{}"
             },
             "url": {
-              "raw": "{{baseUrl}}/unified/test/github-sync",
+              "raw": "{{baseUrl}}/unified/github-data",
               "host": ["{{baseUrl}}"],
-              "path": ["unified", "test", "github-sync"]
+              "path": ["unified", "github-data"]
             }
           },
           "response": [
@@ -573,12 +547,8 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
-                },
                 "url": {
-                  "raw": "{{baseUrl}}/unified/test/github-sync"
+                  "raw": "{{baseUrl}}/unified/github-data"
                 }
               },
               "status": "OK",
@@ -589,7 +559,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"message\": \"Synced 3 repos and 45 events\",\n  \"data\": {\n    \"reposSynced\": 3,\n    \"eventsSynced\": 45\n  }\n}"
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"msg\": \"Synced 3 repos and 45 events\",\n  \"data\": {\n    \"reposSynced\": 3,\n    \"eventsSynced\": 45,\n    \"results\": []\n  }\n}"
             }
           ]
         }

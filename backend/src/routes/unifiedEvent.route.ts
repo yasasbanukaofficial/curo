@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { testGithubSync } from "../controller/unifiedEvent.controller";
+import { fetchGithubData } from "../controller/unifiedEvent.controller";
+import { authenticate } from "../middlewares";
 
 const router = Router();
 
-router.post("/test/github-sync", testGithubSync);
+router.post("/github-data", authenticate, fetchGithubData);
 
 export default router;

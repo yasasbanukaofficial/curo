@@ -5,6 +5,14 @@ import { oauth2Client, GOOGLE_SCOPES } from "../integrations";
 import { FRONTEND_URL, GITHUB_OAUTH_CLIENT_ID } from "../config/env";
 import asyncHandler from "express-async-handler";
 
+const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  setCookie(res, "accessToken", accessToken);
+  setCookie(res, "refreshToken", refreshToken, {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/api/v1/auth/refresh",
+  });
+};
+
 export const register = asyncHandler(
   async (req: Request, res: Response) => {
     const result = await authService.register(req.body);
@@ -15,7 +23,17 @@ export const register = asyncHandler(
 export const login = asyncHandler(
   async (req: Request, res: Response) => {
     const result = await authService.login(req.body);
-    return sendResponse(res, result);
+    if (!result.success) {
+      return sendResponse(res, result);
+    }
+    const { accessToken, refreshToken, ...userData } = result.data;
+    setAuthCookies(res, accessToken, refreshToken);
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      msg: "Login successful",
+      data: userData,
+    });
   },
 );
 
@@ -52,7 +70,7 @@ export const googleCallback = asyncHandler(
     }
 
     const resp = await authService.googleCallback(code);
-    setCookie(res, "token", resp.accessToken);
+    setAuthCookies(res, resp.accessToken, resp.refreshToken);
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   },
@@ -93,7 +111,7 @@ export const githubCallback = asyncHandler(
     }
 
     const resp = await authService.githubCallback(code);
-    setCookie(res, "token", resp.accessToken);
+    setAuthCookies(res, resp.accessToken, resp.refreshToken);
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   },
