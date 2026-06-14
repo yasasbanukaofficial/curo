@@ -1,3 +1,19 @@
+const requiredVars = [
+  "PORT",
+  "MONGODB_URL",
+  "API_VER",
+  "FRONTEND_URL",
+  "JWT_SECRET",
+  "ENCRYPTION_KEY",
+] as const;
+
+const missing = requiredVars.filter((key) => !process.env[key]);
+if (missing.length > 0) {
+  throw new Error(
+    `Missing required environment variables: ${missing.join(", ")}`,
+  );
+}
+
 export const {
   PORT,
   MONGODB_URL,
@@ -16,22 +32,4 @@ export const {
   GITHUB_APP_PEM,
   GITHUB_APP_ID_VALUE,
   ENCRYPTION_KEY,
-} = process.env as {
-  PORT: string | undefined;
-  MONGODB_URL: string | undefined;
-  API_VER: string | undefined;
-  FRONTEND_URL: string | undefined;
-  NODE_ENV: string | undefined;
-  JWT_SECRET: string | undefined;
-  JWT_ACCESS_EXPIRY: string | undefined;
-  JWT_REFRESH_EXPIRY: string | undefined;
-  GOOGLE_OAUTH_CLIENT_ID: string | undefined;
-  GOOGLE_OAUTH_CLIENT_SECRET: string | undefined;
-  GOOGLE_REDIRECT_URL: string | undefined;
-  GITHUB_OAUTH_CLIENT_ID: string | undefined;
-  GITHUB_OAUTH_CLIENT_SECRET: string | undefined;
-  GITHUB_REDIRECT_URL: string | undefined;
-  GITHUB_APP_PEM: string | undefined;
-  GITHUB_APP_ID_VALUE: string | undefined;
-  ENCRYPTION_KEY: string | undefined;
-};
+} = process.env;

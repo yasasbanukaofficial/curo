@@ -1,19 +1,23 @@
 import { Request, Response } from "express";
-import { IUser } from "../types";
 import { authService } from "../services";
 import { redirect, sendResponse, setCookie } from "../util";
 import { oauth2Client, GOOGLE_SCOPES } from "../integrations";
 import { FRONTEND_URL, GITHUB_OAUTH_CLIENT_ID } from "../config/env";
+import asyncHandler from "express-async-handler";
 
-export const register = async (req: Request<{}, {}, IUser>, res: Response) => {
-  const result = await authService.register(req.body);
-  return sendResponse(res, result);
-};
+export const register = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await authService.register(req.body);
+    return sendResponse(res, result);
+  },
+);
 
-export const login = async (req: Request<{}, {}, IUser>, res: Response) => {
-  const result = await authService.login(req.body);
-  return sendResponse(res, result);
-};
+export const login = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await authService.login(req.body);
+    return sendResponse(res, result);
+  },
+);
 
 export const googleLogin = (req: Request, res: Response) => {
   const state = crypto.randomUUID();
@@ -27,15 +31,15 @@ export const googleLogin = (req: Request, res: Response) => {
   res.redirect(authUri);
 };
 
-export const googleCallback = async (req: Request, res: Response) => {
-  try {
+export const googleCallback = asyncHandler(
+  async (req: Request, res: Response) => {
     const { code, state } = req.query;
 
     if (!code || typeof code !== "string") {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "Authorization code is missing or invalid | Google",
+        msg: "Authorization code is missing or invalid",
       });
     }
 
@@ -43,7 +47,7 @@ export const googleCallback = async (req: Request, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: "Invalid oauth state",
+        msg: "Invalid OAuth state",
       });
     }
 
@@ -51,13 +55,8 @@ export const googleCallback = async (req: Request, res: Response) => {
     setCookie(res, "token", resp.accessToken);
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "OAuth failed",
-    });
-  }
-};
+  },
+);
 
 export const githubLogin = (req: Request, res: Response) => {
   const state = crypto.randomUUID();
@@ -66,21 +65,22 @@ export const githubLogin = (req: Request, res: Response) => {
   const url = "https://github.com/login/oauth/authorize";
   const params = new URLSearchParams([
     ["client_id", GITHUB_OAUTH_CLIENT_ID || ""],
-    ["scope", "read:user user:email"],
+    ["scope", "public_repo read:user user:email notifications"],
     ["state", state],
   ]);
 
   res.redirect(`${url}?${params}`);
 };
 
-export const githubCallback = async (req: Request, res: Response) => {
-  try {
+export const githubCallback = asyncHandler(
+  async (req: Request, res: Response) => {
     const { code, state } = req.query;
+
     if (!code || typeof code !== "string") {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "Authorization code is missing or invalid | Github",
+        msg: "Authorization code is missing or invalid",
       });
     }
 
@@ -88,7 +88,7 @@ export const githubCallback = async (req: Request, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: "Invalid oauth state",
+        msg: "Invalid OAuth state",
       });
     }
 
@@ -96,10 +96,5 @@ export const githubCallback = async (req: Request, res: Response) => {
     setCookie(res, "token", resp.accessToken);
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "OAuth failed",
-    });
-  }
-};
+  },
+);

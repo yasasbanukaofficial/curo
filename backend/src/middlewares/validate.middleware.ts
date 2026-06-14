@@ -10,7 +10,11 @@ export const validate =
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: result.error.issues[0].message,
+        msg: "Validation failed",
+        errors: result.error.issues.map((i) => ({
+          path: i.path,
+          message: i.message,
+        })),
       });
     }
 

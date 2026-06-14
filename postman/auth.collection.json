@@ -2,7 +2,7 @@
   "info": {
     "name": "Curo Auth API",
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "description": "Postman collection for testing Curo Auth endpoints.",
+    "description": "Postman collection for testing Curo API endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -10,7 +10,7 @@
     "bearer": [
       {
         "key": "token",
-        "value": "{{token}}",
+        "value": "{{accessToken}}",
         "type": "string"
       }
     ]
@@ -18,10 +18,18 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000/api/v1"
+      "value": "http://localhost:5000/api/v1"
     },
     {
       "key": "token",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
       "value": ""
     },
     {
@@ -41,8 +49,7 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res?.data?.token) pm.collectionVariables.set('token', res.data.token);",
-                  "if (res?.data?.user?.id) pm.collectionVariables.set('userId', res.data.user.id);"
+                  "if (res?.data?.id) pm.collectionVariables.set('userId', res.data.id);"
                 ],
                 "type": "text/javascript"
               }
@@ -251,8 +258,12 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res?.data?.token) pm.collectionVariables.set('token', res.data.token);",
-                  "if (res?.data?.user?.id) pm.collectionVariables.set('userId', res.data.user.id);"
+                  "if (res?.data?.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('token', res.data.accessToken);",
+                  "}",
+                  "if (res?.data?.refreshToken) pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "if (res?.data?.id) pm.collectionVariables.set('userId', res.data.id);"
                 ],
                 "type": "text/javascript"
               }
@@ -399,12 +410,188 @@
               "raw": "{}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/register",
+              "raw": "{{baseUrl}}/auth/login",
               "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
+              "path": ["auth", "login"]
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "OAuth - Google",
+      "item": [
+        {
+          "name": "GET /auth/google - Initiate",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /auth/google/callback - Handle Redirect",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google/callback?code=REPLACE_WITH_REAL_CODE&state=REPLACE_WITH_REAL_STATE",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "REPLACE_WITH_REAL_CODE",
+                  "description": "Authorization code from Google"
+                },
+                {
+                  "key": "state",
+                  "value": "REPLACE_WITH_REAL_STATE",
+                  "description": "State param for CSRF verification (must match oauth_state cookie)"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OAuth - GitHub",
+      "item": [
+        {
+          "name": "GET /auth/github - Initiate",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/github",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "github"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /auth/github/callback - Handle Redirect",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/github/callback?code=REPLACE_WITH_REAL_CODE&state=REPLACE_WITH_REAL_STATE",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "github", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "REPLACE_WITH_REAL_CODE",
+                  "description": "Authorization code from GitHub"
+                },
+                {
+                  "key": "state",
+                  "value": "REPLACE_WITH_REAL_STATE",
+                  "description": "State param for CSRF verification (must match github_oauth_state cookie)"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Unified Events",
+      "item": [
+        {
+          "name": "POST /unified/test/github-sync",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Returns reposSynced and eventsSynced counts\", () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.data).to.be.an('object');",
+                  "  pm.expect(res.data.reposSynced).to.be.a('number');",
+                  "  pm.expect(res.data.eventsSynced).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/unified/test/github-sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["unified", "test", "github-sync"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/unified/test/github-sync"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Synced 3 repos and 45 events\",\n  \"data\": {\n    \"reposSynced\": 3,\n    \"eventsSynced\": 45\n  }\n}"
+            }
+          ]
         }
       ]
     }

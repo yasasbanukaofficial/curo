@@ -9,6 +9,7 @@ import {
 } from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 import { hash, encrypt } from "../util";
+import { AppError } from "../middlewares";
 
 export const authService = {
   register: async (user: IUser) => {
@@ -18,7 +19,7 @@ export const authService = {
 
     if (existingUser) {
       return {
-        success: false,
+        success: false as const,
         status: 409,
         msg: "User already exists",
       };
@@ -32,9 +33,9 @@ export const authService = {
     });
 
     return {
-      success: true,
+      success: true as const,
       status: 201,
-      msg: "Successfully created an user",
+      msg: "Successfully created a user",
       data: { id: newUser._id, name, email },
     };
   },
@@ -42,7 +43,7 @@ export const authService = {
     const existingUser = await UserModel.findOne({ email });
     if (!existingUser) {
       return {
-        success: false,
+        success: false as const,
         status: 404,
         msg: "User not found",
       };
@@ -50,7 +51,7 @@ export const authService = {
     const passwordMatches = await hash.compare(password, existingUser.password);
     if (!passwordMatches) {
       return {
-        success: false,
+        success: false as const,
         status: 401,
         msg: "Invalid credentials, please try again!",
       };
@@ -62,21 +63,21 @@ export const authService = {
     await existingUser.updateOne({ $push: { refreshTokens: refreshToken } });
 
     return {
-      success: true,
+      success: true as const,
       status: 200,
       msg: "Login successful",
       data: {
         id: existingUser._id,
         name: existingUser.name,
         email: existingUser.email,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        accessToken,
+        refreshToken,
       },
     };
   },
 
   googleCallback: async (code: string) => {
-    const { tokens } = await oauth2Client.getToken(code as string);
+    const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
     const ticket = await oauth2Client.verifyIdToken({
@@ -87,7 +88,7 @@ export const authService = {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      throw new Error("Invalid Google token payload");
+      throw new AppError(400, "Invalid Google token payload");
     }
 
     const { sub: googleId, name, email } = payload;
@@ -129,23 +130,24 @@ export const authService = {
       id: user._id,
       name: user.name,
       email: user.email,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
+      accessToken,
+      refreshToken,
     };
   },
+
   githubCallback: async (code: string) => {
     const githubToken = await getGithubAccessToken(code);
     const githubUser = await getGithubUserData(githubToken);
 
     if (!githubUser) {
-      throw new Error("The github authentication seem to have failed!");
+      throw new AppError(500, "GitHub authentication failed");
     }
 
     const { id: githubId, name } = githubUser.data;
     const email = await getGithubEmail(githubToken);
 
     if (!email) {
-      throw new Error("No verified primary email found on GitHub");
+      throw new AppError(400, "No verified primary email found on GitHub");
     }
 
     let user = await UserModel.findOne({
@@ -182,15 +184,13 @@ export const authService = {
       id: user._id,
       name: user.name,
       email: user.email,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
+      accessToken,
+      refreshToken,
     };
   },
 };
 
 export const isExistingUser = async (email: string): Promise<boolean> => {
-  const user = await UserModel.findOne({
-    email,
-  });
+  const user = await UserModel.findOne({ email });
   return !!user;
 };
