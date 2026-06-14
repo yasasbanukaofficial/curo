@@ -3,6 +3,7 @@ import { UserModel } from "../models";
 import { IUser } from "../types";
 import { tokenGen } from "../util/token";
 import { oauth2Client } from "../controller";
+import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 
 export const authService = {
   register: async (user: IUser) => {
@@ -75,7 +76,7 @@ export const authService = {
 
     const ticket = await oauth2Client.verifyIdToken({
       idToken: tokens.id_token as string,
-      audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
+      audience: GOOGLE_OAUTH_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();

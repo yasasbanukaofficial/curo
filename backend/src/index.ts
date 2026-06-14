@@ -6,20 +6,19 @@ import cors from "cors";
 import mongoose from "mongoose";
 import { AuthRouter } from "./routes/index";
 import cookieParser from "cookie-parser";
+import { FRONTEND_URL, PORT, MONGODB_URL, API_VER } from "./config/env";
 
 const app = express();
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: FRONTEND_URL,
     credentials: true,
   }),
 );
 app.use(express.json());
 app.use(cookieParser());
 
-const PORT = process.env.PORT;
-const DB_URL = process.env.MONGODB_URL as string;
-const API_VER = process.env.API_VER;
+const DB_URL = MONGODB_URL as string;
 
 app.use(`/api/${API_VER}/auth`, AuthRouter);
 

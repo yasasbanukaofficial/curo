@@ -35,9 +35,8 @@ const _userSchema = new Schema<IUser>(
       default: [],
     },
     provider: {
-      type: String,
-      enum: ["local", "google"],
-      default: "local",
+      type: [String],
+      default: ["local"],
     },
   },
   { timestamps: true },

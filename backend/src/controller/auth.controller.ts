@@ -3,11 +3,17 @@ import { IUser } from "../types";
 import { authService } from "../services";
 import { redirect, sendResponse, setCookie } from "../util";
 import { google } from "googleapis";
+import {
+  GOOGLE_OAUTH_CLIENT_ID,
+  GOOGLE_OAUTH_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URL,
+  FRONTEND_URL,
+} from "../config/env";
 
 export const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_OAUTH_CLIENT_ID,
-  process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URL,
+  GOOGLE_OAUTH_CLIENT_ID,
+  GOOGLE_OAUTH_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URL,
 );
 
 const scopes = [
@@ -62,7 +68,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     const resp = await authService.googleCallback(code);
     setCookie(res, "token", resp.accessToken);
 
-    return redirect(res, `${process.env.FRONTEND_URL}/dashboard`);
+    return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
     console.error(error);
     res.status(500).json({

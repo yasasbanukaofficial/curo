@@ -1,7 +1,8 @@
 import { IUser } from "../types";
 import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/env";
 
-const SECRET_KEY = process.env.JWT_SECRET as string;
+const SECRET_KEY = JWT_SECRET as string;
 export const tokenGen = {
   genAccessToken: (user: IUser) => generateToken(user, SECRET_KEY, "15m"),
 

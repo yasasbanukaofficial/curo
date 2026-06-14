@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { NODE_ENV } from "../config/env";
 
 export interface ErrorResponse {
   success: false;
@@ -27,7 +28,7 @@ export const setCookie = (
 ) => {
   res.cookie(name, value, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 1000 * 60 * 10,
     ...options,
