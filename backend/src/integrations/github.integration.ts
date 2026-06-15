@@ -4,6 +4,9 @@ import {
   GITHUB_OAUTH_CLIENT_SECRET,
   FRONTEND_URL,
 } from "../config/env";
+import { Octokit } from "octokit";
+import { githubResponseConverter } from "../util/normalizer";
+import { RawRepo } from "../types";
 
 export const getGithubAccessToken = async (code: string) => {
   const params = new URLSearchParams([
@@ -44,4 +47,24 @@ export const getGithubEmail = async (accessToken: string) => {
   );
 
   return primary?.email ?? null;
+};
+
+export const getGithubRepos = async (accessToken: string, userId: string) => {
+  const octokit = new Octokit({
+    auth: accessToken,
+  });
+
+  const resp = await octokit.request("GET /user/repos", {
+    headers: {
+      "X-GitHub-Api-Version": "2026-03-10",
+    },
+    visibility: "public",
+    since: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  });
+
+  if (!resp || resp.status !== 200) {
+    throw new Error("Error when fetching github repositories");
+  }
+
+  return githubResponseConverter(resp.data as RawRepo[], userId);
 };

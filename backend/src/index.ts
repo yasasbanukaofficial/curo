@@ -4,9 +4,10 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { AuthRouter } from "./routes/index";
 import cookieParser from "cookie-parser";
 import { FRONTEND_URL, PORT, MONGODB_URL, API_VER } from "./config/env";
+import { AuthRouter } from "./routes/index";
+import { GithubRouter } from "./routes/index";
 
 const app = express();
 app.use(
@@ -21,6 +22,7 @@ app.use(cookieParser());
 const DB_URL = MONGODB_URL as string;
 
 app.use(`/api/${API_VER}/auth`, AuthRouter);
+app.use(`/api/${API_VER}/github`, GithubRouter);
 
 app.get("/", (req, res) => {
   res.send("CURO API. Unauthorized requests are not allowed.");
