@@ -59,12 +59,21 @@ export const getGithubRepos = async (accessToken: string, userId: string) => {
       "X-GitHub-Api-Version": "2026-03-10",
     },
     visibility: "public",
-    since: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    sort: "pushed",
+    direction: "desc",
   });
 
   if (!resp || resp.status !== 200) {
     throw new Error("Error when fetching github repositories");
   }
 
-  return githubResponseConverter(resp.data as RawRepo[], userId);
+  const thirtyDays = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+  const activeRepo = (resp.data as RawRepo[]).filter(
+    (repo) =>
+      repo.pushed_at !== null &&
+      new Date(repo.pushed_at).getTime() > thirtyDays,
+  );
+
+  return githubResponseConverter(activeRepo as RawRepo[], userId);
 };

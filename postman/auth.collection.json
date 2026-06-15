@@ -6,23 +6,16 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token}}",
-        "type": "string"
-      }
-    ]
+    "type": "noauth"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000/api/v1"
+      "value": "http://localhost:5000/api/v1"
     },
     {
-      "key": "token",
-      "value": ""
+      "key": "accessToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMmZlOWU3Nzk4YzI1ZDQwNTAzNDRhYiIsImVtYWlsIjoieWl4YmluZm9AZ21haWwuY29tIiwiaWF0IjoxNzgxNTQ1NjkzLCJleHAiOjE3ODE1NDY1OTN9.QxcdmXfGf092gxxRvOCJPTG3DEcSM4mdXkk6Tx-lH00"
     },
     {
       "key": "userId",
@@ -35,19 +28,6 @@
       "item": [
         {
           "name": "POST /auth/register - Success",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res?.data?.token) pm.collectionVariables.set('token', res.data.token);",
-                  "if (res?.data?.user?.id) pm.collectionVariables.set('userId', res.data.user.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "noauth"
@@ -251,8 +231,13 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res?.data?.token) pm.collectionVariables.set('token', res.data.token);",
-                  "if (res?.data?.user?.id) pm.collectionVariables.set('userId', res.data.user.id);"
+                  "if (res?.success) {",
+                  "  pm.collectionVariables.set('userId', res.data?.id || '');",
+                  "  pm.test('Login successful', () => {",
+                  "    pm.expect(res.data).to.have.property('id');",
+                  "    pm.expect(res.data).to.not.have.property('accessToken');",
+                  "  });",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -402,6 +387,55 @@
               "raw": "{{baseUrl}}/auth/register",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "GitHub",
+      "item": [
+        {
+          "name": "GET /github/repos - Fetch Repos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const token = pm.collectionVariables.get('accessToken');",
+                  "if (token) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Cookie',",
+                  "    value: 'accessToken=' + token",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "const res = pm.response.json();",
+                  "pm.test(\"Returns repos array\", () => {",
+                  "  pm.expect(res.success).to.be.true;",
+                  "  pm.expect(res.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/github/repos",
+              "host": ["{{baseUrl}}"],
+              "path": ["github", "repos"]
             }
           },
           "response": []

@@ -2,6 +2,7 @@ import { Response } from "express";
 import { getGithubRepos } from "../integrations";
 import { AuthRequest } from "../types/auth";
 import { userService } from "../services";
+import { encrypt, sendResponse } from "../util";
 
 export const fetchGithubRepos = async (req: AuthRequest, res: Response) => {
   try {
@@ -15,12 +16,20 @@ export const fetchGithubRepos = async (req: AuthRequest, res: Response) => {
       throw new Error("User not found!");
     }
 
-    const accessToken = userDetails.githubId;
+    const accessToken = userDetails.githubAccessToken;
     if (!accessToken) {
       throw new Error("GitHub access token not found!");
     }
 
-    return await getGithubRepos(accessToken, userId);
+    const decrypted = encrypt.compare(accessToken);
+    if (!decrypted) throw new Error("Decryption failed | Github Access Token");
+
+    const repos = await getGithubRepos(decrypted, userId);
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      data: repos,
+    });
   } catch (error) {
     const message =
       error instanceof Error

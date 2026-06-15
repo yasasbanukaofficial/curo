@@ -9,11 +9,14 @@ export const encrypt = {
   gen: (plain: string): string => {
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
-    const encrypted = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
+    const encrypted = Buffer.concat([
+      cipher.update(plain, "utf8"),
+      cipher.final(),
+    ]);
     return iv.toString("hex") + ":" + encrypted.toString("hex");
   },
 
-  compare: (plain: string, encrypted: string): string | null => {
+  compare: (encrypted: string): string | null => {
     try {
       const [ivHex, encryptedHex] = encrypted.split(":");
       const iv = Buffer.from(ivHex, "hex");
