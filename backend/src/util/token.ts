@@ -17,6 +17,7 @@ export const tokenGen = {
     generateToken(user, SECRET_KEY, ACCESS_EXPIRY),
   genRefreshToken: (user: IUser) =>
     generateToken(user, SECRET_KEY, REFRESH_EXPIRY),
+  verify: (token: string) => verifyToken(token),
 };
 
 const generateToken = (
@@ -25,4 +26,8 @@ const generateToken = (
   expiresIn: jwt.SignOptions["expiresIn"],
 ) => {
   return jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn });
+};
+
+const verifyToken = (token: string) => {
+  return jwt.verify(token, SECRET_KEY);
 };

@@ -186,6 +186,46 @@ export const authService = {
       refreshToken: refreshToken,
     };
   },
+  handleRefreshToken: async (refreshToken: string) => {
+    try {
+      const decoded: any = tokenGen.verify(refreshToken);
+      const userId = decoded.id || decoded._id;
+      if (!userId) {
+        return { success: false, status: 401, msg: "Invalid token" };
+      }
+
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        return { success: false, status: 404, msg: "User not found" };
+      }
+
+      // ensure the refresh token is one we issued
+      if (
+        !Array.isArray(user.refreshTokens) ||
+        !user.refreshTokens.includes(refreshToken)
+      ) {
+        return {
+          success: false,
+          status: 401,
+          msg: "Refresh token not recognized",
+        };
+      }
+
+      const accessToken = tokenGen.genAccessToken(user);
+      const newRefreshToken = tokenGen.genRefreshToken(user);
+
+      await user.updateOne({ $pull: { refreshTokens: refreshToken } });
+      await user.updateOne({ $push: { refreshTokens: newRefreshToken } });
+
+      return {
+        success: true,
+        status: 200,
+        data: { accessToken, refreshToken: newRefreshToken },
+      };
+    } catch (error) {
+      return { success: false, status: 401, msg: "Invalid refresh token" };
+    }
+  },
 };
 
 export const isExistingUser = async (email: string): Promise<boolean> => {
