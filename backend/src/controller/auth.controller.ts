@@ -12,6 +12,25 @@ export const register = async (req: Request<{}, {}, IUser>, res: Response) => {
 
 export const login = async (req: Request<{}, {}, IUser>, res: Response) => {
   const result = await authService.login(req.body);
+
+  if (result.success && result.data) {
+    const { accessToken, refreshToken, ...safeData } = result.data;
+
+    if (accessToken) {
+      setCookie(res, "accessToken", accessToken, {
+        maxAge: 15 * 60 * 1000,
+      });
+    }
+    if (refreshToken) {
+      setCookie(res, "refreshToken", refreshToken, {
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+    }
+
+    return sendResponse(res, { ...result, data: safeData });
+  }
+
   return sendResponse(res, result);
 };
 
@@ -40,6 +59,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     }
 
     if (state !== req.cookies.oauth_state) {
+      res.clearCookie("oauth_state");
       return sendResponse(res, {
         success: false,
         status: 401,
@@ -48,7 +68,14 @@ export const googleCallback = async (req: Request, res: Response) => {
     }
 
     const resp = await authService.googleCallback(code);
-    setCookie(res, "token", resp.accessToken);
+    res.clearCookie("oauth_state");
+    setCookie(res, "accessToken", resp.accessToken, {
+      maxAge: 15 * 60 * 1000,
+    });
+    setCookie(res, "refreshToken", resp.refreshToken, {
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
@@ -85,6 +112,7 @@ export const githubCallback = async (req: Request, res: Response) => {
     }
 
     if (state !== req.cookies.github_oauth_state) {
+      res.clearCookie("github_oauth_state");
       return sendResponse(res, {
         success: false,
         status: 401,
@@ -93,7 +121,14 @@ export const githubCallback = async (req: Request, res: Response) => {
     }
 
     const resp = await authService.githubCallback(code);
-    setCookie(res, "token", resp.accessToken);
+    res.clearCookie("github_oauth_state");
+    setCookie(res, "accessToken", resp.accessToken, {
+      maxAge: 15 * 60 * 1000,
+    });
+    setCookie(res, "refreshToken", resp.refreshToken, {
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
@@ -102,4 +137,15 @@ export const githubCallback = async (req: Request, res: Response) => {
       message: "OAuth failed",
     });
   }
+};
+
+export const handleRefreshToken = async (token: string) => {
+  const resp = await authService.handleRefreshToken(token);
+
+  if (!resp?.success || !resp.data) {
+    throw new Error(resp?.msg || "Failed to refresh token");
+  }
+
+  const { accessToken, refreshToken } = resp.data;
+  return { accessToken, refreshToken };
 };
