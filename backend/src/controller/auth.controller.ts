@@ -14,7 +14,7 @@ export const register = async (req: Request<{}, {}, IUser>, res: Response) => {
 export const login = async (req: Request<{}, {}, IUser>, res: Response) => {
   const result = await authService.login(req.body);
   if (result.success && result.data) {
-    setCookie(res, "Access_token", result.data.accessToken);
+    setCookie(res, "access_token", result.data.accessToken);
     setCookie(res, "refreshtoken", result.data.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -55,7 +55,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     }
 
     const resp = await authService.googleCallback(code);
-    setCookie(res, "Access_token", resp.accessToken);
+    setCookie(res, "access_token", resp.accessToken);
     setCookie(res, "refreshtoken", resp.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
@@ -103,7 +103,7 @@ export const githubCallback = async (req: Request, res: Response) => {
     }
 
     const resp = await authService.githubCallback(code);
-    setCookie(res, "Access_token", resp.accessToken);
+    setCookie(res, "access_token", resp.accessToken);
     setCookie(res, "refreshtoken", resp.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });

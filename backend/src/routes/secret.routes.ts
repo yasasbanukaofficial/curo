@@ -4,6 +4,6 @@ import { saveSecret } from "../controller/secret.controller";
 
 const router = Router();
 
-router.post("/saveSec", authenticate, saveSecret);
+router.post("/save", authenticate, saveSecret);
 
 export default router;

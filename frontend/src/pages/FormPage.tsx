@@ -9,6 +9,8 @@ const DUMMY_PROJECTS = [
   "Project Epsilon",
 ];
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function FormPage() {
   const [name, setName] = useState("");
   const [secretKey, setSecretKey] = useState("");
@@ -18,6 +20,17 @@ function FormPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    axios.post(
+      `${API_URL}/secrets/save`,
+      {
+        secName: name,
+        secKey: secretKey,
+        projectId: project,
+      },
+      {
+        withCredentials: true,
+      },
+    );
     setSubmitted(true);
   };
 

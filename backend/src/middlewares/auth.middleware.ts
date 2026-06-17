@@ -15,7 +15,7 @@ export const authenticate = async (
   next: NextFunction,
 ) => {
   try {
-    const accessToken = req.cookies?.Access_token;
+    const accessToken = req.cookies?.access_token;
 
     if (accessToken) {
       try {
@@ -72,7 +72,7 @@ export const authenticate = async (
       $push: { refreshTokens: newRefreshToken },
     });
 
-    setCookie(res, "Access_token", newAccessToken);
+    setCookie(res, "access_token", newAccessToken);
     setCookie(res, "refreshtoken", newRefreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
