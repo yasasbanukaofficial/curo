@@ -4,6 +4,7 @@ import { authService } from "../services";
 import { redirect, sendResponse, setCookie } from "../util";
 import { oauth2Client, GOOGLE_SCOPES } from "../integrations";
 import { FRONTEND_URL, GITHUB_OAUTH_CLIENT_ID } from "../config/env";
+import { AuthRequest } from "../middlewares";
 
 export const register = async (req: Request<{}, {}, IUser>, res: Response) => {
   const result = await authService.register(req.body);
@@ -12,6 +13,12 @@ export const register = async (req: Request<{}, {}, IUser>, res: Response) => {
 
 export const login = async (req: Request<{}, {}, IUser>, res: Response) => {
   const result = await authService.login(req.body);
+  if (result.success && result.data) {
+    setCookie(res, "Access_token", result.data.accessToken);
+    setCookie(res, "refreshtoken", result.data.refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+  }
   return sendResponse(res, result);
 };
 
@@ -48,7 +55,10 @@ export const googleCallback = async (req: Request, res: Response) => {
     }
 
     const resp = await authService.googleCallback(code);
-    setCookie(res, "token", resp.accessToken);
+    setCookie(res, "Access_token", resp.accessToken);
+    setCookie(res, "refreshtoken", resp.refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
@@ -93,7 +103,10 @@ export const githubCallback = async (req: Request, res: Response) => {
     }
 
     const resp = await authService.githubCallback(code);
-    setCookie(res, "token", resp.accessToken);
+    setCookie(res, "Access_token", resp.accessToken);
+    setCookie(res, "refreshtoken", resp.refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
@@ -102,4 +115,15 @@ export const githubCallback = async (req: Request, res: Response) => {
       message: "OAuth failed",
     });
   }
+};
+
+export const refresh = async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  const result = await authService.refresh(refreshToken);
+  return sendResponse(res, result);
+};
+
+export const me = async (req: AuthRequest, res: Response) => {
+  const result = await authService.me(req.userId!);
+  return sendResponse(res, result);
 };

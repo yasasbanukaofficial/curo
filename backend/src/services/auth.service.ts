@@ -1,6 +1,6 @@
 import { UserModel } from "../models";
 import { IUser } from "../types";
-import { tokenGen } from "../util/token";
+import { tokenGen, verifyToken } from "../util/token";
 import {
   oauth2Client,
   getGithubAccessToken,
@@ -184,6 +184,56 @@ export const authService = {
       email: user.email,
       accessToken: accessToken,
       refreshToken: refreshToken,
+    };
+  },
+
+  refresh: async (refreshToken: string) => {
+    const decoded = verifyToken(refreshToken);
+
+    const user = await UserModel.findById(decoded.id);
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+
+    const tokenExists = user.refreshTokens.includes(refreshToken);
+    if (!tokenExists) {
+      return { success: false, status: 401, msg: "Invalid refresh token" };
+    }
+
+    const newAccessToken = tokenGen.genAccessToken(user);
+    const newRefreshToken = tokenGen.genRefreshToken(user);
+
+    await UserModel.findByIdAndUpdate(user._id, {
+      $pull: { refreshTokens: refreshToken },
+      $push: { refreshTokens: newRefreshToken },
+    });
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Tokens refreshed successfully",
+      data: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      },
+    };
+  },
+
+  me: async (userId: string) => {
+    const user = await UserModel.findById(userId).select("-password -refreshTokens -googleRefreshToken -githubAccessToken");
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    return {
+      success: true,
+      status: 200,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        provider: user.provider,
+        createdAt: user.createdAt,
+      },
     };
   },
 };
