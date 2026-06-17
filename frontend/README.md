@@ -1,6 +1,8 @@
 # Curo — Frontend
 
-React + TypeScript + Vite, styled with Tailwind CSS v4.
+Centralized secrets management platform — React + TypeScript + Vite, styled with Tailwind CSS v4.
+
+Securely store, manage, version, and synchronize environment variables across multiple projects and environments through a web dashboard.
 
 ## Scripts
 

@@ -23,7 +23,7 @@ const DB_URL = MONGODB_URL as string;
 app.use(`/api/${API_VER}/auth`, AuthRouter);
 
 app.get("/", (req, res) => {
-  res.send("CURO API. Unauthorized requests are not allowed.");
+  res.send("CURO Secrets Management API. Unauthorized requests are not allowed.");
 });
 
 mongoose

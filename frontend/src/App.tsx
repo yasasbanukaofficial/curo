@@ -6,14 +6,11 @@ function App() {
           Curo
         </span>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Welcome to Curo
+          Centralized Secrets Management
         </h1>
         <p className="mt-3 text-slate-600">
-          The frontend is ready. Start building in{" "}
-          <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm">
-            src/
-          </code>
-          .
+          Securely store, manage, version, and synchronize environment variables
+          across your projects and environments.
         </p>
         <button
           onClick={() => {

@@ -2,7 +2,7 @@
   "name": "curo-frontend",
   "private": true,
   "version": "1.0.0",
-  "description": "Unified Intelligence Platform — React frontend for the Curo workspace that connects all your tools in one intelligent dashboard",
+  "description": "Centralized secrets management platform — React frontend for securely storing, managing, versioning, and syncing environment variables across projects and environments",
   "type": "module",
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
@@ -15,7 +15,7 @@
     "node": ">=20",
     "pnpm": ">=10"
   },
-  "keywords": ["curo", "unified-intelligence", "react", "dashboard", "productivity", "typescript", "vite"],
+  "keywords": ["curo", "secrets-management", "environment-variables", "react", "dashboard", "typescript", "vite"],
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "react": "^19.2.6",
