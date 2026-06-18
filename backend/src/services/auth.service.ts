@@ -38,7 +38,13 @@ export const authService = {
       data: { id: newUser._id, name, email },
     };
   },
-  authenticateUser: async ({ email, password }: { email: string; password: string }) => {
+  authenticateUser: async ({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }) => {
     const existingUser = await UserModel.findOne({ email });
     if (!existingUser) {
       return {
@@ -205,8 +211,11 @@ export const authService = {
 
     await UserModel.findByIdAndUpdate(user._id, {
       $pull: { refreshTokens: refreshToken },
-      $push: { refreshTokens: newRefreshToken },
-    });
+    }).then(() =>
+      UserModel.findByIdAndUpdate(user._id, {
+        $push: { refreshTokens: newRefreshToken },
+      }),
+    );
 
     return {
       success: true,
@@ -222,7 +231,9 @@ export const authService = {
   },
 
   getCurrentUser: async (userId: string) => {
-    const user = await UserModel.findById(userId).select("-password -refreshTokens -googleRefreshToken -githubAccessToken");
+    const user = await UserModel.findById(userId).select(
+      "-password -refreshTokens -googleRefreshToken -githubAccessToken",
+    );
     if (!user) {
       return { success: false, status: 404, msg: "User not found" };
     }
