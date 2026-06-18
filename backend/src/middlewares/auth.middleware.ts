@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { verifyToken } from "../util/token";
 import { sendResponse } from "../util";
 import { UserModel } from "../models";
-import { handleRefreshToken } from "../controller/auth.controller";
+import { refreshTokenViaCookies } from "../controller/auth.controller";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -31,8 +31,12 @@ export const authenticate = async (
         req.userId = decoded.id;
         req.userEmail = decoded.email;
         return next();
-      } catch {
-        // Access token invalid/expired, fall through to refresh
+      } catch (error) {
+        // return sendResponse(res, {
+        //   success: false,
+        //   status: 401,
+        //   msg: "Access token invalid or expired",
+        // });
       }
     }
 
@@ -45,7 +49,7 @@ export const authenticate = async (
       });
     }
 
-    const { userId, userEmail } = await handleRefreshToken(refreshToken, res);
+    const { userId, userEmail } = await refreshTokenViaCookies(refreshToken, res);
     req.userId = userId;
     req.userEmail = userEmail;
     next();

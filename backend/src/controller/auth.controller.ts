@@ -6,13 +6,13 @@ import { oauth2Client, GOOGLE_SCOPES } from "../integrations";
 import { FRONTEND_URL, GITHUB_OAUTH_CLIENT_ID } from "../config/env";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
-export const register = async (req: Request<{}, {}, IUser>, res: Response) => {
-  const result = await authService.register(req.body);
+export const registerUser = async (req: Request<{}, {}, IUser>, res: Response) => {
+  const result = await authService.createUser(req.body);
   return sendResponse(res, result);
 };
 
-export const login = async (req: Request<{}, {}, IUser>, res: Response) => {
-  const result = await authService.login(req.body);
+export const loginUser = async (req: Request<{}, {}, IUser>, res: Response) => {
+  const result = await authService.authenticateUser(req.body);
   if (result.success && result.data) {
     setCookie(res, "access_token", result.data.accessToken);
     setCookie(res, "refreshtoken", result.data.refreshToken, {
@@ -22,7 +22,7 @@ export const login = async (req: Request<{}, {}, IUser>, res: Response) => {
   return sendResponse(res, result);
 };
 
-export const googleLogin = (req: Request, res: Response) => {
+export const loginWithGoogle = (req: Request, res: Response) => {
   const state = crypto.randomUUID();
   setCookie(res, "oauth_state", state);
   const authUri = oauth2Client.generateAuthUrl({
@@ -34,7 +34,7 @@ export const googleLogin = (req: Request, res: Response) => {
   res.redirect(authUri);
 };
 
-export const googleCallback = async (req: Request, res: Response) => {
+export const handleGoogleCallback = async (req: Request, res: Response) => {
   try {
     const { code, state } = req.query;
 
@@ -54,7 +54,7 @@ export const googleCallback = async (req: Request, res: Response) => {
       });
     }
 
-    const resp = await authService.googleCallback(code);
+    const resp = await authService.handleGoogleOAuth(code);
     setCookie(res, "access_token", resp.accessToken);
     setCookie(res, "refreshtoken", resp.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
@@ -69,7 +69,7 @@ export const googleCallback = async (req: Request, res: Response) => {
   }
 };
 
-export const githubLogin = (req: Request, res: Response) => {
+export const loginWithGithub = (req: Request, res: Response) => {
   const state = crypto.randomUUID();
   setCookie(res, "github_oauth_state", state);
 
@@ -83,7 +83,7 @@ export const githubLogin = (req: Request, res: Response) => {
   res.redirect(`${url}?${params}`);
 };
 
-export const githubCallback = async (req: Request, res: Response) => {
+export const handleGithubCallback = async (req: Request, res: Response) => {
   try {
     const { code, state } = req.query;
     if (!code || typeof code !== "string") {
@@ -102,7 +102,7 @@ export const githubCallback = async (req: Request, res: Response) => {
       });
     }
 
-    const resp = await authService.githubCallback(code);
+    const resp = await authService.handleGithubOAuth(code);
     setCookie(res, "access_token", resp.accessToken);
     setCookie(res, "refreshtoken", resp.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
@@ -117,14 +117,14 @@ export const githubCallback = async (req: Request, res: Response) => {
   }
 };
 
-export const refresh = async (req: Request, res: Response) => {
+export const refreshToken = async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
-  const result = await authService.refresh(refreshToken);
+  const result = await authService.refreshToken(refreshToken);
   return sendResponse(res, result);
 };
 
-export const handleRefreshToken = async (refreshToken: string, res: Response) => {
-  const result = await authService.refresh(refreshToken);
+export const refreshTokenViaCookies = async (refreshToken: string, res: Response) => {
+  const result = await authService.refreshToken(refreshToken);
   if (!result.success || !result.data) {
     throw new Error(result.msg || "Failed to refresh token");
   }
@@ -137,7 +137,7 @@ export const handleRefreshToken = async (refreshToken: string, res: Response) =>
   return { userId: result.data.userId, userEmail: result.data.userEmail };
 };
 
-export const me = async (req: AuthRequest, res: Response) => {
-  const result = await authService.me(req.userId!);
+export const getCurrentUser = async (req: AuthRequest, res: Response) => {
+  const result = await authService.getCurrentUser(req.userId!);
   return sendResponse(res, result);
 };

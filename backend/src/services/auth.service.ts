@@ -11,7 +11,7 @@ import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 import { hash, encrypt } from "../util";
 
 export const authService = {
-  register: async (user: IUser) => {
+  createUser: async (user: IUser) => {
     const { name, email, password } = user;
 
     const existingUser = await isExistingUser(email);
@@ -38,7 +38,7 @@ export const authService = {
       data: { id: newUser._id, name, email },
     };
   },
-  login: async ({ email, password }: { email: string; password: string }) => {
+  authenticateUser: async ({ email, password }: { email: string; password: string }) => {
     const existingUser = await UserModel.findOne({ email });
     if (!existingUser) {
       return {
@@ -75,7 +75,7 @@ export const authService = {
     };
   },
 
-  googleCallback: async (code: string) => {
+  handleGoogleOAuth: async (code: string) => {
     const { tokens } = await oauth2Client.getToken(code as string);
     oauth2Client.setCredentials(tokens);
 
@@ -133,7 +133,7 @@ export const authService = {
       refreshToken: refreshToken,
     };
   },
-  githubCallback: async (code: string) => {
+  handleGithubOAuth: async (code: string) => {
     const githubToken = await getGithubAccessToken(code);
     const githubUser = await getGithubUserData(githubToken);
 
@@ -187,7 +187,7 @@ export const authService = {
     };
   },
 
-  refresh: async (refreshToken: string) => {
+  refreshToken: async (refreshToken: string) => {
     const decoded = verifyToken(refreshToken);
 
     const user = await UserModel.findById(decoded.id);
@@ -221,7 +221,7 @@ export const authService = {
     };
   },
 
-  me: async (userId: string) => {
+  getCurrentUser: async (userId: string) => {
     const user = await UserModel.findById(userId).select("-password -refreshTokens -googleRefreshToken -githubAccessToken");
     if (!user) {
       return { success: false, status: 404, msg: "User not found" };
