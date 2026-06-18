@@ -2,6 +2,22 @@ import { ProjectModel } from "../models/project.model";
 import { IProject } from "../types/project";
 
 export const projectService = {
+  getAllProjects: async (userId: string): Promise<IProject[]> => {
+    try {
+      const resp = await ProjectModel.find({ userId }).sort({
+        createdAt: -1,
+      });
+      const allProjects: IProject[] = resp.map((projectDoc) => ({
+        projectName: projectDoc.projectName,
+        description: projectDoc.description,
+        userId: projectDoc.userId,
+      }));
+      return allProjects;
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
   createProject: async (userId: string, data: IProject): Promise<boolean> => {
     const { projectName, description } = data;
     if (!projectName || !description) {

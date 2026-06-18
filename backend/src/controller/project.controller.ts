@@ -4,6 +4,25 @@ import { AuthRequest } from "../middlewares";
 import { IProject } from "../types/project";
 import { projectService } from "../services";
 
+export const getAllProjects = async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+
+  try {
+    const allProjects = await projectService.getAllProjects(userId);
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      data: allProjects,
+    });
+  } catch (error) {
+    return sendResponse(res, {
+      success: false,
+      status: 500,
+      msg: "Internal server error while fetching projects",
+    });
+  }
+};
+
 export const createProject = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
   const body = req.body;
