@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { sendResponse } from "../util";
 import { AuthRequest } from "../middlewares";
-import { ISecret } from "../types/secret";
-import { secretService } from "../services/secret.service";
+import { ISecret } from "../types";
+import { secretService } from "../services";
 
 export const createSecret = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
@@ -106,6 +106,25 @@ export const deleteSecret = async (req: AuthRequest, res: Response) => {
       success: false,
       status,
       msg: error.message,
+    });
+  }
+};
+
+export const getAllSecrets = async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+
+  try {
+    const allSecrets = await secretService.getAllSecrets(userId);
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      data: allSecrets,
+    });
+  } catch (error) {
+    return sendResponse(res, {
+      success: false,
+      status: 500,
+      msg: "Internal server error while fetching secrets",
     });
   }
 };

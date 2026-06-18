@@ -16,7 +16,7 @@ export const encrypt = {
     return iv.toString("hex") + ":" + encrypted.toString("hex");
   },
 
-  compare: (plain: string, encrypted: string): boolean => {
+  decrypt: (encrypted: string): string | null => {
     try {
       const [ivHex, encryptedHex] = encrypted.split(":");
       const iv = Buffer.from(ivHex, "hex");
@@ -25,9 +25,14 @@ export const encrypt = {
         decipher.update(Buffer.from(encryptedHex, "hex")),
         decipher.final(),
       ]);
-      return decrypted.toString("utf8") === plain;
+      return decrypted.toString("utf8");
     } catch {
-      return false;
+      return null;
     }
+  },
+
+  compare: (plain: string, encrypted: string): boolean => {
+    const decrypted = encrypt.decrypt(encrypted);
+    return decrypted === plain;
   },
 };
