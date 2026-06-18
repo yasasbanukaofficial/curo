@@ -35,14 +35,6 @@ export const saveSecret = async (req: AuthRequest, res: Response) => {
       });
     }
   } catch (error: any) {
-    if (error.message === "USER_NOT_FOUND") {
-      return sendResponse(res, {
-        success: false,
-        status: 404,
-        msg: "User not found",
-      });
-    }
-
     if (error.message === "INVALID_PAYLOAD") {
       return sendResponse(res, {
         success: false,
@@ -57,4 +49,8 @@ export const saveSecret = async (req: AuthRequest, res: Response) => {
       msg: "Internal server error while saving secret",
     });
   }
+};
+
+export const updateSecret = async (req: AuthRequest, res: Response) => {
+  const userId = req.userId;
 };

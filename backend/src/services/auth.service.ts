@@ -215,6 +215,8 @@ export const authService = {
       data: {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
+        userId: user._id.toString(),
+        userEmail: user.email,
       },
     };
   },

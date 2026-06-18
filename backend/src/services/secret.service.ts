@@ -1,15 +1,9 @@
 import { SecretsModel } from "../models/secrets.model";
 import { ISecret } from "../types/secret";
-import { UserModel } from "../models";
 import { encrypt } from "../util";
 
 export const secretService = {
   saveSecretToDB: async (userId: string, data: ISecret): Promise<boolean> => {
-    const existingUser = await UserModel.findById(userId);
-    if (!existingUser) {
-      throw new Error("USER_NOT_FOUND");
-    }
-
     const { secName, secKey, projectId } = data;
     if (!secName || !secKey || !projectId) {
       throw new Error("INVALID_PAYLOAD");
@@ -21,6 +15,7 @@ export const secretService = {
         secName,
         secKey: encryptedPass,
         projectId,
+        userId,
       });
       return true;
     } catch (dbError) {

@@ -16,6 +16,10 @@ export const _secretSchema = new Schema<ISecret>({
     type: Schema.Types.ObjectId,
     required: [true, "Project ID is required"],
   },
+  userId: {
+    type: Schema.Types.ObjectId,
+    required: [true, "User ID is required"],
+  },
 });
 
 export const SecretsModel = model<ISecret>("Secrets", _secretSchema);

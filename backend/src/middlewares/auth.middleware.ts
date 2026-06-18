@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { setCookie } from "../util/apiResponse";
-import { tokenGen, verifyToken } from "../util/token";
+import { verifyToken } from "../util/token";
 import { sendResponse } from "../util";
 import { UserModel } from "../models";
+import { handleRefreshToken } from "../controller/auth.controller";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -45,40 +45,9 @@ export const authenticate = async (
       });
     }
 
-    const decoded = verifyToken(refreshToken);
-    const user = await UserModel.findById(decoded.id);
-    if (!user) {
-      return sendResponse(res, {
-        success: false,
-        status: 401,
-        msg: "User not found",
-      });
-    }
-
-    const tokenExists = user.refreshTokens.includes(refreshToken);
-    if (!tokenExists) {
-      return sendResponse(res, {
-        success: false,
-        status: 401,
-        msg: "Invalid refresh token",
-      });
-    }
-
-    const newAccessToken = tokenGen.genAccessToken(user);
-    const newRefreshToken = tokenGen.genRefreshToken(user);
-
-    await UserModel.findByIdAndUpdate(user._id, {
-      $pull: { refreshTokens: refreshToken },
-      $push: { refreshTokens: newRefreshToken },
-    });
-
-    setCookie(res, "access_token", newAccessToken);
-    setCookie(res, "refreshtoken", newRefreshToken, {
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
-
-    req.userId = user._id.toString();
-    req.userEmail = user.email;
+    const { userId, userEmail } = await handleRefreshToken(refreshToken, res);
+    req.userId = userId;
+    req.userEmail = userEmail;
     next();
   } catch (error) {
     return sendResponse(res, {
