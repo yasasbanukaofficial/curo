@@ -2,12 +2,29 @@ import { ProjectModel } from "../models/project.model";
 import { IProject } from "../types/project";
 
 export const projectService = {
+  getProjectById: async (userId: string, projectId: string): Promise<IProject | null> => {
+    try {
+      const projectDoc = await ProjectModel.findOne({ _id: projectId, userId });
+      if (!projectDoc) return null;
+
+      return {
+        projectName: projectDoc.projectName,
+        description: projectDoc.description,
+        userId: projectDoc.userId,
+      };
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
+
   getAllProjects: async (userId: string): Promise<IProject[]> => {
     try {
       const resp = await ProjectModel.find({ userId }).sort({
         createdAt: -1,
       });
-      const allProjects: IProject[] = resp.map((projectDoc) => ({
+      const allProjects = resp.map((projectDoc) => ({
+        _id: projectDoc._id,
         projectName: projectDoc.projectName,
         description: projectDoc.description,
         userId: projectDoc.userId,

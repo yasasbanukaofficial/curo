@@ -78,12 +78,30 @@ export const secretService = {
       throw error;
     }
   },
+  getSecretById: async (userId: string, secretId: string): Promise<ISecret | null> => {
+    try {
+      const secretDoc = await SecretsModel.findOne({ _id: secretId, userId });
+      if (!secretDoc) return null;
+
+      return {
+        secName: secretDoc.secName,
+        secKey: encrypt.decrypt(secretDoc.secKey) ?? "",
+        projectId: secretDoc.projectId,
+        userId: secretDoc.userId,
+      };
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
+
   getAllSecrets: async (userId: string): Promise<ISecret[]> => {
     try {
       const resp = await SecretsModel.find({ userId }).sort({
         createdAt: -1,
       });
-      const allSecrets: ISecret[] = resp.map((secretDoc) => ({
+      const allSecrets = resp.map((secretDoc) => ({
+        _id: secretDoc._id,
         secName: secretDoc.secName,
         secKey: encrypt.decrypt(secretDoc.secKey) ?? "",
         projectId: secretDoc.projectId,

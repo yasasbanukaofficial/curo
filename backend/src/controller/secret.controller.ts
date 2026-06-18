@@ -110,6 +110,41 @@ export const deleteSecret = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getSecretById = async (req: AuthRequest, res: Response) => {
+  const { secretId } = req.params as { secretId: string };
+  const userId = req.userId!;
+
+  if (!secretId) {
+    return sendResponse(res, {
+      success: false,
+      status: 400,
+      msg: "Secret ID is required",
+    });
+  }
+
+  try {
+    const secret = await secretService.getSecretById(userId, secretId);
+    if (!secret) {
+      return sendResponse(res, {
+        success: false,
+        status: 404,
+        msg: "Secret not found",
+      });
+    }
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      data: secret,
+    });
+  } catch (error) {
+    return sendResponse(res, {
+      success: false,
+      status: 500,
+      msg: "Internal server error while fetching secret",
+    });
+  }
+};
+
 export const getAllSecrets = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
 
