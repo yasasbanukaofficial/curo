@@ -1,31 +1,5 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-
-const DUMMY_PROJECTS = [
-  "Project Alpha",
-  "Project Beta",
-  "Project Gamma",
-  "Project Delta",
-  "Project Epsilon",
-];
-
-const DUMMY_SECRETS = [
-  {
-    id: 1,
-    name: "DATABASE_URL",
-    project: "Project Alpha",
-    createdAt: "2026-06-01",
-  },
-  { id: 2, name: "API_KEY", project: "Project Beta", createdAt: "2026-06-05" },
-  {
-    id: 3,
-    name: "JWT_SECRET",
-    project: "Project Alpha",
-    createdAt: "2026-06-10",
-  },
-];
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "../lib/api";
 
 function FormPage() {
   const [name, setName] = useState("");
@@ -33,37 +7,54 @@ function FormPage() {
   const [project, setProject] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [secrets, setSecrets] = useState([]);
+  const [secrets, setSecrets] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [secretId, setSecretId] = useState("");
+  const [fetchedSecret, setFetchedSecret] = useState<any>(null);
 
   useEffect(() => {
     fetchSecrets();
+    fetchProjects();
   }, []);
 
   const fetchSecrets = async () => {
     const {
       data: { data: secrets },
-    } = await axios.get(`${API_URL}/secrets/all`, {
-      withCredentials: true,
-    });
+    } = await api.get("/secrets/all");
     if (secrets) {
       setSecrets(secrets);
     }
   };
 
+  const fetchProjects = async () => {
+    const {
+      data: { data: projects },
+    } = await api.get("/projects/all");
+    if (projects) {
+      setProjects(projects);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await axios.post(
-      `${API_URL}/secrets/save`,
-      {
-        secName: name,
-        secKey: secretKey,
-        projectId: project,
-      },
-      {
-        withCredentials: true,
-      },
-    );
+    await api.post("/secrets/save", {
+      secName: name,
+      secKey: secretKey,
+      projectId: project,
+    });
     setSubmitted(true);
+  };
+
+  const handleFetchSecret = async () => {
+    if (!secretId) return;
+    try {
+      const {
+        data: { data: secret },
+      } = await api.get(`/secrets/get/${secretId}`);
+      setFetchedSecret(secret);
+    } catch {
+      setFetchedSecret(null);
+    }
   };
 
   if (submitted) {
@@ -217,9 +208,9 @@ function FormPage() {
                 <option value="" disabled>
                   Select a project
                 </option>
-                {DUMMY_PROJECTS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
+                {projects.map((p: any) => (
+                  <option key={p._id} value={p._id}>
+                    {p.projectName}
                   </option>
                 ))}
               </select>
@@ -257,13 +248,36 @@ function FormPage() {
             </span>
           </div>
 
-          <div className="mt-6 overflow-x-auto">
+          <div className="mt-3 flex gap-2">
+            <input
+              type="text"
+              value={secretId}
+              onChange={(e) => setSecretId(e.target.value)}
+              placeholder="Paste secret ID to fetch..."
+              className="block flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+            />
+            <button
+              onClick={handleFetchSecret}
+              className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
+            >
+              Fetch
+            </button>
+          </div>
+
+          {fetchedSecret && (
+            <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <strong>Fetched:</strong> {fetchedSecret.secName} ={" "}
+              {fetchedSecret.secKey}
+            </div>
+          )}
+
+          <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-3 pr-4">Name</th>
-                  <th className="pb-3 pr-4">Project</th>
-                  <th className="pb-3 pr-4">Created</th>
+                  <th className="pb-3 pr-4">Key</th>
+                  <th className="pb-3">ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,14 +293,18 @@ function FormPage() {
                 )}
                 {secrets.map((s: any) => (
                   <tr
-                    key={s.id}
+                    key={s._id}
                     className="border-b border-slate-100 last:border-0"
                   >
                     <td className="py-3 pr-4 font-medium text-slate-900">
-                      {s.name}
+                      {s.secName}
                     </td>
-                    <td className="py-3 pr-4 text-slate-600">{s.project}</td>
-                    <td className="py-3 text-slate-500">{s.createdAt}</td>
+                    <td className="py-3 pr-4 font-mono text-slate-600">
+                      {s.secKey}
+                    </td>
+                    <td className="py-3 font-mono text-xs text-slate-400">
+                      {s._id}
+                    </td>
                   </tr>
                 ))}
               </tbody>

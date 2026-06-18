@@ -1,7 +1,5 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "../lib/api";
 
 type Project = {
   _id: string;
@@ -16,6 +14,8 @@ function ProjectsPage() {
   const [projectName, setProjectName] = useState("");
   const [description, setDescription] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [projectId, setProjectId] = useState("");
+  const [fetchedProject, setFetchedProject] = useState<any>(null);
 
   useEffect(() => {
     fetchAllProjects();
@@ -24,24 +24,30 @@ function ProjectsPage() {
   const fetchAllProjects = async () => {
     const {
       data: { data: projectList },
-    } = await axios.get(`${API_URL}/projects/all`, {
-      withCredentials: true,
-    });
+    } = await api.get("/projects/all");
     if (projectList) {
       setProjects(projectList);
     }
   };
 
+  const handleFetchProject = async () => {
+    if (!projectId) return;
+    try {
+      const {
+        data: { data: project },
+      } = await api.get(`/projects/get/${projectId}`);
+      setFetchedProject(project);
+    } catch {
+      setFetchedProject(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await axios.post(
-      `${API_URL}/projects/create`,
-      {
-        projectName,
-        description,
-      },
-      { withCredentials: true },
-    );
+    await api.post("/projects/create", {
+      projectName,
+      description,
+    });
     setSubmitted(true);
     fetchAllProjects();
   };
@@ -169,13 +175,36 @@ function ProjectsPage() {
             </span>
           </div>
 
-          <div className="mt-6 overflow-x-auto">
+          <div className="mt-3 flex gap-2">
+            <input
+              type="text"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+              placeholder="Paste project ID to fetch..."
+              className="block flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+            />
+            <button
+              onClick={handleFetchProject}
+              className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
+            >
+              Fetch
+            </button>
+          </div>
+
+          {fetchedProject && (
+            <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <strong>Fetched:</strong> {fetchedProject.projectName} —{" "}
+              {fetchedProject.description}
+            </div>
+          )}
+
+          <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-3 pr-4">Name</th>
                   <th className="pb-3 pr-4">Description</th>
-                  <th className="pb-3">Created</th>
+                  <th className="pb-3">ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -197,7 +226,7 @@ function ProjectsPage() {
                     <td className="py-3 pr-4 text-slate-600">
                       {p.description}
                     </td>
-                    <td className="py-3 text-slate-500">{p.createdAt}</td>
+                    <td className="py-3 font-mono text-xs text-slate-400">{p._id}</td>
                   </tr>
                 ))}
               </tbody>
