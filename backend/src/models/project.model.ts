@@ -1,0 +1,21 @@
+import { model, Schema } from "mongoose";
+import { IProject } from "../types/project";
+
+export const _projectSchema = new Schema<IProject>({
+  projectName: {
+    type: String,
+    required: [true, "Project name is required"],
+    minLength: [2, "Project name is too short"],
+  },
+  description: {
+    type: String,
+    required: [true, "Description is required"],
+    minLength: [2, "Description is too short"],
+  },
+  userId: {
+    type: Schema.Types.ObjectId,
+    required: [true, "User ID is required"],
+  },
+});
+
+export const ProjectModel = model<IProject>("Project", _projectSchema);
