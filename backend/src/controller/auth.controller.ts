@@ -130,26 +130,17 @@ export const refreshTokenViaCookies = async (
   refreshToken: string,
   res: Response,
 ) => {
-  try {
-    const result = await authService.refreshToken(refreshToken);
-    if (!result.success || !result.data) {
-      throw new Error(result.msg || "Failed to refresh token");
-    }
-
-    setCookie(res, "access_token", result.data.accessToken);
-    setCookie(res, "refreshtoken", result.data.refreshToken, {
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
-
-    return { userId: result.data.userId, userEmail: result.data.userEmail };
-  } catch (error: any) {
-    console.error("Refresh token error:", error.message);
-    return sendResponse(res, {
-      success: false,
-      status: 401,
-      msg: error.message,
-    });
+  const result = await authService.refreshToken(refreshToken);
+  if (!result.success || !result.data) {
+    throw new Error(result.msg || "Failed to refresh token");
   }
+
+  setCookie(res, "access_token", result.data.accessToken);
+  setCookie(res, "refreshtoken", result.data.refreshToken, {
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  });
+
+  return { userId: result.data.userId, userEmail: result.data.userEmail };
 };
 
 export const getCurrentUser = async (req: AuthRequest, res: Response) => {

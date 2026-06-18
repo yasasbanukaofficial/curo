@@ -31,12 +31,8 @@ export const authenticate = async (
         req.userId = decoded.id;
         req.userEmail = decoded.email;
         return next();
-      } catch (error) {
-        // return sendResponse(res, {
-        //   success: false,
-        //   status: 401,
-        //   msg: "Access token invalid or expired",
-        // });
+      } catch {
+        // access token expired — fall through to refresh
       }
     }
 
@@ -45,14 +41,25 @@ export const authenticate = async (
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: "Access token is required",
+        msg: "Not authenticated",
       });
     }
 
-    const { userId, userEmail } = await refreshTokenViaCookies(refreshToken, res);
-    req.userId = userId;
-    req.userEmail = userEmail;
-    next();
+    try {
+      const { userId, userEmail } = await refreshTokenViaCookies(
+        refreshToken,
+        res,
+      );
+      req.userId = userId;
+      req.userEmail = userEmail;
+      return next();
+    } catch (refreshError: any) {
+      return sendResponse(res, {
+        success: false,
+        status: 401,
+        msg: refreshError.message,
+      });
+    }
   } catch (error) {
     return sendResponse(res, {
       success: false,
