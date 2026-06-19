@@ -3,9 +3,15 @@ import { SecretsModel } from "../models/secrets.model";
 import { IEnvironment } from "../types/environment";
 
 export const environmentService = {
-  getEnvironmentById: async (userId: string, environmentId: string): Promise<IEnvironment | null> => {
+  getEnvironmentById: async (
+    userId: string,
+    environmentId: string,
+  ): Promise<IEnvironment | null> => {
     try {
-      const envDoc = await EnvironmentModel.findOne({ _id: environmentId, userId });
+      const envDoc = await EnvironmentModel.findOne({
+        _id: environmentId,
+        userId,
+      });
       if (!envDoc) return null;
 
       return {
@@ -37,7 +43,10 @@ export const environmentService = {
     }
   },
 
-  createEnvironment: async (userId: string, data: IEnvironment): Promise<boolean> => {
+  createEnvironment: async (
+    userId: string,
+    data: IEnvironment,
+  ): Promise<boolean> => {
     const { name, projectId } = data;
     if (!name || !projectId) {
       throw new Error("INVALID_PAYLOAD");
@@ -77,7 +86,7 @@ export const environmentService = {
       const existing = await EnvironmentModel.findOneAndUpdate(
         { _id: environmentId, userId },
         { $set: data },
-        { new: true },
+        { returnDocument: "after" },
       );
 
       if (!existing) {

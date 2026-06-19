@@ -49,8 +49,8 @@ export const secretService = {
 
       const existingKey = await SecretsModel.findOneAndUpdate(
         { _id: secretId, userId },
-        { $set: { data } },
-        { new: true },
+        { $set: data },
+        { returnDocument: "after" },
       );
 
       if (!existingKey) {
@@ -79,7 +79,10 @@ export const secretService = {
       throw error;
     }
   },
-  getSecretById: async (userId: string, secretId: string): Promise<ISecret | null> => {
+  getSecretById: async (
+    userId: string,
+    secretId: string,
+  ): Promise<ISecret | null> => {
     try {
       const secretDoc = await SecretsModel.findOne({ _id: secretId, userId });
       if (!secretDoc) return null;

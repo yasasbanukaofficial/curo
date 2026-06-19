@@ -2,7 +2,10 @@ import { ProjectModel } from "../models/project.model";
 import { IProject } from "../types/project";
 
 export const projectService = {
-  getProjectById: async (userId: string, projectId: string): Promise<IProject | null> => {
+  getProjectById: async (
+    userId: string,
+    projectId: string,
+  ): Promise<IProject | null> => {
     try {
       const projectDoc = await ProjectModel.findOne({ _id: projectId, userId });
       if (!projectDoc) return null;
@@ -74,7 +77,7 @@ export const projectService = {
       const existing = await ProjectModel.findOneAndUpdate(
         { _id: projectId, userId },
         { $set: data },
-        { new: true },
+        { returnDocument: "after" },
       );
 
       if (!existing) {

@@ -27,6 +27,6 @@ export const _secretSchema = new Schema<ISecret>({
   },
 });
 
-_secretSchema.index({ secName: 1, userId: 1 }, { unique: true });
+_secretSchema.index({ secName: 1, userId: 1, environmentId: 1 }, { unique: true });
 
 export const SecretsModel = model<ISecret>("Secrets", _secretSchema);
