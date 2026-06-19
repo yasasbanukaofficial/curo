@@ -39,7 +39,7 @@ export const createSecret = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "A secret with this name already exists for your account",
+        msg: `A secret named "${body?.secName}" already exists${body?.environmentId ? " in this environment" : ""}`,
       });
     }
 
@@ -72,12 +72,17 @@ export const updateSecret = async (req: AuthRequest, res: Response) => {
       msg: "Secret updated successfully",
     });
   } catch (error: any) {
-    const status = error.message === "SECRET_NOT_FOUND" ? 404 : 500;
-    return sendResponse(res, {
-      success: false,
-      status,
-      msg: error.message,
-    });
+    if (error.message === "SECRET_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: error.message });
+    }
+    if (error.code === 11000) {
+      return sendResponse(res, {
+        success: false,
+        status: 400,
+        msg: `A secret named "${body?.secName}" already exists${body?.environmentId ? " in this environment" : ""}`,
+      });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: error.message });
   }
 };
 

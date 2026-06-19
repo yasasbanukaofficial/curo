@@ -96,7 +96,7 @@ export const createEnvironment = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "An environment with this name already exists in this project",
+        msg: `An environment named "${body?.name}" already exists in this project`,
       });
     }
 
@@ -129,12 +129,17 @@ export const updateEnvironment = async (req: AuthRequest, res: Response) => {
       msg: "Environment updated successfully",
     });
   } catch (error: any) {
-    const status = error.message === "ENVIRONMENT_NOT_FOUND" ? 404 : 500;
-    return sendResponse(res, {
-      success: false,
-      status,
-      msg: error.message,
-    });
+    if (error.message === "ENVIRONMENT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: error.message });
+    }
+    if (error.code === 11000) {
+      return sendResponse(res, {
+        success: false,
+        status: 400,
+        msg: `An environment named "${body?.name}" already exists in this project`,
+      });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: error.message });
   }
 };
 

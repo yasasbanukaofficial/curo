@@ -96,7 +96,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "A project with this name already exists",
+        msg: `A project named "${body?.projectName}" already exists`,
       });
     }
 
@@ -129,12 +129,17 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
       msg: "Project updated successfully",
     });
   } catch (error: any) {
-    const status = error.message === "PROJECT_NOT_FOUND" ? 404 : 500;
-    return sendResponse(res, {
-      success: false,
-      status,
-      msg: error.message,
-    });
+    if (error.message === "PROJECT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: error.message });
+    }
+    if (error.code === 11000) {
+      return sendResponse(res, {
+        success: false,
+        status: 400,
+        msg: `A project named "${body?.projectName}" already exists`,
+      });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: error.message });
   }
 };
 
