@@ -20,6 +20,11 @@ export const _secretSchema = new Schema<ISecret>({
     type: Schema.Types.ObjectId,
     required: [true, "User ID is required"],
   },
+  environmentId: {
+    type: Schema.Types.ObjectId,
+    ref: "Environment",
+    required: false,
+  },
 });
 
 _secretSchema.index({ secName: 1, userId: 1 }, { unique: true });

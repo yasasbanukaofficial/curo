@@ -4,7 +4,7 @@ import { encrypt } from "../util";
 
 export const secretService = {
   saveSecretToDB: async (userId: string, data: ISecret): Promise<boolean> => {
-    const { secName, secKey, projectId } = data;
+    const { secName, secKey, projectId, environmentId } = data;
     if (!secName || !secKey || !projectId) {
       throw new Error("INVALID_PAYLOAD");
     }
@@ -16,6 +16,7 @@ export const secretService = {
         secKey: encryptedPass,
         projectId,
         userId,
+        environmentId,
       });
 
       return true;
@@ -32,12 +33,12 @@ export const secretService = {
     secretId: string,
     data: Partial<ISecret>,
   ): Promise<boolean> => {
-    const { secName, secKey, projectId } = data;
+    const { secName, secKey, projectId, environmentId } = data;
     if (!secretId) {
       throw new Error("SECRET_ID_NOT_EXISTING");
     }
 
-    if (!secName && !secKey && !projectId) {
+    if (!secName && !secKey && !projectId && !environmentId) {
       throw new Error("INVALID_PAYLOAD");
     }
 
@@ -88,6 +89,7 @@ export const secretService = {
         secKey: encrypt.decrypt(secretDoc.secKey) ?? "",
         projectId: secretDoc.projectId,
         userId: secretDoc.userId,
+        environmentId: secretDoc.environmentId,
       };
     } catch (error) {
       console.error("DB Error:", error);
@@ -106,6 +108,7 @@ export const secretService = {
         secKey: encrypt.decrypt(secretDoc.secKey) ?? "",
         projectId: secretDoc.projectId,
         userId: secretDoc.userId,
+        environmentId: secretDoc.environmentId,
       }));
       return allSecrets;
     } catch (error) {

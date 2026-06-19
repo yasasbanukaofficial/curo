@@ -5,4 +5,5 @@ export interface ISecret {
   secKey: string;
   projectId: Types.ObjectId;
   userId: Types.ObjectId;
+  environmentId?: Types.ObjectId;
 }
