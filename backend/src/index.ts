@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { AuthRouter, SecretRouter, ProjectRouter } from "./routes/index";
+import { AuthRouter, SecretRouter, ProjectRouter, EnvironmentRouter } from "./routes/index";
 import cookieParser from "cookie-parser";
 import { FRONTEND_URL, PORT, MONGODB_URL, API_VER } from "./config/env";
 
@@ -23,6 +23,7 @@ const DB_URL = MONGODB_URL as string;
 app.use(`/api/${API_VER}/auth`, AuthRouter);
 app.use(`/api/${API_VER}/secrets`, SecretRouter);
 app.use(`/api/${API_VER}/projects`, ProjectRouter);
+app.use(`/api/${API_VER}/environments`, EnvironmentRouter);
 
 app.get("/", (req, res) => {
   res.send(
