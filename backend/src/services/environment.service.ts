@@ -1,6 +1,7 @@
 import { EnvironmentModel } from "../models/environment.model";
 import { SecretsModel } from "../models/secrets.model";
 import { IEnvironment } from "../types/environment";
+import { auditService } from "./audit.service";
 
 export const environmentService = {
   getEnvironmentById: async (
@@ -58,6 +59,14 @@ export const environmentService = {
         projectId,
         userId,
       });
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "CREATED",
+        resource: "ENVIRONMENT",
+        metadata: { name, projectId },
+      });
+
       return true;
     } catch (dbError: any) {
       console.error("DB Error:", dbError);
@@ -93,6 +102,13 @@ export const environmentService = {
         throw new Error("ENVIRONMENT_NOT_FOUND");
       }
 
+      auditService.createAudit({
+        userId: userId as any,
+        action: "UPDATED",
+        resource: "ENVIRONMENT",
+        metadata: { environmentId, ...data },
+      });
+
       return true;
     } catch (error: any) {
       console.error("DB Error:", error);
@@ -111,6 +127,14 @@ export const environmentService = {
         userId,
       });
       if (!deleted) throw new Error("ENVIRONMENT_NOT_FOUND");
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "DELETED",
+        resource: "ENVIRONMENT",
+        metadata: { name: deleted.name, projectId: deleted.projectId },
+      });
+
       return true;
     } catch (error) {
       console.error("DB Error:", error);

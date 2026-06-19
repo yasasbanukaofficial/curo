@@ -1,5 +1,6 @@
 import { ProjectModel } from "../models/project.model";
 import { IProject } from "../types/project";
+import { auditService } from "./audit.service";
 
 export const projectService = {
   getProjectById: async (
@@ -50,6 +51,14 @@ export const projectService = {
         description,
         userId,
       });
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "CREATED",
+        resource: "PROJECT",
+        metadata: { projectName, description },
+      });
+
       return true;
     } catch (dbError: any) {
       console.error("DB Error:", dbError);
@@ -84,6 +93,13 @@ export const projectService = {
         throw new Error("PROJECT_NOT_FOUND");
       }
 
+      auditService.createAudit({
+        userId: userId as any,
+        action: "UPDATED",
+        resource: "PROJECT",
+        metadata: { projectId, ...data },
+      });
+
       return true;
     } catch (error: any) {
       console.error("DB Error:", error);
@@ -100,6 +116,14 @@ export const projectService = {
         userId,
       });
       if (!deleted) throw new Error("PROJECT_NOT_FOUND");
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "DELETED",
+        resource: "PROJECT",
+        metadata: { projectName: deleted.projectName, description: deleted.description },
+      });
+
       return true;
     } catch (error) {
       console.error("DB Error:", error);

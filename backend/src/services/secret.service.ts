@@ -2,6 +2,7 @@ import { SecretsModel } from "../models/secrets.model";
 import { ISecret } from "../types/secret";
 import { encrypt } from "../util";
 import { versionService } from "./version.service";
+import { auditService } from "./audit.service";
 
 export const secretService = {
   saveSecretToDB: async (userId: string, data: ISecret): Promise<boolean> => {
@@ -18,6 +19,13 @@ export const secretService = {
         projectId,
         userId,
         environmentId,
+      });
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "CREATED",
+        resource: "SECRET",
+        metadata: { secName, projectId, environmentId },
       });
 
       return true;
@@ -60,6 +68,13 @@ export const secretService = {
         { returnDocument: "after" },
       );
 
+      auditService.createAudit({
+        userId: userId as any,
+        action: "UPDATED",
+        resource: "SECRET",
+        metadata: { secretId, ...data },
+      });
+
       return true;
     } catch (error: any) {
       console.error("DB Error:", error);
@@ -76,6 +91,14 @@ export const secretService = {
         userId,
       });
       if (!deleted) throw new Error("SECRET_NOT_FOUND");
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "DELETED",
+        resource: "SECRET",
+        metadata: { secName: deleted.secName, projectId: deleted.projectId },
+      });
+
       return true;
     } catch (error) {
       console.error("DB Error:", error);
