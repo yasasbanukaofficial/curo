@@ -1,5 +1,5 @@
 import { IUser } from "../types";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import {
   JWT_SECRET,
   JWT_ACCESS_EXPIRY,
@@ -25,4 +25,12 @@ const generateToken = (
   expiresIn: jwt.SignOptions["expiresIn"],
 ) => {
   return jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn });
+};
+
+export const verifyToken = (token: string): { id: string; email: string } => {
+  const payload = jwt.verify(token, SECRET_KEY) as JwtPayload;
+  if (!payload.id || !payload.email) {
+    throw new jwt.JsonWebTokenError("Invalid token payload");
+  }
+  return { id: payload.id as string, email: payload.email as string };
 };

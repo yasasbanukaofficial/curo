@@ -1,6 +1,6 @@
 import { UserModel } from "../models";
 import { IUser } from "../types";
-import { tokenGen } from "../util/token";
+import { tokenGen, verifyToken } from "../util/token";
 import {
   oauth2Client,
   getGithubAccessToken,
@@ -11,7 +11,7 @@ import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 import { hash, encrypt } from "../util";
 
 export const authService = {
-  register: async (user: IUser) => {
+  createUser: async (user: IUser) => {
     const { name, email, password } = user;
 
     const existingUser = await isExistingUser(email);
@@ -38,7 +38,13 @@ export const authService = {
       data: { id: newUser._id, name, email },
     };
   },
-  login: async ({ email, password }: { email: string; password: string }) => {
+  authenticateUser: async ({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }) => {
     const existingUser = await UserModel.findOne({ email });
     if (!existingUser) {
       return {
@@ -75,7 +81,7 @@ export const authService = {
     };
   },
 
-  googleCallback: async (code: string) => {
+  handleGoogleOAuth: async (code: string) => {
     const { tokens } = await oauth2Client.getToken(code as string);
     oauth2Client.setCredentials(tokens);
 
@@ -133,7 +139,7 @@ export const authService = {
       refreshToken: refreshToken,
     };
   },
-  githubCallback: async (code: string) => {
+  handleGithubOAuth: async (code: string) => {
     const githubToken = await getGithubAccessToken(code);
     const githubUser = await getGithubUserData(githubToken);
 
@@ -184,6 +190,63 @@ export const authService = {
       email: user.email,
       accessToken: accessToken,
       refreshToken: refreshToken,
+    };
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    const decoded = verifyToken(refreshToken);
+
+    const user = await UserModel.findById(decoded.id);
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+
+    const tokenExists = user.refreshTokens.includes(refreshToken);
+    if (!tokenExists) {
+      return { success: false, status: 401, msg: "Invalid refresh token" };
+    }
+
+    const newAccessToken = tokenGen.genAccessToken(user);
+    const newRefreshToken = tokenGen.genRefreshToken(user);
+
+    await UserModel.findByIdAndUpdate(user._id, {
+      $pull: { refreshTokens: refreshToken },
+    }).then(() =>
+      UserModel.findByIdAndUpdate(user._id, {
+        $push: { refreshTokens: newRefreshToken },
+      }),
+    );
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Tokens refreshed successfully",
+      data: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        userId: user._id.toString(),
+        userEmail: user.email,
+      },
+    };
+  },
+
+  getCurrentUser: async (userId: string) => {
+    const user = await UserModel.findById(userId).select(
+      "-password -refreshTokens -googleRefreshToken -githubAccessToken",
+    );
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    return {
+      success: true,
+      status: 200,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        provider: user.provider,
+        createdAt: user.createdAt,
+      },
     };
   },
 };

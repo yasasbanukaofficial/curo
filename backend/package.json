@@ -1,7 +1,7 @@
 {
   "name": "curo-backend",
   "version": "1.0.0",
-  "description": "Unified Intelligence Platform — Backend API server connecting GitHub, Slack, WhatsApp, Google Calendar, ClickUp and more with ML-powered insights",
+  "description": "Centralized secrets management platform — Backend API server for securely storing, managing, versioning, and syncing environment variables across projects and environments",
   "main": "index.js",
   "private": "true",
   "scripts": {
@@ -16,13 +16,13 @@
   },
   "keywords": [
     "curo",
-    "unified-intelligence",
-    "productivity",
+    "secrets-management",
+    "environment-variables",
     "mern",
     "typescript",
-    "brainjs",
-    "tensorflow",
-    "integration-platform"
+    "security",
+    "vault",
+    "configuration-management"
   ],
   "author": "",
   "license": "ISC",
