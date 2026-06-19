@@ -16,6 +16,9 @@ function FormPage() {
   const [fetchedSecret, setFetchedSecret] = useState<any>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [versions, setVersions] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historySecretName, setHistorySecretName] = useState("");
 
   const clearError = useCallback(() => setErrorMsg(""), []);
 
@@ -45,6 +48,26 @@ function FormPage() {
     if (secrets) {
       setSecrets(secrets);
     }
+  };
+
+  const fetchVersions = async (secretId: string) => {
+    try {
+      const {
+        data: { data: versions },
+      } = await api.get(`/versions/all/${secretId}`);
+      if (versions) {
+        setVersions(versions);
+      }
+    } catch {
+      setVersions([]);
+    }
+  };
+
+  const handleShowHistory = async (s: any) => {
+    setHistorySecretName(s.secName);
+    setVersions([]);
+    setShowHistory(true);
+    await fetchVersions(s._id);
   };
 
   const fetchProjects = async () => {
@@ -426,6 +449,12 @@ function FormPage() {
                         >
                           Delete
                         </button>
+                        <button
+                          onClick={() => handleShowHistory(s)}
+                          className="cursor-pointer rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-600 transition hover:bg-amber-100"
+                        >
+                          History
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -435,6 +464,63 @@ function FormPage() {
           </div>
         </div>
       </div>
+
+      {showHistory && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-12 px-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-slate-200 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Version History
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">{historySecretName}</p>
+              </div>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="cursor-pointer rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="pb-3 pr-4">Version</th>
+                    <th className="pb-3 pr-4">Value</th>
+                    <th className="pb-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {versions.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-12 text-center text-sm text-slate-400">
+                        {versions.length === 0 ? "Loading..." : "No previous versions found."}
+                      </td>
+                    </tr>
+                  )}
+                  {versions.map((v: any) => (
+                    <tr key={v._id} className="border-b border-slate-100 last:border-0">
+                      <td className="py-3 pr-4 font-mono text-slate-900">
+                        v{v.version}
+                      </td>
+                      <td className="py-3 pr-4 font-mono text-slate-600 max-w-[200px] truncate">
+                        {v.secKey}
+                      </td>
+                      <td className="py-3 text-xs text-slate-400 whitespace-nowrap">
+                        {new Date(v.createdAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
