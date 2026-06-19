@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../lib/api";
+import Toast from "../components/Toast";
 
 function FormPage() {
   const [name, setName] = useState("");
@@ -13,6 +14,10 @@ function FormPage() {
   const [environments, setEnvironments] = useState<any[]>([]);
   const [secretId, setSecretId] = useState("");
   const [fetchedSecret, setFetchedSecret] = useState<any>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const clearError = useCallback(() => setErrorMsg(""), []);
 
   useEffect(() => {
     fetchSecrets();
@@ -53,13 +58,25 @@ function FormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/secrets/save", {
+    setErrorMsg("");
+    const payload: any = {
       secName: name,
-      secKey: secretKey,
       projectId: project,
-      environmentId: environment || undefined,
-    });
-    setSubmitted(true);
+    };
+    if (secretKey) payload.secKey = secretKey;
+    if (environment) payload.environmentId = environment;
+
+    try {
+      if (editingId) {
+        await api.put(`/secrets/update/${editingId}`, payload);
+        setEditingId(null);
+      } else {
+        await api.post("/secrets/save", payload);
+      }
+      setSubmitted(true);
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.msg || "Something went wrong");
+    }
   };
 
   const handleFetchSecret = async () => {
@@ -72,6 +89,29 @@ function FormPage() {
     } catch {
       setFetchedSecret(null);
     }
+  };
+
+  const handleEdit = (s: any) => {
+    setName(s.secName);
+    setSecretKey("");
+    setProject(s.projectId);
+    setEnvironment(s.environmentId ?? "");
+    setEditingId(s._id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this secret? This cannot be undone.")) return;
+    await api.delete(`/secrets/delete/${id}`);
+    fetchSecrets();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setName("");
+    setSecretKey("");
+    setProject("");
+    setEnvironment("");
   };
 
   if (submitted) {
@@ -94,10 +134,10 @@ function FormPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Secret Added
+            {editingId ? "Secret Updated" : "Secret Added"}
           </h1>
           <p className="mt-2 text-slate-600">
-            Your secret has been stored securely.
+            Your secret has been {editingId ? "updated" : "stored securely"}.
           </p>
           <button
             onClick={() => {
@@ -106,6 +146,7 @@ function FormPage() {
               setSecretKey("");
               setProject("");
               setEnvironment("");
+              setEditingId(null);
             }}
             className="mt-6 cursor-pointer rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
           >
@@ -118,16 +159,17 @@ function FormPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-start justify-center bg-slate-50 px-6 py-12 text-slate-900">
+      {errorMsg && <Toast message={errorMsg} onClose={clearError} />}
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 lg:flex-row lg:items-start">
         <div className="w-full max-w-xl shrink-0 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 sm:p-10">
           <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-700 uppercase">
             Curo
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Add a Secret
+            {editingId ? "Edit Secret" : "Add a Secret"}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Store a new environment variable for your project.
+            {editingId ? "Update the secret details below." : "Store a new environment variable for your project."}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -162,8 +204,8 @@ function FormPage() {
                   type={showSecret ? "text" : "password"}
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
-                  placeholder="Enter your secret value"
-                  required
+                  placeholder={editingId ? "Leave blank to keep current value" : "Enter your secret value"}
+                  required={!editingId}
                   className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-11 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                 />
                 <button
@@ -259,25 +301,36 @@ function FormPage() {
               </select>
             </div>
 
-            <button
-              type="submit"
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Save Secret
-            </button>
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {editingId ? "Update Secret" : "Save Secret"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -321,14 +374,15 @@ function FormPage() {
                   <th className="pb-3 pr-4">Name</th>
                   <th className="pb-3 pr-4">Key</th>
                   <th className="pb-3 pr-4">Env</th>
-                  <th className="pb-3">ID</th>
+                  <th className="pb-3 pr-4">ID</th>
+                  <th className="pb-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {secrets.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="py-12 text-center text-sm text-slate-400"
                     >
                       No secrets saved yet.
@@ -355,8 +409,24 @@ function FormPage() {
                         <span className="text-slate-300">—</span>
                       )}
                     </td>
-                    <td className="py-3 font-mono text-xs text-slate-400">
+                    <td className="py-3 pr-4 font-mono text-xs text-slate-400">
                       {s._id}
+                    </td>
+                    <td className="py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(s)}
+                          className="cursor-pointer rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600 transition hover:bg-indigo-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(s._id)}
+                          className="cursor-pointer rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

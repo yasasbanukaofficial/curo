@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../lib/api";
+import Toast from "../components/Toast";
 
 type Project = {
   _id: string;
@@ -16,6 +17,10 @@ function ProjectsPage() {
   const [submitted, setSubmitted] = useState(false);
   const [projectId, setProjectId] = useState("");
   const [fetchedProject, setFetchedProject] = useState<any>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const clearError = useCallback(() => setErrorMsg(""), []);
 
   useEffect(() => {
     fetchAllProjects();
@@ -44,12 +49,44 @@ function ProjectsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api.post("/projects/create", {
-      projectName,
-      description,
-    });
-    setSubmitted(true);
+    setErrorMsg("");
+    try {
+      if (editingId) {
+        await api.put(`/projects/update/${editingId}`, {
+          projectName,
+          description,
+        });
+        setEditingId(null);
+      } else {
+        await api.post("/projects/create", {
+          projectName,
+          description,
+        });
+      }
+      setSubmitted(true);
+      fetchAllProjects();
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.msg || "Something went wrong");
+    }
+  };
+
+  const handleEdit = (p: Project) => {
+    setProjectName(p.projectName);
+    setDescription(p.description);
+    setEditingId(p._id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this project? This cannot be undone.")) return;
+    await api.delete(`/projects/delete/${id}`);
     fetchAllProjects();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setProjectName("");
+    setDescription("");
   };
 
   if (submitted) {
@@ -72,16 +109,17 @@ function ProjectsPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Project Created
+            {editingId ? "Project Updated" : "Project Created"}
           </h1>
           <p className="mt-2 text-slate-600">
-            Your project has been created successfully.
+            Your project has been {editingId ? "updated" : "created"} successfully.
           </p>
           <button
             onClick={() => {
               setSubmitted(false);
               setProjectName("");
               setDescription("");
+              setEditingId(null);
             }}
             className="mt-6 cursor-pointer rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
           >
@@ -94,16 +132,17 @@ function ProjectsPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-start justify-center bg-slate-50 px-6 py-12 text-slate-900">
+      {errorMsg && <Toast message={errorMsg} onClose={clearError} />}
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 lg:flex-row lg:items-start">
         <div className="w-full max-w-xl shrink-0 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 sm:p-10">
           <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-700 uppercase">
             Curo
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Create a Project
+            {editingId ? "Edit Project" : "Create a Project"}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Start a new project to organize your secrets.
+            {editingId ? "Update the project details below." : "Start a new project to organize your secrets."}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -143,25 +182,36 @@ function ProjectsPage() {
               />
             </div>
 
-            <button
-              type="submit"
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Create Project
-            </button>
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {editingId ? "Update Project" : "Create Project"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -204,14 +254,15 @@ function ProjectsPage() {
                 <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-3 pr-4">Name</th>
                   <th className="pb-3 pr-4">Description</th>
-                  <th className="pb-3">ID</th>
+                  <th className="pb-3 pr-4">ID</th>
+                  <th className="pb-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {projects.length == 0 && (
                   <tr key="empty">
                     <td
-                      colSpan={3}
+                      colSpan={4}
                       className="py-12 text-center text-sm text-slate-400"
                     >
                       No projects yet.
@@ -226,7 +277,23 @@ function ProjectsPage() {
                     <td className="py-3 pr-4 text-slate-600">
                       {p.description}
                     </td>
-                    <td className="py-3 font-mono text-xs text-slate-400">{p._id}</td>
+                    <td className="py-3 pr-4 font-mono text-xs text-slate-400">{p._id}</td>
+                    <td className="py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(p)}
+                          className="cursor-pointer rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600 transition hover:bg-indigo-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p._id)}
+                          className="cursor-pointer rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
