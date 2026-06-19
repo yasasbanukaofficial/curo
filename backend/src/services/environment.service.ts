@@ -61,10 +61,10 @@ export const environmentService = {
 
       return true;
     } catch (dbError: any) {
-      console.error("DB Error:", dbError);
       if (dbError.code === 11000) {
         throw new Error("DUPLICATE_ENVIRONMENT");
       }
+      console.error("DB Error:", dbError);
       throw new Error("DATABASE_ERROR");
     }
   },

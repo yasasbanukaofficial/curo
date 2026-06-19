@@ -53,10 +53,10 @@ export const projectService = {
 
       return true;
     } catch (dbError: any) {
-      console.error("DB Error:", dbError);
       if (dbError.code === 11000) {
         throw new Error("DUPLICATE_PROJECT");
       }
+      console.error("DB Error:", dbError);
       throw new Error("DATABASE_ERROR");
     }
   },
