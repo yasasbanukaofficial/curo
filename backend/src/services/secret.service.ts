@@ -1,6 +1,7 @@
 import { SecretsModel } from "../models/secrets.model";
 import { ISecret } from "../types/secret";
 import { encrypt } from "../util";
+import { versionService } from "./version.service";
 
 export const secretService = {
   saveSecretToDB: async (userId: string, data: ISecret): Promise<boolean> => {
@@ -43,19 +44,21 @@ export const secretService = {
     }
 
     try {
+      const currentSecret = await SecretsModel.findOne({ _id: secretId, userId });
+      if (!currentSecret) {
+        throw new Error("SECRET_NOT_FOUND");
+      }
+
       if (secKey) {
+        await versionService.createVersion(userId, secretId, currentSecret.secKey);
         data.secKey = encrypt.gen(secKey);
       }
 
-      const existingKey = await SecretsModel.findOneAndUpdate(
+      await SecretsModel.findOneAndUpdate(
         { _id: secretId, userId },
         { $set: data },
         { returnDocument: "after" },
       );
-
-      if (!existingKey) {
-        throw new Error("SECRET_NOT_FOUND");
-      }
 
       return true;
     } catch (error: any) {
