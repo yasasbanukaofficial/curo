@@ -5,17 +5,33 @@ function FormPage() {
   const [name, setName] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [project, setProject] = useState("");
+  const [environment, setEnvironment] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [secrets, setSecrets] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [environments, setEnvironments] = useState<any[]>([]);
   const [secretId, setSecretId] = useState("");
   const [fetchedSecret, setFetchedSecret] = useState<any>(null);
 
   useEffect(() => {
     fetchSecrets();
     fetchProjects();
+    fetchEnvironments();
   }, []);
+
+  const fetchEnvironments = async () => {
+    const {
+      data: { data: envs },
+    } = await api.get("/environments/all");
+    if (envs) {
+      setEnvironments(envs);
+    }
+  };
+
+  const filteredEnvironments = environments.filter(
+    (e: any) => e.projectId === project,
+  );
 
   const fetchSecrets = async () => {
     const {
@@ -41,6 +57,7 @@ function FormPage() {
       secName: name,
       secKey: secretKey,
       projectId: project,
+      environmentId: environment || undefined,
     });
     setSubmitted(true);
   };
@@ -88,6 +105,7 @@ function FormPage() {
               setName("");
               setSecretKey("");
               setProject("");
+              setEnvironment("");
             }}
             className="mt-6 cursor-pointer rounded-xl bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
           >
@@ -201,7 +219,10 @@ function FormPage() {
               <select
                 id="project"
                 value={project}
-                onChange={(e) => setProject(e.target.value)}
+                onChange={(e) => {
+                  setProject(e.target.value);
+                  setEnvironment("");
+                }}
                 required
                 className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
               >
@@ -211,6 +232,28 @@ function FormPage() {
                 {projects.map((p: any) => (
                   <option key={p._id} value={p._id}>
                     {p.projectName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="environment"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Environment
+              </label>
+              <select
+                id="environment"
+                value={environment}
+                onChange={(e) => setEnvironment(e.target.value)}
+                className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+              >
+                <option value="">None</option>
+                {filteredEnvironments.map((e: any) => (
+                  <option key={e._id} value={e._id}>
+                    {e.name}
                   </option>
                 ))}
               </select>
@@ -277,6 +320,7 @@ function FormPage() {
                 <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-3 pr-4">Name</th>
                   <th className="pb-3 pr-4">Key</th>
+                  <th className="pb-3 pr-4">Env</th>
                   <th className="pb-3">ID</th>
                 </tr>
               </thead>
@@ -284,7 +328,7 @@ function FormPage() {
                 {secrets.length === 0 && (
                   <tr>
                     <td
-                      colSpan={3}
+                      colSpan={4}
                       className="py-12 text-center text-sm text-slate-400"
                     >
                       No secrets saved yet.
@@ -301,6 +345,15 @@ function FormPage() {
                     </td>
                     <td className="py-3 pr-4 font-mono text-slate-600">
                       {s.secKey}
+                    </td>
+                    <td className="py-3 pr-4 font-mono text-xs text-slate-400">
+                      {s.environmentId ? (
+                        <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-indigo-700">
+                          {environments.find((e: any) => e._id === s.environmentId)?.name ?? s.environmentId.slice(-6)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
                     </td>
                     <td className="py-3 font-mono text-xs text-slate-400">
                       {s._id}
