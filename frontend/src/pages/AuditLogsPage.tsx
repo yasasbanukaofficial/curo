@@ -31,27 +31,13 @@ function AuditLogsPage() {
       CREATED: "bg-emerald-100 text-emerald-700",
       UPDATED: "bg-blue-100 text-blue-700",
       DELETED: "bg-red-100 text-red-700",
+      VIEWED: "bg-amber-100 text-amber-700",
     };
     return (
       <span
         className={`rounded-md px-2 py-0.5 text-xs font-medium ${styles[action] || "bg-slate-100 text-slate-600"}`}
       >
         {action}
-      </span>
-    );
-  };
-
-  const resourceBadge = (resource: string) => {
-    const styles: Record<string, string> = {
-      SECRET: "bg-purple-100 text-purple-700",
-      PROJECT: "bg-indigo-100 text-indigo-700",
-      ENVIRONMENT: "bg-amber-100 text-amber-700",
-    };
-    return (
-      <span
-        className={`rounded-md px-2 py-0.5 text-xs font-medium ${styles[resource] || "bg-slate-100 text-slate-600"}`}
-      >
-        {resource}
       </span>
     );
   };
@@ -68,7 +54,7 @@ function AuditLogsPage() {
               Audit Logs
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Track every action on secrets, projects and environments.
+              Track every action on secrets.
             </p>
             {currentUser && (
               <p className="mt-1 text-xs text-slate-400">
@@ -110,7 +96,11 @@ function AuditLogsPage() {
                   className="border-b border-slate-100 last:border-0"
                 >
                   <td className="py-3 pr-4">{actionBadge(log.action)}</td>
-                  <td className="py-3 pr-4">{resourceBadge(log.resource)}</td>
+                  <td className="py-3 pr-4">
+                    <span className="rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                      SECRET
+                    </span>
+                  </td>
                   <td className="py-3 pr-4 text-xs text-slate-600">
                     {currentUser?.name || currentUser?.email || "—"}
                   </td>

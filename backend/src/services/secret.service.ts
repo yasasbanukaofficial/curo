@@ -57,8 +57,9 @@ export const secretService = {
         throw new Error("SECRET_NOT_FOUND");
       }
 
+      await versionService.createVersion(userId, secretId, currentSecret.secKey);
+
       if (secKey) {
-        await versionService.createVersion(userId, secretId, currentSecret.secKey);
         data.secKey = encrypt.gen(secKey);
       }
 
@@ -112,6 +113,13 @@ export const secretService = {
     try {
       const secretDoc = await SecretsModel.findOne({ _id: secretId, userId });
       if (!secretDoc) return null;
+
+      auditService.createAudit({
+        userId: userId as any,
+        action: "VIEWED",
+        resource: "SECRET",
+        metadata: { secName: secretDoc.secName, projectId: secretDoc.projectId },
+      });
 
       return {
         secName: secretDoc.secName,

@@ -10,12 +10,12 @@ export const _auditSchema = new Schema<IAudit>(
     },
     action: {
       type: String,
-      enum: ["CREATED", "UPDATED", "DELETED"],
+      enum: ["CREATED", "UPDATED", "DELETED", "VIEWED"],
       required: [true, "Action is required"],
     },
     resource: {
       type: String,
-      enum: ["SECRET", "PROJECT", "ENVIRONMENT"],
+      enum: ["SECRET"],
       required: [true, "Resource is required"],
     },
     metadata: {

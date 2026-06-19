@@ -36,7 +36,7 @@ export const versionService = {
       const versions = await VersionModel.find({ secretId, userId })
         .sort({ version: -1 });
 
-      return versions.map((v) => ({
+      return versions.map((v: any) => ({
         _id: v._id,
         secretId: v.secretId,
         secKey: encrypt.decrypt(v.secKey) ?? "",
