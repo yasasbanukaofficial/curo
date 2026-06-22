@@ -9,22 +9,25 @@ import IntegrationSection from "../components/landing/IntegrationSection";
 import Pricing from "../components/landing/Pricing";
 import BottomCTA from "../components/landing/BottomCTA";
 import Footer from "../components/landing/Footer";
+import SmoothScroll from "../components/SmoothScroll";
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-[#fcfcfc]">
-      <Navbar />
-      <Hero />
-      <BrandSection />
-      <WorkSection />
-      <FeatureSection />
-      <CoreSection />
-      <StandardSection />
-      <IntegrationSection />
-      <Pricing />
-      <BottomCTA />
-      <Footer />
-    </div>
+    <SmoothScroll>
+      <div className="min-h-screen bg-[#fcfcfc]">
+        <Navbar />
+        <Hero />
+        <BrandSection />
+        <WorkSection />
+        <FeatureSection />
+        <CoreSection />
+        <StandardSection />
+        <IntegrationSection />
+        <Pricing />
+        <BottomCTA />
+        <Footer />
+      </div>
+    </SmoothScroll>
   );
 }
 
