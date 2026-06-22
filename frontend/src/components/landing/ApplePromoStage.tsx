@@ -3,18 +3,22 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SiNotion, SiSlack, SiGoogledocs, SiConfluence, SiGithub, SiLinear, SiVercel, SiRailway } from 'react-icons/si';
+import { FaAws } from 'react-icons/fa';
+import { PiFlask } from 'react-icons/pi';
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 const tools = [
-  { name: "Notion", icon: "N" },
-  { name: "Slack", icon: "S" },
-  { name: "Google Docs", icon: "GD" },
-  { name: "Confluence", icon: "C" },
-  { name: "GitHub", icon: "GH" },
-  { name: "Linear", icon: "L" },
-  { name: "Vercel", icon: "V" },
-  { name: "AWS", icon: "AWS" },
+  { name: "Notion", icon: <SiNotion className="w-10 h-10 text-[#000000]" /> },
+  { name: "Slack", icon: <SiSlack className="w-10 h-10 text-[#4A154B]" /> },
+  { name: "Google Docs", icon: <SiGoogledocs className="w-10 h-10 text-[#4285F4]" /> },
+  { name: "Confluence", icon: <SiConfluence className="w-10 h-10 text-[#172B4D]" /> },
+  { name: "GitHub", icon: <SiGithub className="w-10 h-10 text-[#181717]" /> },
+  { name: "Linear", icon: <SiLinear className="w-10 h-10 text-[#5E6AD2]" /> },
+  { name: "Vercel", icon: <SiVercel className="w-10 h-10 text-[#000000]" /> },
+  { name: "Railway", icon: <SiRailway className="w-10 h-10 text-[#0B0D0E]" /> },
+  { name: "AWS", icon: <FaAws className="w-10 h-10 text-[#FF9900]" /> },
 ];
 
 export default function ApplePromoStage() {
@@ -65,9 +69,9 @@ export default function ApplePromoStage() {
 
       // Scene 3: Integrations
       gsap.set('.tool-node', { 
-        x: () => (Math.random() - 0.5) * 1000, 
-        y: () => (Math.random() - 0.5) * 800,
-        scale: 0.5,
+        x: () => (Math.random() - 0.5) * 500, 
+        y: () => (Math.random() - 0.5) * 400,
+        scale: 0.6,
         opacity: 0
       });
       gsap.set('.integration-line', { opacity: 0 });
@@ -79,7 +83,7 @@ export default function ApplePromoStage() {
       gsap.set('.card-3', { zIndex: 10 }); // Enterprise
 
       // Final CTA
-      gsap.set('.final-cta-btn', { opacity: 0, y: 20 });
+      gsap.set('.final-cta-wrapper', { opacity: 0, scale: 0.9, y: 50 });
 
       // Ambient breathing loop
       gsap.to('.act1-card', { rotation: 1, yoyo: true, repeat: -1, duration: 2, ease: 'sine.inOut', stagger: 0.2 });
@@ -120,7 +124,7 @@ export default function ApplePromoStage() {
       tl.to('.flow-line.in', { opacity: 0.5, scaleY: 1, duration: 1, transformOrigin: 'top center' }, 12.5);
 
       // Act 6: Core - Processing
-      tl.to('.central-engine', { rotation: 180, boxShadow: '0 0 60px rgba(0,113,227,0.4)', duration: 1.5, ease: 'power2.inOut' }, 14);
+      tl.to('.central-engine', { rotation: 180, boxShadow: '0 0 60px rgba(29,29,31,0.4)', duration: 1.5, ease: 'power2.inOut' }, 14);
 
       // Act 7: Core - Output
       tl.to('.flow-line.out', { opacity: 0.5, scaleY: 1, duration: 1, transformOrigin: 'top center' }, 15.5);
@@ -137,7 +141,7 @@ export default function ApplePromoStage() {
       tools.forEach((_, i) => {
         const angle = (i / tools.length) * Math.PI * 2;
         const radius = 240;
-        tl.to(`.tool-node:nth-child(${i + 2})`, { 
+        tl.to(`.tool-${i}`, { 
           x: Math.cos(angle) * radius,
           y: Math.sin(angle) * radius,
           duration: 1.5,
@@ -164,8 +168,8 @@ export default function ApplePromoStage() {
       tl.to('.card-3', { x: 350, y: 0, scale: 1.05, opacity: 1, rotation: 5, zIndex: 50, duration: 1.5, ease: 'power3.inOut' }, 27.5);
 
       // Act 13: Final Outro
-      tl.to(['.card-1', '.card-2', '.card-3'], { y: -50, opacity: 0, duration: 1 }, 29.5);
-      tl.to('.final-cta-btn', { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }, 30.5);
+      tl.to(['.card-1', '.card-2', '.card-3'], { y: -100, opacity: 0, duration: 1 }, 29.5);
+      tl.to('.final-cta-wrapper', { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'elastic.out(1, 0.8)' }, 30.5);
 
       // Continuous Orbits
       gsap.to('.avatar-orbit-container', { rotation: 360, repeat: -1, duration: 20, ease: 'none' });
@@ -178,19 +182,19 @@ export default function ApplePromoStage() {
 
   const getActText = () => {
     switch(currentAct) {
-      case 1: return <><div className="text-[#FF3B30] text-xs uppercase font-bold tracking-widest mb-2">The old way</div><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Secrets passed<br/>in messages.</h2></>;
-      case 2: return <h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">One place.</h2>;
-      case 3: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Every secret.<br/>Synced instantly.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">No more .env files passed<br/>in Slack.</p></>;
-      case 4: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">CLI Integrated.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Pull secrets effortlessly.</p></>;
-      case 5: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Connect company<br/>knowledge.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Upload configs and secrets.</p></>;
-      case 6: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Build the<br/>secrets model.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Curo organizes everything.</p></>;
-      case 7: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Generate consistent<br/>output.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">For every environment.</p></>;
-      case 8: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Works with<br/>your tools.</h2></>;
-      case 9: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Everything<br/>connected.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">No migration required.</p></>;
-      case 10: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Start simple.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Free for small teams.</p></>;
-      case 11: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Scale gracefully.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">For growing startups.</p></>;
-      case 12: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Enterprise ready.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Unlimited everything.</p></>;
-      case 13: return <h2 className="text-[64px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight text-center">Ready to centralize?</h2>;
+      case 1: return <><div className="text-[#FF3B30] text-xs uppercase font-bold tracking-widest mb-2">The old way</div><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Secrets passed<br/>in messages.</h2></>;
+      case 2: return <h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">One place.</h2>;
+      case 3: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Every secret.<br/>Synced instantly.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">No more .env files passed<br/>in Slack.</p></>;
+      case 4: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">CLI Integrated.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">Pull secrets effortlessly.</p></>;
+      case 5: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Connect company<br/>knowledge.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">Upload configs and secrets.</p></>;
+      case 6: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Build the<br/>secrets model.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">Curo organizes everything.</p></>;
+      case 7: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Generate consistent<br/>output.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">For every environment.</p></>;
+      case 8: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Works with<br/>your tools.</h2></>;
+      case 9: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Everything<br/>connected.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">No migration required.</p></>;
+      case 10: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Start simple.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">Free for small teams.</p></>;
+      case 11: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Scale gracefully.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">For growing startups.</p></>;
+      case 12: return <><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Enterprise ready.</h2><p className="text-sm md:text-[16px] text-[#6E6E73] leading-relaxed">Unlimited everything.</p></>;
+      case 13: return null;
       default: return null;
     }
   };
@@ -198,10 +202,10 @@ export default function ApplePromoStage() {
   return (
     <div ref={containerRef} className="relative w-full" style={{ height: '1400vh', background: '#fcfcfc' }}>
       <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center font-sans">
-        <div className="absolute top-0 left-0 h-[2px] bg-[#0071E3] z-50 transition-all duration-100 ease-out" ref={progressBarRef} style={{ width: '0%' }}></div>
+        <div className="absolute top-0 left-0 h-[2px] bg-[#1D1D1F] z-50 transition-all duration-100 ease-out" ref={progressBarRef} style={{ width: '0%' }}></div>
         
         {/* Dynamic Texts */}
-        <div className={`absolute top-20 ${currentAct === 13 ? 'left-1/2 -translate-x-1/2' : 'left-10 md:left-20'} z-40 max-w-md pointer-events-none transition-all duration-500`}>
+        <div className={`absolute top-12 md:top-20 left-6 md:left-20 z-40 max-w-md pointer-events-none transition-all duration-500`}>
           <AnimatePresence mode="wait">
             <motion.div key={currentAct} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
               {getActText()}
@@ -210,7 +214,7 @@ export default function ApplePromoStage() {
         </div>
 
         {/* Global Stage */}
-        <div className="relative w-full max-w-[1200px] h-[700px] flex items-center justify-center z-10 pointer-events-none">
+        <div className="relative w-full max-w-[1200px] h-[700px] flex items-center justify-center z-10 pointer-events-none scale-[0.5] sm:scale-[0.75] lg:scale-100 origin-center">
           
           {/* --- SCENE 1: HERO --- */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -248,9 +252,9 @@ export default function ApplePromoStage() {
               const r = 200 + Math.random() * 100;
               const startX = Math.cos(angle) * r;
               const startY = Math.sin(angle) * r;
-              return <div key={i} className="particle absolute w-1.5 h-1.5 bg-[#0071E3] rounded-full" style={{ transform: `translate(${startX}px, ${startY}px)` }}></div>;
+              return <div key={i} className="particle absolute w-1.5 h-1.5 bg-[#1D1D1F] rounded-full" style={{ transform: `translate(${startX}px, ${startY}px)` }}></div>;
             })}
-            <div className="act2-vault absolute bg-[#F5F5F7] w-[120px] h-[120px] rounded-[32px] flex items-center justify-center shadow-[0_0_40px_rgba(0,113,227,0.2)] border border-white z-20">
+            <div className="act2-vault absolute bg-[#F5F5F7] w-[120px] h-[120px] rounded-[32px] flex items-center justify-center shadow-[0_0_40px_rgba(29,29,31,0.2)] border border-white z-20">
               <svg className="w-12 h-12 text-[#1D1D1F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -260,8 +264,8 @@ export default function ApplePromoStage() {
             <div className="absolute w-[600px] h-[600px] flex items-center justify-center z-10">
               <div className="avatar-orbit-container absolute w-full h-full rounded-full border border-dashed border-[#E5E5EA]">
                 <div className="avatar-orbit absolute top-0 left-1/2 -ml-6 -mt-6 w-12 h-12 rounded-full bg-[#F5F5F7] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#1D1D1F]">AK</div>
-                <div className="avatar-orbit absolute bottom-1/4 -right-2 w-12 h-12 rounded-full bg-[#E8F2FF] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#0071E3]">SM</div>
-                <div className="avatar-orbit absolute bottom-1/4 -left-2 w-12 h-12 rounded-full bg-[#E8F2FF] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#0071E3]">JR</div>
+                <div className="avatar-orbit absolute bottom-1/4 -right-2 w-12 h-12 rounded-full bg-[#F5F5F7] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#1D1D1F]">SM</div>
+                <div className="avatar-orbit absolute bottom-1/4 -left-2 w-12 h-12 rounded-full bg-[#F5F5F7] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#1D1D1F]">JR</div>
               </div>
             </div>
             <div className="act3-dashboard absolute bg-white w-[480px] rounded-[16px] shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-[#E5E5EA] overflow-hidden z-30">
@@ -295,9 +299,7 @@ export default function ApplePromoStage() {
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {/* Engine (also used in Integrations) */}
             <div className="central-engine absolute top-1/2 left-1/2 -mt-16 -ml-16 w-32 h-32 bg-[#1D1D1F] rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center z-20">
-              <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
+              <PiFlask className="w-14 h-14 text-white" />
               <div className="flow-line out absolute top-full left-1/2 w-0.5 h-32 bg-[#30D158] -ml-[1px]"></div>
             </div>
             {/* Inputs */}
@@ -305,18 +307,18 @@ export default function ApplePromoStage() {
               <div className="file-node w-24 h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
                 <span className="text-2xl mb-2">📄</span>
                 <span className="text-xs font-mono text-[#6E6E73]">.env.local</span>
-                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#0071E3] -ml-[1px]"></div>
+                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#1D1D1F] -ml-[1px]"></div>
               </div>
               <div className="file-node w-24 h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
                 <span className="text-2xl mb-2">⚙️</span>
                 <span className="text-xs font-mono text-[#6E6E73]">config.yml</span>
-                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#0071E3] -ml-[1px]"></div>
+                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#1D1D1F] -ml-[1px]"></div>
               </div>
             </div>
             {/* Outputs */}
             <div className="flex gap-8 absolute bottom-10">
               {['Development', 'Staging', 'Production'].map((env, i) => (
-                <div key={i} className="output-node w-32 h-20 bg-[#E8F2FF] rounded-xl border border-[#0071E3]/20 flex items-center justify-center text-[#0071E3] font-medium text-sm">
+                <div key={i} className="output-node w-32 h-20 bg-[#F5F5F7] rounded-xl border border-[#E5E5EA] flex items-center justify-center text-[#1D1D1F] font-medium text-sm">
                   {env}
                 </div>
               ))}
@@ -326,7 +328,7 @@ export default function ApplePromoStage() {
           {/* --- SCENE 3: INTEGRATIONS --- */}
           <div className="absolute inset-0 flex items-center justify-center">
             {tools.map((tool, i) => (
-              <div key={i} className="tool-node absolute w-16 h-16 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center justify-center text-[#1D1D1F] font-bold text-lg border border-[#E5E5EA] z-30">
+              <div key={i} className={`tool-node tool-${i} absolute w-[72px] h-[72px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center justify-center text-[#1D1D1F] font-bold text-lg border border-[#E5E5EA] z-30`}>
                 {tool.icon}
               </div>
             ))}
@@ -341,27 +343,45 @@ export default function ApplePromoStage() {
 
           {/* --- SCENE 4: PRICING --- */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="pricing-card card-1 absolute w-[300px] bg-white rounded-3xl border border-[#E5E5EA] shadow-xl p-8">
+            <div className="pricing-card card-1 absolute w-[300px] bg-white rounded-3xl border border-[#E5E5EA] shadow-xl p-8 pointer-events-auto">
               <h3 className="text-xl font-semibold text-[#1D1D1F] mb-2">Starter</h3>
               <div className="text-4xl font-bold text-[#1D1D1F] mb-6">$29<span className="text-sm font-normal text-[#6E6E73]">/mo</span></div>
-              <div className="w-full py-3 bg-[#F5F5F7] text-center rounded-full text-sm font-medium text-[#1D1D1F]">Start Free</div>
+              <ul className="space-y-3 mb-8 text-sm text-[#6E6E73]">
+                <li>✓ Up to 5 team members</li>
+                <li>✓ 50,000 secrets</li>
+                <li>✓ Basic vault setup</li>
+              </ul>
+              <button className="w-full py-3 bg-[#F5F5F7] text-center rounded-full text-sm font-medium text-[#1D1D1F] hover:bg-[#E5E5EA] transition-colors cursor-pointer">Start Free Trial</button>
             </div>
-            <div className="pricing-card card-2 absolute w-[300px] bg-white rounded-3xl border border-[#0071E3] shadow-2xl p-8">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0071E3] text-white text-xs font-bold px-3 py-1 rounded-full">Popular</div>
+            <div className="pricing-card card-2 absolute w-[300px] bg-white rounded-3xl border-2 border-[#1D1D1F] shadow-2xl p-8 pointer-events-auto">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1D1D1F] text-white text-xs font-bold px-3 py-1 rounded-full">Popular</div>
               <h3 className="text-xl font-semibold text-[#1D1D1F] mb-2">Team</h3>
               <div className="text-4xl font-bold text-[#1D1D1F] mb-6">$159<span className="text-sm font-normal text-[#6E6E73]">/mo</span></div>
-              <div className="w-full py-3 bg-[#0071E3] text-center rounded-full text-sm font-medium text-white shadow-md">Upgrade to Team</div>
+              <ul className="space-y-3 mb-8 text-sm text-[#6E6E73]">
+                <li>✓ Up to 25 team members</li>
+                <li>✓ Advanced access controls</li>
+                <li>✓ Version history & rollbacks</li>
+              </ul>
+              <button className="w-full py-3 bg-[#1D1D1F] text-center rounded-full text-sm font-medium text-white shadow-md hover:bg-[#333] transition-colors cursor-pointer">Upgrade to Team</button>
             </div>
-            <div className="pricing-card card-3 absolute w-[300px] bg-[#1D1D1F] rounded-3xl border border-[#1D1D1F] shadow-2xl p-8 text-white">
+            <div className="pricing-card card-3 absolute w-[300px] bg-[#F5F5F7] rounded-3xl border border-[#E5E5EA] shadow-2xl p-8 pointer-events-auto">
               <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
               <div className="text-4xl font-bold mb-6">Custom</div>
-              <div className="w-full py-3 bg-white text-center rounded-full text-sm font-medium text-[#1D1D1F]">Contact Sales</div>
+              <ul className="space-y-3 mb-8 text-sm text-[#6E6E73]">
+                <li>✓ Unlimited everything</li>
+                <li>✓ Dedicated manager</li>
+                <li>✓ Custom SLA guarantees</li>
+              </ul>
+              <button className="w-full py-3 bg-white text-center rounded-full text-sm font-medium text-[#1D1D1F] border border-[#E5E5EA] hover:bg-[#fcfcfc] transition-colors cursor-pointer">Contact Sales</button>
             </div>
           </div>
 
           {/* FINAL CTA */}
-          <div className="final-cta-btn absolute bottom-20 pointer-events-auto">
-            <button className="bg-[#0071E3] text-white px-8 py-4 rounded-full font-medium text-lg hover:scale-105 transition-transform shadow-[0_4px_14px_0_rgba(0,113,227,0.39)]">
+          <div className="final-cta-wrapper absolute inset-0 flex flex-col items-center justify-center pointer-events-auto">
+            <h2 className="text-4xl md:text-[64px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight text-center mb-8">
+              Ready to centralize?
+            </h2>
+            <button className="bg-[#1D1D1F] text-white px-8 py-4 rounded-full font-medium text-lg hover:bg-[#333] transition-colors shadow-lg cursor-pointer">
               Get Started for Free
             </button>
           </div>

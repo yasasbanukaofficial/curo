@@ -3,7 +3,7 @@ import Corner from "./Corner";
 import ButtonPrimary from "./ButtonPrimary";
 import ButtonSecondary from "./ButtonSecondary";
 import { ChevronRightIcon } from "../ui/Icons";
-import ScrollAnimationStage from "./ScrollAnimationStage";
+
 
 export default function Hero() {
   return (
@@ -29,9 +29,6 @@ export default function Hero() {
           </div>
         </div>
       </div>
-      
-      <DotsLine className="h-10" />
-      <ScrollAnimationStage />
       <DotsLine className="h-10" />
     </section>
   );
