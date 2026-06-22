@@ -16,8 +16,8 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#fcfcfc]">
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative mt-5">
+    <nav className="fixed top-0 z-50 w-full bg-[#fcfcfc] pt-5">
+      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <div className="flex h-16 justify-between items-center border-b border-[#efefef]">
           <div className="flex items-center gap-8">
             <CuroLogo />

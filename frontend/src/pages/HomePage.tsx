@@ -14,7 +14,7 @@ import SmoothScroll from "../components/SmoothScroll";
 function HomePage() {
   return (
     <SmoothScroll>
-      <div className="min-h-screen bg-[#fcfcfc]">
+      <div className="min-h-screen bg-[#fcfcfc] pt-24">
         <Navbar />
         <Hero />
         <BrandSection />
