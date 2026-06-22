@@ -1,23 +1,23 @@
-export default function Footer() {
-  const sections = [
-    {
-      title: "Product",
-      links: ["Features", "Integrations", "Pricing", "Changelog"]
-    },
-    {
-      title: "Company",
-      links: ["About", "Blog", "Careers", "Contact"]
-    },
-    {
-      title: "Resources",
-      links: ["Documentation", "API Reference", "Help Center", "Status"]
-    },
-    {
-      title: "Legal",
-      links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"]
-    }
-  ];
+const sections = [
+  {
+    title: "Product",
+    links: ["Features", "Integrations", "Pricing", "Changelog"]
+  },
+  {
+    title: "Company",
+    links: ["About", "Blog", "Careers", "Contact"]
+  },
+  {
+    title: "Resources",
+    links: ["Documentation", "API Reference", "Help Center", "Status"]
+  },
+  {
+    title: "Legal",
+    links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"]
+  }
+];
 
+export default function Footer() {
   return (
     <footer className="bg-[#191919] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-8">
@@ -25,9 +25,9 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <a href="#" className="flex items-center gap-2 text-lg font-bold tracking-tight text-white font-display mb-4">
               <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v18" />
-                <path d="m16 7-4-4-4 4" />
-                <path d="m16 17-4 4-4-4" />
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <circle cx="12" cy="12" r="2.5" />
+                <path d="M12 14.5v2" />
               </svg>
               Curo
             </a>
