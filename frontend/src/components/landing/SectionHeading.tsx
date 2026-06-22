@@ -1,4 +1,4 @@
-import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import StaggerContainer, { fadeInUp } from "../animations/StaggerContainer";
 import { motion } from "framer-motion";
 
 interface SectionHeadingProps {

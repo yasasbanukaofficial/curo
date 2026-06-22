@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { WarningIcon, CloseIcon } from "./ui/Icons";
+import { WarningIcon, CloseIcon } from "../ui/Icons";
 
 type ToastProps = {
   message: string;

@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { motion, AnimatePresence } from 'framer-motion';
-import Corner from "./Corner";
+import Corner from "../landing/Corner";
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 

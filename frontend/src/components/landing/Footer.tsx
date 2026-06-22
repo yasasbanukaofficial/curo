@@ -1,6 +1,6 @@
 import CuroLogo from "./CuroLogo";
 import { FacebookIcon, TwitterIcon, GitHubIcon, LinkedInIcon } from "../ui/Icons";
-import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import StaggerContainer, { fadeInUp } from "../animations/StaggerContainer";
 import { motion } from "framer-motion";
 
 const sections = [

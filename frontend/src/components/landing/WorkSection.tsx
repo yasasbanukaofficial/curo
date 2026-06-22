@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import SectionShell from "./SectionShell";
 import SectionHeading from "./SectionHeading";
-import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import StaggerContainer, { fadeInUp } from "../animations/StaggerContainer";
 import Card from "./Card";
 import MediaFrame from "./MediaFrame";
 

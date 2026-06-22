@@ -1,7 +1,7 @@
 import SectionShell from "./SectionShell";
 import SectionHeading from "./SectionHeading";
 import IntegrationTile from "./IntegrationTile";
-import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import StaggerContainer, { fadeInUp } from "../animations/StaggerContainer";
 import { motion } from "framer-motion";
 
 const tools = [

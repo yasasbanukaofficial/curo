@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import SectionShell from "./SectionShell";
 import SectionHeading from "./SectionHeading";
 import MediaFrame from "./MediaFrame";
-import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import StaggerContainer, { fadeInUp } from "../animations/StaggerContainer";
 import { ChevronRightIcon } from "./ChevronRightIcon";
 
 const cards = [

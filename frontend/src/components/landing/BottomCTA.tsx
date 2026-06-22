@@ -2,7 +2,7 @@ import DotsLine from "./DotsLine";
 import ButtonPrimary from "./ButtonPrimary";
 import ButtonSecondary from "./ButtonSecondary";
 import { ChevronRightIcon } from "../ui/Icons";
-import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import StaggerContainer, { fadeInUp } from "../animations/StaggerContainer";
 import { motion } from "framer-motion";
 
 export default function BottomCTA() {
