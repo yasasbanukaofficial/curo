@@ -1,3 +1,5 @@
+import { useTheme } from "../../contexts/ThemeContext";
+
 const navItems = [
   { label: "Overview", icon: "grid", active: true },
   { label: "Documents", icon: "file", active: false },
@@ -42,21 +44,23 @@ function NavIcon({ type }: { type: string }) {
 }
 
 export default function Sidebar() {
+  const { theme, toggle } = useTheme();
+
   return (
-    <aside className="w-[220px] bg-white border-r border-[#EFEFEF] flex flex-col flex-shrink-0">
+    <aside className="w-[220px] bg-white dark:bg-[#1A1A1A] border-r border-[#EFEFEF] dark:border-[#2A2A2A] flex flex-col flex-shrink-0">
       <div className="px-4 pt-4 pb-3">
         <div className="relative">
           <input
             type="text"
             placeholder="Search anything"
-            className="w-full h-9 pl-4 pr-10 text-sm bg-[#F5F5F5] rounded-lg border-none outline-none text-[#1A1A1A] placeholder-[#888]"
+            className="w-full h-9 pl-4 pr-10 text-sm bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-lg border-none outline-none text-[#1A1A1A] dark:text-[#E5E5E5] placeholder-[#888] dark:placeholder-[#666]"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#888] font-medium">⌘F</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#888] dark:text-[#666] font-medium">⌘F</span>
         </div>
       </div>
 
       <div className="px-4 mb-2">
-        <p className="text-[10px] font-medium text-[#888] tracking-[0.08em] uppercase">Main Menu</p>
+        <p className="text-[10px] font-medium text-[#888] dark:text-[#666] tracking-[0.08em] uppercase">Main Menu</p>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5">
@@ -65,8 +69,8 @@ export default function Sidebar() {
             key={item.label}
             className={`flex items-center gap-3 w-full h-9 px-3 text-sm rounded-lg transition-colors ${
               item.active
-                ? "bg-[#F3F3F3] text-[#1A1A1A] font-medium"
-                : "text-[#888] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]"
+                ? "bg-[#F3F3F3] dark:bg-[#333] text-[#1A1A1A] dark:text-[#E5E5E5] font-medium"
+                : "text-[#888] dark:text-[#666] hover:text-[#1A1A1A] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F5] dark:hover:bg-[#2A2A2A]"
             }`}
           >
             <NavIcon type={item.icon} />
@@ -75,14 +79,34 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="px-4 pb-4 mt-auto border-t border-[#EFEFEF] pt-4">
-        <p className="text-[10px] font-medium text-[#888] tracking-[0.08em] uppercase mb-3">Mode</p>
-        <div className="flex items-center bg-[#F5F5F5] rounded-lg p-0.5">
-          <button className="flex-1 h-8 flex items-center justify-center gap-1.5 text-sm bg-white rounded-md shadow-sm font-medium text-[#1A1A1A]">
-            <span>☀</span> Light
+      <div className="px-4 pb-4 mt-auto border-t border-[#EFEFEF] dark:border-[#2A2A2A] pt-4">
+        <p className="text-[10px] font-medium text-[#888] dark:text-[#666] tracking-[0.08em] uppercase mb-3">Mode</p>
+        <div className="flex items-center bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-lg p-0.5">
+          <button
+            onClick={theme === "dark" ? toggle : undefined}
+            className={`flex-1 h-10 flex items-center justify-center gap-1.5 text-sm rounded-md font-medium transition-colors ${
+              theme === "light"
+                ? "bg-white dark:bg-[#333] shadow-sm text-[#1A1A1A] dark:text-[#E5E5E5]"
+                : "text-[#888] dark:text-[#666] hover:text-[#1A1A1A] dark:hover:text-[#E5E5E5]"
+            }`}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            Light
           </button>
-          <button className="flex-1 h-8 flex items-center justify-center gap-1.5 text-sm text-[#888] hover:text-[#1A1A1A]">
-            <span>🌙</span> Dark
+          <button
+            onClick={theme === "light" ? toggle : undefined}
+            className={`flex-1 h-10 flex items-center justify-center gap-1.5 text-sm rounded-md font-medium transition-colors ${
+              theme === "dark"
+                ? "bg-white dark:bg-[#333] shadow-sm text-[#1A1A1A] dark:text-[#E5E5E5]"
+                : "text-[#888] dark:text-[#666] hover:text-[#1A1A1A] dark:hover:text-[#E5E5E5]"
+            }`}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            Dark
           </button>
         </div>
       </div>
