@@ -7,6 +7,7 @@ interface CardProps {
   hover?: boolean;
   className?: string;
   as?: ElementType;
+  bg?: string;
 }
 
 export default function Card({
@@ -16,13 +17,14 @@ export default function Card({
   hover = false,
   className = "",
   as: Tag = "div",
+  bg = "bg-white",
 }: CardProps) {
   const hoverClasses = hover
     ? "hover:border-[#191919]/20 hover:shadow-sm transition-all duration-300 group"
     : "";
   return (
     <Tag
-      className={`rounded-2xl ${borderWidth} border-[#ededed] bg-white ${padding} ${hoverClasses} ${className}`}
+      className={`rounded-2xl ${borderWidth} border-[#ededed] ${bg} ${padding} ${hoverClasses} ${className}`}
     >
       {children}
     </Tag>

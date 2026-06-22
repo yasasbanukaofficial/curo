@@ -4,6 +4,7 @@ interface SectionHeadingProps {
   as?: "h1" | "h2" | "h3";
   maxWidth?: string;
   marginBottom?: string;
+  align?: "center" | "left";
 }
 
 export default function SectionHeading({
@@ -12,14 +13,20 @@ export default function SectionHeading({
   as: Tag = "h2",
   maxWidth = "max-w-3xl",
   marginBottom = "mb-16 lg:mb-20",
+  align = "center",
 }: SectionHeadingProps) {
   const headingSize =
     Tag === "h1"
       ? "text-4xl sm:text-5xl lg:text-6xl"
       : "text-3xl sm:text-4xl";
 
+  const alignment =
+    align === "left"
+      ? "text-left"
+      : "text-center mx-auto";
+
   return (
-    <div className={`text-center ${maxWidth} mx-auto ${marginBottom}`}>
+    <div className={`${alignment} ${align === "left" ? "" : maxWidth} ${marginBottom}`}>
       <Tag
         className={`${headingSize} font-bold tracking-tight text-[#191919] font-display mb-4`}
       >
