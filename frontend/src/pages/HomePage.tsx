@@ -1,11 +1,11 @@
 import Navbar from "../components/landing/Navbar";
 import Hero from "../components/landing/Hero";
-import SocialProof from "../components/landing/SocialProof";
-import ProblemSolution from "../components/landing/ProblemSolution";
-import BentoWalkthrough from "../components/landing/BentoWalkthrough";
-import FeatureGrid from "../components/landing/FeatureGrid";
-import ProcessWalkthrough from "../components/landing/ProcessWalkthrough";
-import Integrations from "../components/landing/Integrations";
+import BrandSection from "../components/landing/BrandSection";
+import WorkSection from "../components/landing/WorkSection";
+import FeatureSection from "../components/landing/FeatureSection";
+import CoreSection from "../components/landing/CoreSection";
+import StandardSection from "../components/landing/StandardSection";
+import IntegrationSection from "../components/landing/IntegrationSection";
 import Pricing from "../components/landing/Pricing";
 import BottomCTA from "../components/landing/BottomCTA";
 import Footer from "../components/landing/Footer";
@@ -15,12 +15,12 @@ function HomePage() {
     <div className="min-h-screen bg-[#fcfcfc]">
       <Navbar />
       <Hero />
-      <SocialProof />
-      <ProblemSolution />
-      <BentoWalkthrough />
-      <FeatureGrid />
-      <ProcessWalkthrough />
-      <Integrations />
+      <BrandSection />
+      <WorkSection />
+      <FeatureSection />
+      <CoreSection />
+      <StandardSection />
+      <IntegrationSection />
       <Pricing />
       <BottomCTA />
       <Footer />

@@ -1,18 +1,19 @@
 import { useState } from "react";
+import Corner from "./Corner";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-[#efefef] bg-[#fcfcfc]/80 backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between items-center">
+    <nav className="sticky top-0 z-50 w-full bg-[#fcfcfc]">
+      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative mt-5">
+        <div className="flex h-16 justify-between items-center border-b border-[#efefef]">
           <div className="flex items-center gap-8">
             <a href="#" className="flex items-center gap-2 text-xl font-bold tracking-tight text-[#191919] font-display">
-              <svg className="h-6 w-6 text-[#191919]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v18" />
-                <path d="m16 7-4-4-4 4" />
-                <path d="m16 17-4 4-4-4" />
+              <svg className="h-6 w-6 text-[#191919]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <circle cx="12" cy="12" r="2.5" />
+                <path d="M12 14.5v2" />
               </svg>
               <span>Curo</span>
             </a>
@@ -42,9 +43,10 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+        <Corner />
       </div>
       {isOpen && (
-        <div className="md:hidden border-t border-[#efefef] bg-[#fcfcfc] px-4 pt-2 pb-4 space-y-2">
+        <div className="md:hidden border-b border-[#efefef] bg-[#fcfcfc] px-4 pt-2 pb-4 space-y-2">
           <a href="#features" onClick={() => setIsOpen(false)} className="block py-2 text-base font-medium text-[#636363] hover:text-[#191919]">Features</a>
           <a href="#problem" onClick={() => setIsOpen(false)} className="block py-2 text-base font-medium text-[#636363] hover:text-[#191919]">Problem</a>
           <a href="#centralized" onClick={() => setIsOpen(false)} className="block py-2 text-base font-medium text-[#636363] hover:text-[#191919]">System</a>
