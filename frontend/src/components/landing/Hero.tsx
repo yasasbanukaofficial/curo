@@ -3,6 +3,7 @@ import Corner from "./Corner";
 import ButtonPrimary from "./ButtonPrimary";
 import ButtonSecondary from "./ButtonSecondary";
 import { ChevronRightIcon } from "../ui/Icons";
+import HeroCanvas from "./HeroCanvas";
 
 export default function Hero() {
   return (
@@ -39,12 +40,7 @@ export default function Hero() {
                   curo.app/dashboard
                 </div>
               </div>
-              <img
-                src="https://framerusercontent.com/images/3TFqmzpkg29FoG0w6wdYdGdwn2E.png?width=1600"
-                alt="Curo Dashboard Interface"
-                className="w-full h-auto object-cover"
-                loading="eager"
-              />
+              <HeroCanvas />
             </div>
           </div>
         </div>
