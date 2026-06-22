@@ -16,7 +16,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 w-full bg-[#fcfcfc]">
+    <nav className="sticky top-0 z-50 w-full bg-[#fcfcfc]">
       <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative mt-5">
         <div className="flex h-16 justify-between items-center border-b border-[#efefef]">
           <div className="flex items-center gap-8">

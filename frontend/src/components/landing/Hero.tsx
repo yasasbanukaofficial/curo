@@ -5,7 +5,7 @@ import ButtonSecondary from "./ButtonSecondary";
 
 export default function Hero() {
   return (
-    <section className="relative bg-[#fcfcfc] pt-24">
+    <section className="relative bg-[#fcfcfc]">
       <DotsLine className="h-10" />
       <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">
         <Corner />
