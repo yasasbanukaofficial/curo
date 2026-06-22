@@ -1,6 +1,5 @@
 import Navbar from "../components/landing/Navbar";
 import Hero from "../components/landing/Hero";
-import BrandSection from "../components/landing/BrandSection";
 import WorkSection from "../components/landing/WorkSection";
 import FeatureSection from "../components/landing/FeatureSection";
 import CoreSection from "../components/landing/CoreSection";
@@ -17,7 +16,6 @@ function HomePage() {
       <div className="min-h-screen bg-[#fcfcfc] pt-24">
         <Navbar />
         <Hero />
-        <BrandSection />
         <WorkSection />
         <FeatureSection />
         <CoreSection />
