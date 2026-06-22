@@ -1,6 +1,8 @@
 import SectionShell from "./SectionShell";
 import SectionHeading from "./SectionHeading";
 import IntegrationTile from "./IntegrationTile";
+import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import { motion } from "framer-motion";
 
 const tools = [
   { name: "Notion", icon: <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#f4f4f4" /><text x="12" y="16" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#191919">N</text></svg> },
@@ -22,19 +24,21 @@ export default function IntegrationSection() {
         marginBottom="mb-16"
       />
 
-      <div className="relative max-w-5xl mx-auto">
+      <StaggerContainer className="relative max-w-5xl mx-auto" staggerDelay={0.05}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center">
           {tools.map((tool, idx) => (
-            <IntegrationTile key={idx} name={tool.name} icon={tool.icon} />
+            <motion.div key={idx} variants={fadeInUp(20, 0.4)}>
+              <IntegrationTile name={tool.name} icon={tool.icon} />
+            </motion.div>
           ))}
         </div>
 
-        <div className="mt-16 text-center">
+        <motion.div variants={fadeInUp(20, 0.4)} className="mt-16 text-center">
           <p className="text-sm text-[#737373]">
             Plus CI/CD pipelines, Docker, Kubernetes, and more.
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </StaggerContainer>
     </SectionShell>
   );
 }

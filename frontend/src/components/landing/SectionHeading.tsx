@@ -1,3 +1,6 @@
+import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import { motion } from "framer-motion";
+
 interface SectionHeadingProps {
   heading: string;
   subtitle?: string;
@@ -26,17 +29,21 @@ export default function SectionHeading({
       : "text-center mx-auto";
 
   return (
-    <div className={`${alignment} ${align === "left" ? "" : maxWidth} ${marginBottom}`}>
-      <Tag
-        className={`${headingSize} font-bold tracking-tight text-[#191919] font-display mb-4`}
-      >
-        {heading}
-      </Tag>
+    <StaggerContainer className={`${alignment} ${align === "left" ? "" : maxWidth} ${marginBottom}`}>
+      <motion.div variants={fadeInUp(20, 0.5)}>
+        <Tag
+          className={`${headingSize} font-bold tracking-tight text-[#191919] font-display mb-4`}
+        >
+          {heading}
+        </Tag>
+      </motion.div>
       {subtitle && (
-        <p className="text-base sm:text-lg text-[#737373] leading-relaxed">
-          {subtitle}
-        </p>
+        <motion.div variants={fadeInUp(20, 0.5)}>
+          <p className="text-base sm:text-lg text-[#737373] leading-relaxed">
+            {subtitle}
+          </p>
+        </motion.div>
       )}
-    </div>
+    </StaggerContainer>
   );
 }
