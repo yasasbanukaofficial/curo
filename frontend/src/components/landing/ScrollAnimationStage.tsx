@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 import { motion, AnimatePresence } from 'framer-motion';
+import Corner from "./Corner";
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
@@ -136,7 +137,9 @@ export default function ScrollAnimationStage() {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full" style={{ height: '500vh', background: '#fcfcfc' }}>
+    <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative">
+      <Corner />
+      <div ref={containerRef} className="relative w-full" style={{ height: '500vh' }}>
       <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center font-sans">
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 h-[2px] bg-[#0071E3] z-50 transition-all duration-100 ease-out" ref={progressBarRef} style={{ width: '0%' }}></div>
@@ -304,6 +307,7 @@ export default function ScrollAnimationStage() {
           to { opacity: 1; }
         }
       `}</style>
+      </div>
     </div>
   );
 }

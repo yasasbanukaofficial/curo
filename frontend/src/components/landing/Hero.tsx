@@ -30,11 +30,8 @@ export default function Hero() {
         </div>
       </div>
       
-      {/* SCROLL ANIMATION STAGE */}
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">
-        <Corner />
-        <ScrollAnimationStage />
-      </div>
+      <DotsLine className="h-10" />
+      <ScrollAnimationStage />
       <DotsLine className="h-10" />
     </section>
   );

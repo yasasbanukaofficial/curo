@@ -1,0 +1,377 @@
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+import { motion, AnimatePresence } from 'framer-motion';
+
+gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+
+const tools = [
+  { name: "Notion", icon: "N" },
+  { name: "Slack", icon: "S" },
+  { name: "Google Docs", icon: "GD" },
+  { name: "Confluence", icon: "C" },
+  { name: "GitHub", icon: "GH" },
+  { name: "Linear", icon: "L" },
+  { name: "Vercel", icon: "V" },
+  { name: "AWS", icon: "AWS" },
+];
+
+export default function ApplePromoStage() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const [currentAct, setCurrentAct] = useState(1);
+
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.5,
+          onUpdate: (self) => {
+            const p = self.progress;
+            if (progressBarRef.current) {
+              progressBarRef.current.style.width = `${p * 100}%`;
+            }
+            
+            // Map progress 0-1 to Acts 1-13
+            const act = Math.min(13, Math.max(1, Math.ceil(p * 13)));
+            setCurrentAct(act);
+          }
+        }
+      });
+
+      // --- INITIAL SETUP ---
+      // Scene 1: Hero
+      gsap.set('.act1-card', { x: -60, opacity: 0 });
+      gsap.set('.act1-strikethrough', { scaleX: 0, transformOrigin: 'left center' });
+      gsap.set('.particle', { opacity: 0, scale: 0 });
+      gsap.set('.act2-vault', { scale: 0.4, opacity: 0 });
+      gsap.set('.act3-dashboard', { scaleX: 0.3, scaleY: 0.3, opacity: 0, borderRadius: '24px' });
+      gsap.set('.secret-row', { opacity: 0, x: -10 });
+      gsap.set('.check-sync', { scale: 0 });
+      gsap.set('.avatar-orbit', { opacity: 0 });
+      gsap.set('.connect-line', { strokeDashoffset: 100, strokeDasharray: 100 });
+      gsap.set('.act4-terminal', { opacity: 0 });
+      gsap.set('.terminal-text', { width: 0 });
+
+      // Scene 2: Core
+      gsap.set('.file-node', { y: -200, opacity: 0, scale: 0.8 });
+      gsap.set('.central-engine', { scale: 0.5, opacity: 0 });
+      gsap.set('.output-node', { y: 200, opacity: 0, scale: 0.8 });
+      gsap.set('.flow-line', { opacity: 0, scaleY: 0 });
+
+      // Scene 3: Integrations
+      gsap.set('.tool-node', { 
+        x: () => (Math.random() - 0.5) * 1000, 
+        y: () => (Math.random() - 0.5) * 800,
+        scale: 0.5,
+        opacity: 0
+      });
+      gsap.set('.integration-line', { opacity: 0 });
+
+      // Scene 4: Pricing
+      gsap.set('.pricing-card', { x: 0, y: 0, scale: 0.8, opacity: 0, rotation: 0 });
+      gsap.set('.card-1', { zIndex: 30 }); // Starter
+      gsap.set('.card-2', { zIndex: 20 }); // Team
+      gsap.set('.card-3', { zIndex: 10 }); // Enterprise
+
+      // Final CTA
+      gsap.set('.final-cta-btn', { opacity: 0, y: 20 });
+
+      // Ambient breathing loop
+      gsap.to('.act1-card', { rotation: 1, yoyo: true, repeat: -1, duration: 2, ease: 'sine.inOut', stagger: 0.2 });
+
+      // --- TIMELINE ---
+      // 0 to 1 scaling (we have 13 acts, so ~0.076 per act)
+
+      // Act 1: The old way
+      tl.to('.act1-card', { x: 0, opacity: 1, duration: 1, stagger: 0.15, ease: 'power2.out' }, 0);
+      tl.to('.act1-strikethrough', { scaleX: 1, duration: 1.5, ease: 'power2.inOut' }, 0.5);
+
+      // Act 2: Transition to vault
+      tl.to('.act1-card', { scale: 0.6, filter: 'blur(8px)', opacity: 0, duration: 1, ease: 'power2.inOut' }, 2);
+      tl.to('.act1-strikethrough', { scale: 0.6, filter: 'blur(8px)', opacity: 0, duration: 1, ease: 'power2.inOut' }, 2);
+      tl.to('.particle', { opacity: 1, scale: 1, duration: 0.2, stagger: 0.02 }, 2.5);
+      tl.to('.particle', { x: 0, y: 0, opacity: 0, duration: 1, stagger: 0.02, ease: 'power3.in' }, 2.7);
+      tl.to('.act2-vault', { scale: 1, opacity: 1, duration: 1, ease: 'back.out(1.5)' }, 3.2);
+
+      // Act 3: Dashboard
+      tl.to('.act2-vault', { opacity: 0, duration: 0.2 }, 4.5);
+      tl.to('.act3-dashboard', { opacity: 1, scaleX: 1, scaleY: 1, duration: 1.2, ease: 'elastic.out(1, 0.75)' }, 4.5);
+      tl.to('.secret-row', { opacity: 1, x: 0, duration: 0.5, stagger: 0.2 }, 5.2);
+      tl.to('.check-sync', { scale: 1, duration: 0.4, stagger: 0.1, ease: 'back.out(2)' }, 5.8);
+      tl.to('.avatar-orbit', { opacity: 1, duration: 0.5 }, 6);
+
+      // Act 4: Terminal
+      tl.to('.act3-dashboard', { scale: 1.04, y: -12, duration: 1, ease: 'power2.out' }, 7.5);
+      tl.to('.act4-terminal', { opacity: 1, duration: 0.2 }, 8);
+      tl.to('.terminal-text', { width: '100%', duration: 1, ease: 'steps(30)' }, 8.1);
+      tl.to('.act4-terminal-success', { opacity: 1, duration: 0.1 }, 9.2);
+
+      // Transition to Core
+      tl.to(['.act3-dashboard', '.act4-terminal', '.avatar-orbit-container'], { opacity: 0, scale: 0.8, filter: 'blur(10px)', duration: 1 }, 10.5);
+
+      // Act 5: Core - Inputs
+      tl.to('.file-node', { y: -100, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: 'back.out(1.2)' }, 11.5);
+      tl.to('.central-engine', { scale: 1, opacity: 1, duration: 1, ease: 'back.out(1.5)' }, 12);
+      tl.to('.flow-line.in', { opacity: 0.5, scaleY: 1, duration: 1, transformOrigin: 'top center' }, 12.5);
+
+      // Act 6: Core - Processing
+      tl.to('.central-engine', { rotation: 180, boxShadow: '0 0 60px rgba(0,113,227,0.4)', duration: 1.5, ease: 'power2.inOut' }, 14);
+
+      // Act 7: Core - Output
+      tl.to('.flow-line.out', { opacity: 0.5, scaleY: 1, duration: 1, transformOrigin: 'top center' }, 15.5);
+      tl.to('.output-node', { y: 100, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: 'back.out(1.2)' }, 16);
+
+      // Transition to Integrations
+      tl.to(['.file-node', '.output-node', '.flow-line'], { opacity: 0, scale: 0.5, duration: 1 }, 17.5);
+      tl.to('.central-engine', { scale: 0.8, boxShadow: '0 0 0px rgba(0,0,0,0)', duration: 1 }, 17.5);
+
+      // Act 8: Integrations - Scattered
+      tl.to('.tool-node', { opacity: 1, scale: 1, duration: 1, stagger: 0.1, ease: 'back.out(1.5)' }, 18.5);
+
+      // Act 9: Integrations - Snap
+      tools.forEach((_, i) => {
+        const angle = (i / tools.length) * Math.PI * 2;
+        const radius = 240;
+        tl.to(`.tool-node:nth-child(${i + 2})`, { 
+          x: Math.cos(angle) * radius,
+          y: Math.sin(angle) * radius,
+          duration: 1.5,
+          ease: 'power3.inOut'
+        }, 20);
+      });
+      tl.to('.integration-line', { opacity: 0.2, duration: 1 }, 21);
+
+      // Transition to Pricing
+      tl.to(['.tool-node', '.integration-line', '.central-engine'], { opacity: 0, scale: 0, duration: 1, ease: 'power2.in' }, 22.5);
+
+      // Act 10: Pricing - Starter
+      tl.to('.card-1', { scale: 1, opacity: 1, duration: 1, ease: 'power3.out' }, 24);
+      tl.to('.card-2', { scale: 0.95, opacity: 0.5, y: 20, duration: 1, ease: 'power3.out' }, 24);
+      tl.to('.card-3', { scale: 0.9, opacity: 0.2, y: 40, duration: 1, ease: 'power3.out' }, 24);
+
+      // Act 11: Pricing - Team
+      tl.to('.card-1', { x: -300, rotation: -5, duration: 1.5, ease: 'power3.inOut' }, 25.5);
+      tl.to('.card-2', { x: 0, y: 0, scale: 1.1, opacity: 1, zIndex: 40, duration: 1.5, ease: 'power3.inOut' }, 25.5);
+
+      // Act 12: Pricing - Enterprise
+      tl.to('.card-1', { x: -350, opacity: 0.5, scale: 0.9, duration: 1.5, ease: 'power3.inOut' }, 27.5);
+      tl.to('.card-2', { x: 0, scale: 1, opacity: 1, duration: 1.5, ease: 'power3.inOut' }, 27.5);
+      tl.to('.card-3', { x: 350, y: 0, scale: 1.05, opacity: 1, rotation: 5, zIndex: 50, duration: 1.5, ease: 'power3.inOut' }, 27.5);
+
+      // Act 13: Final Outro
+      tl.to(['.card-1', '.card-2', '.card-3'], { y: -50, opacity: 0, duration: 1 }, 29.5);
+      tl.to('.final-cta-btn', { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }, 30.5);
+
+      // Continuous Orbits
+      gsap.to('.avatar-orbit-container', { rotation: 360, repeat: -1, duration: 20, ease: 'none' });
+      gsap.to('.avatar-orbit', { rotation: -360, repeat: -1, duration: 20, ease: 'none' });
+
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const getActText = () => {
+    switch(currentAct) {
+      case 1: return <><div className="text-[#FF3B30] text-xs uppercase font-bold tracking-widest mb-2">The old way</div><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Secrets passed<br/>in messages.</h2></>;
+      case 2: return <h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">One place.</h2>;
+      case 3: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Every secret.<br/>Synced instantly.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">No more .env files passed<br/>in Slack.</p></>;
+      case 4: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">CLI Integrated.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Pull secrets effortlessly.</p></>;
+      case 5: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Connect company<br/>knowledge.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Upload configs and secrets.</p></>;
+      case 6: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Build the<br/>secrets model.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Curo organizes everything.</p></>;
+      case 7: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Generate consistent<br/>output.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">For every environment.</p></>;
+      case 8: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Works with<br/>your tools.</h2></>;
+      case 9: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Everything<br/>connected.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">No migration required.</p></>;
+      case 10: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Start simple.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Free for small teams.</p></>;
+      case 11: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Scale gracefully.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">For growing startups.</p></>;
+      case 12: return <><h2 className="text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight mb-4">Enterprise ready.</h2><p className="text-[16px] text-[#6E6E73] leading-relaxed">Unlimited everything.</p></>;
+      case 13: return <h2 className="text-[64px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight text-center">Ready to centralize?</h2>;
+      default: return null;
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="relative w-full" style={{ height: '1400vh', background: '#fcfcfc' }}>
+      <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center font-sans">
+        <div className="absolute top-0 left-0 h-[2px] bg-[#0071E3] z-50 transition-all duration-100 ease-out" ref={progressBarRef} style={{ width: '0%' }}></div>
+        
+        {/* Dynamic Texts */}
+        <div className={`absolute top-20 ${currentAct === 13 ? 'left-1/2 -translate-x-1/2' : 'left-10 md:left-20'} z-40 max-w-md pointer-events-none transition-all duration-500`}>
+          <AnimatePresence mode="wait">
+            <motion.div key={currentAct} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
+              {getActText()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Global Stage */}
+        <div className="relative w-full max-w-[1200px] h-[700px] flex items-center justify-center z-10 pointer-events-none">
+          
+          {/* --- SCENE 1: HERO --- */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* Act 1 Cards */}
+            <div className="absolute flex gap-6 z-10">
+              <div className="act1-strikethrough absolute top-1/2 left-[-10%] w-[120%] h-1 bg-[#FF3B30] z-20"></div>
+              <div className="act1-card bg-[#F5F5F7] p-4 rounded-[16px] w-[200px] shadow-[0_2px_20px_rgba(0,0,0,0.06)] border border-white/50 relative">
+                <div className="flex items-center gap-2 mb-3 text-[#1D1D1F] font-medium text-sm"><span className="text-xl">💬</span> Slack DM</div>
+                <div className="text-xs text-[#6E6E73] font-mono leading-relaxed">
+                  hey here's the<br/>stripe key:<br/>
+                  <span className="text-[#1D1D1F] bg-gray-200 px-1 rounded">sk-live-...</span>
+                </div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF3B30] rounded-full animate-ping opacity-75"></div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF3B30] rounded-full border-2 border-white"></div>
+              </div>
+              <div className="act1-card bg-[#F5F5F7] p-4 rounded-[16px] w-[200px] shadow-[0_2px_20px_rgba(0,0,0,0.06)] border border-white/50 relative mt-8">
+                <div className="flex items-center gap-2 mb-3 text-[#1D1D1F] font-medium text-sm"><span className="text-xl">📧</span> Email</div>
+                <div className="text-xs text-[#6E6E73] font-mono leading-relaxed">
+                  <span className="text-[#1D1D1F]">API_KEY=sk-...</span><br/>
+                  <span className="italic">(attached)</span>
+                </div>
+              </div>
+              <div className="act1-card bg-[#F5F5F7] p-4 rounded-[16px] w-[200px] shadow-[0_2px_20px_rgba(0,0,0,0.06)] border border-white/50 relative mt-[-20px]">
+                <div className="flex items-center gap-2 mb-3 text-[#1D1D1F] font-medium text-sm"><span className="text-xl">📄</span> .env file</div>
+                <div className="text-xs text-[#6E6E73] font-mono leading-relaxed">
+                  <span className="text-[#1D1D1F]">DB_PASS=hunter2</span><br/>
+                  <span className="italic">(committed 😬)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Act 2 Particles & Vault */}
+            {Array.from({ length: 25 }).map((_, i) => {
+              const angle = (i / 25) * Math.PI * 2;
+              const r = 200 + Math.random() * 100;
+              const startX = Math.cos(angle) * r;
+              const startY = Math.sin(angle) * r;
+              return <div key={i} className="particle absolute w-1.5 h-1.5 bg-[#0071E3] rounded-full" style={{ transform: `translate(${startX}px, ${startY}px)` }}></div>;
+            })}
+            <div className="act2-vault absolute bg-[#F5F5F7] w-[120px] h-[120px] rounded-[32px] flex items-center justify-center shadow-[0_0_40px_rgba(0,113,227,0.2)] border border-white z-20">
+              <svg className="w-12 h-12 text-[#1D1D1F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+
+            {/* Act 3 Dashboard & Orbits */}
+            <div className="absolute w-[600px] h-[600px] flex items-center justify-center z-10">
+              <div className="avatar-orbit-container absolute w-full h-full rounded-full border border-dashed border-[#E5E5EA]">
+                <div className="avatar-orbit absolute top-0 left-1/2 -ml-6 -mt-6 w-12 h-12 rounded-full bg-[#F5F5F7] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#1D1D1F]">AK</div>
+                <div className="avatar-orbit absolute bottom-1/4 -right-2 w-12 h-12 rounded-full bg-[#E8F2FF] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#0071E3]">SM</div>
+                <div className="avatar-orbit absolute bottom-1/4 -left-2 w-12 h-12 rounded-full bg-[#E8F2FF] border-2 border-white shadow-sm flex items-center justify-center text-xs font-medium text-[#0071E3]">JR</div>
+              </div>
+            </div>
+            <div className="act3-dashboard absolute bg-white w-[480px] rounded-[16px] shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-[#E5E5EA] overflow-hidden z-30">
+              <div className="bg-[#F5F5F7] px-6 py-4 border-b border-[#E5E5EA] flex justify-between items-center">
+                <div className="flex items-center gap-2 font-medium text-[#1D1D1F]">Production Secrets</div>
+              </div>
+              <div className="p-6 space-y-4 font-mono text-sm">
+                {['STRIPE_SECRET_KEY', 'DATABASE_URL', 'OPENAI_API_KEY', 'JWT_SECRET'].map((key, i) => (
+                  <div key={i} className="secret-row flex justify-between items-center">
+                    <span className="text-[#6E6E73] w-1/3">{key}</span>
+                    <div className="secret-value relative flex-1 mx-4 h-6 rounded bg-[#F5F5F7] overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#E5E5EA] via-[#F5F5F7] to-[#E5E5EA] w-[200%] animate-[shimmer_2s_linear_infinite]"></div>
+                      <span className="absolute inset-0 flex items-center px-2 tracking-[0.2em] text-[#1D1D1F]">••••••••</span>
+                    </div>
+                    <div className="check-sync flex items-center gap-1 text-[#30D158] text-xs font-sans font-medium">✓ sync</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Act 4 Terminal */}
+            <div className="act4-terminal absolute -bottom-16 w-[480px] z-30 font-mono text-sm">
+              <div className="text-[#1D1D1F] flex relative overflow-hidden h-6 whitespace-nowrap terminal-text border-r-2 border-[#1D1D1F] animate-[blink_1s_step-end_infinite]">
+                $ envsync pull --env production
+              </div>
+              <div className="act4-terminal-success text-[#30D158] mt-2 opacity-0">✓ 12 secrets synced in 0.3s</div>
+            </div>
+          </div>
+
+          {/* --- SCENE 2: CORE --- */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            {/* Engine (also used in Integrations) */}
+            <div className="central-engine absolute top-1/2 left-1/2 -mt-16 -ml-16 w-32 h-32 bg-[#1D1D1F] rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center z-20">
+              <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              <div className="flow-line out absolute top-full left-1/2 w-0.5 h-32 bg-[#30D158] -ml-[1px]"></div>
+            </div>
+            {/* Inputs */}
+            <div className="flex gap-16 absolute top-10">
+              <div className="file-node w-24 h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
+                <span className="text-2xl mb-2">📄</span>
+                <span className="text-xs font-mono text-[#6E6E73]">.env.local</span>
+                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#0071E3] -ml-[1px]"></div>
+              </div>
+              <div className="file-node w-24 h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
+                <span className="text-2xl mb-2">⚙️</span>
+                <span className="text-xs font-mono text-[#6E6E73]">config.yml</span>
+                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#0071E3] -ml-[1px]"></div>
+              </div>
+            </div>
+            {/* Outputs */}
+            <div className="flex gap-8 absolute bottom-10">
+              {['Development', 'Staging', 'Production'].map((env, i) => (
+                <div key={i} className="output-node w-32 h-20 bg-[#E8F2FF] rounded-xl border border-[#0071E3]/20 flex items-center justify-center text-[#0071E3] font-medium text-sm">
+                  {env}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* --- SCENE 3: INTEGRATIONS --- */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {tools.map((tool, i) => (
+              <div key={i} className="tool-node absolute w-16 h-16 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex items-center justify-center text-[#1D1D1F] font-bold text-lg border border-[#E5E5EA] z-30">
+                {tool.icon}
+              </div>
+            ))}
+            <svg className="integration-line absolute inset-0 w-full h-full z-10" viewBox="0 0 1200 700">
+              {tools.map((_, i) => {
+                const angle = (i / tools.length) * Math.PI * 2;
+                const radius = 240;
+                return <line key={i} x1="600" y1="350" x2={600 + Math.cos(angle) * radius} y2={350 + Math.sin(angle) * radius} stroke="#1D1D1F" strokeWidth="2" strokeDasharray="4 4" />;
+              })}
+            </svg>
+          </div>
+
+          {/* --- SCENE 4: PRICING --- */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="pricing-card card-1 absolute w-[300px] bg-white rounded-3xl border border-[#E5E5EA] shadow-xl p-8">
+              <h3 className="text-xl font-semibold text-[#1D1D1F] mb-2">Starter</h3>
+              <div className="text-4xl font-bold text-[#1D1D1F] mb-6">$29<span className="text-sm font-normal text-[#6E6E73]">/mo</span></div>
+              <div className="w-full py-3 bg-[#F5F5F7] text-center rounded-full text-sm font-medium text-[#1D1D1F]">Start Free</div>
+            </div>
+            <div className="pricing-card card-2 absolute w-[300px] bg-white rounded-3xl border border-[#0071E3] shadow-2xl p-8">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0071E3] text-white text-xs font-bold px-3 py-1 rounded-full">Popular</div>
+              <h3 className="text-xl font-semibold text-[#1D1D1F] mb-2">Team</h3>
+              <div className="text-4xl font-bold text-[#1D1D1F] mb-6">$159<span className="text-sm font-normal text-[#6E6E73]">/mo</span></div>
+              <div className="w-full py-3 bg-[#0071E3] text-center rounded-full text-sm font-medium text-white shadow-md">Upgrade to Team</div>
+            </div>
+            <div className="pricing-card card-3 absolute w-[300px] bg-[#1D1D1F] rounded-3xl border border-[#1D1D1F] shadow-2xl p-8 text-white">
+              <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
+              <div className="text-4xl font-bold mb-6">Custom</div>
+              <div className="w-full py-3 bg-white text-center rounded-full text-sm font-medium text-[#1D1D1F]">Contact Sales</div>
+            </div>
+          </div>
+
+          {/* FINAL CTA */}
+          <div className="final-cta-btn absolute bottom-20 pointer-events-auto">
+            <button className="bg-[#0071E3] text-white px-8 py-4 rounded-full font-medium text-lg hover:scale-105 transition-transform shadow-[0_4px_14px_0_rgba(0,113,227,0.39)]">
+              Get Started for Free
+            </button>
+          </div>
+
+        </div>
+      </div>
+      <style>{`
+        @keyframes shimmer { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
+        @keyframes blink { 0%, 100% { border-color: transparent; } 50% { border-color: #1D1D1F; } }
+      `}</style>
+    </div>
+  );
+}
