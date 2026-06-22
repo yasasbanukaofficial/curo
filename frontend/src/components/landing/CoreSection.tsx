@@ -1,5 +1,7 @@
-import DotsLine from "./DotsLine";
-import Corner from "./Corner";
+import { motion } from "framer-motion";
+import SectionShell from "./SectionShell";
+import SectionHeading from "./SectionHeading";
+import StaggerContainer, { fadeInUp } from "./StaggerContainer";
 
 const operations = [
   {
@@ -60,39 +62,32 @@ const operations = [
 
 export default function CoreSection() {
   return (
-    <section className="bg-[#fcfcfc]">
-      <DotsLine className="h-10" />
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative">
-        <Corner />
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#191919] font-display mb-4">
-            Core secrets operations
-          </h2>
-          <p className="text-base sm:text-lg text-[#737373] leading-relaxed">
-            A unified set of tools to keep secrets consistent across your company.
-          </p>
-        </div>
+    <SectionShell>
+      <SectionHeading
+        heading="Core secrets operations"
+        subtitle="A unified set of tools to keep secrets consistent across your company."
+        marginBottom="mb-16"
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {operations.map((op, idx) => (
-            <div
-              key={idx}
-              className="rounded-2xl border border-[#ededed] bg-white p-6 hover:border-[#191919]/20 hover:shadow-sm transition-all duration-300 group"
-            >
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#191919] text-white mb-5 group-hover:bg-[#191919]/90 transition-colors">
-                {op.icon}
-              </div>
-              <h3 className="text-lg font-bold text-[#191919] font-display mb-2">
-                {op.title}
-              </h3>
-              <p className="text-sm text-[#737373] leading-relaxed">
-                {op.description}
-              </p>
+      <StaggerContainer staggerDelay={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {operations.map((op, idx) => (
+          <motion.div
+            key={idx}
+            variants={fadeInUp(30, 0.5)}
+            className="rounded-2xl border border-[#ededed] bg-white p-6 hover:border-[#191919]/20 hover:shadow-sm transition-all duration-300 group"
+          >
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#191919] text-white mb-5 group-hover:bg-[#191919]/90 transition-colors">
+              {op.icon}
             </div>
-          ))}
-        </div>
-      </div>
-      <DotsLine className="h-10" />
-    </section>
+            <h3 className="text-lg font-bold text-[#191919] font-display mb-2">
+              {op.title}
+            </h3>
+            <p className="text-sm text-[#737373] leading-relaxed">
+              {op.description}
+            </p>
+          </motion.div>
+        ))}
+      </StaggerContainer>
+    </SectionShell>
   );
 }

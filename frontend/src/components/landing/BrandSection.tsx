@@ -1,5 +1,4 @@
-import DotsLine from "./DotsLine";
-import Corner from "./Corner";
+import SectionShell from "./SectionShell";
 
 const logos = [
   { name: "Logo 01", url: "https://framerusercontent.com/images/WWMCBTyiJptmzGSZcH82wUzJdk.svg?width=133&height=36" },
@@ -13,26 +12,21 @@ const logos = [
 
 export default function BrandSection() {
   return (
-    <section className="bg-[#fcfcfc]">
-      <DotsLine className="h-10" />
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative">
-        <Corner />
-        <p className="text-center text-sm font-medium text-[#737373] mb-8">
-          Trusted by Leading Teams
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-8">
-          {logos.map((logo, idx) => (
-            <div key={idx} className="opacity-40 hover:opacity-70 transition-opacity">
-              <img
-                src={logo.url}
-                alt={logo.name}
-                className="h-8 w-auto object-contain"
-              />
-            </div>
-          ))}
-        </div>
+    <SectionShell padding="py-12 lg:py-16">
+      <p className="text-center text-sm font-medium text-[#737373] mb-8">
+        Trusted by Leading Teams
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-8">
+        {logos.map((logo, idx) => (
+          <div key={idx} className="opacity-40 hover:opacity-70 transition-opacity">
+            <img
+              src={logo.url}
+              alt={logo.name}
+              className="h-8 w-auto object-contain"
+            />
+          </div>
+        ))}
       </div>
-      <DotsLine className="h-10" />
-    </section>
+    </SectionShell>
   );
 }

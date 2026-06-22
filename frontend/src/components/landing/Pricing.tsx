@@ -1,5 +1,8 @@
-import DotsLine from "./DotsLine";
-import Corner from "./Corner";
+import { motion } from "framer-motion";
+import SectionShell from "./SectionShell";
+import SectionHeading from "./SectionHeading";
+import StaggerContainer, { fadeInUp } from "./StaggerContainer";
+import { CheckIcon } from "./ChevronRightIcon";
 
 export default function Pricing() {
   const plans = [
@@ -58,75 +61,66 @@ export default function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="bg-[#fcfcfc]">
-      <DotsLine className="h-10" />
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative">
-        <Corner />
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#191919] font-display mb-4">
-            Simple, transparent pricing
-          </h2>
-          <p className="text-base sm:text-lg text-[#737373] leading-relaxed">
-            Start with a free trial. No credit card required.
-          </p>
-        </div>
+    <SectionShell id="pricing">
+      <SectionHeading
+        heading="Simple, transparent pricing"
+        subtitle="Start with a free trial. No credit card required."
+        marginBottom="mb-16"
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, idx) => (
-            <div
-              key={idx}
-              className={`relative rounded-2xl border-2 p-8 flex flex-col ${
-                plan.featured
-                  ? "border-[#191919] bg-white shadow-xl"
-                  : "border-dashed border-[#ccc] bg-white shadow-sm"
-              }`}
-            >
-              {plan.featured && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block rounded-full bg-[#191919] px-4 py-1 text-xs font-semibold text-white shadow-sm">
-                  Most Popular
+      <StaggerContainer staggerDelay={0.12} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {plans.map((plan, idx) => (
+          <motion.div
+            key={idx}
+            variants={fadeInUp(30, 0.5)}
+            className={`relative rounded-2xl border-2 p-8 flex flex-col ${
+              plan.featured
+                ? "border-[#191919] bg-white shadow-xl"
+                : "border-dashed border-[#ccc] bg-white shadow-sm"
+            }`}
+          >
+            {plan.featured && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block rounded-full bg-[#191919] px-4 py-1 text-xs font-semibold text-white shadow-sm">
+                Most Popular
+              </span>
+            )}
+            <h3 className="text-lg font-semibold text-[#191919] mb-1">
+              {plan.name}
+            </h3>
+            <div className="flex items-baseline gap-1 mb-6">
+              <span className="text-4xl font-extrabold tracking-tight font-display text-[#191919]">
+                {plan.price}
+              </span>
+              {plan.period && (
+                <span className="text-sm text-[#737373]">
+                  {plan.period}
                 </span>
               )}
-              <h3 className="text-lg font-semibold text-[#191919] mb-1">
-                {plan.name}
-              </h3>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold tracking-tight font-display text-[#191919]">
-                  {plan.price}
-                </span>
-                {plan.period && (
-                  <span className="text-sm text-[#737373]">
-                    {plan.period}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs font-medium text-[#737373] mb-4 uppercase tracking-wider">
-                {plan.description}
-              </p>
-              <ul className="space-y-3 mb-8 flex-1">
-                {plan.features.map((feat, fIdx) => (
-                  <li key={fIdx} className="flex items-start gap-3 text-sm">
-                    <svg className="h-4 w-4 mt-0.5 shrink-0 text-[#191919]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-[#737373]">{feat}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={plan.href}
-                className={`block text-center rounded-full py-3 text-sm font-semibold transition-all active:scale-95 ${
-                  plan.featured
-                    ? "bg-[#191919] text-white hover:bg-[#191919]/90 shadow-sm"
-                    : "border border-[#ddd] bg-white text-[#191919] hover:bg-[#f4f4f4]"
-                }`}
-              >
-                {plan.cta}
-              </a>
             </div>
-          ))}
-        </div>
-      </div>
-      <DotsLine className="h-10" />
-    </section>
+            <p className="text-xs font-medium text-[#737373] mb-4 uppercase tracking-wider">
+              {plan.description}
+            </p>
+            <ul className="space-y-3 mb-8 flex-1">
+              {plan.features.map((feat, fIdx) => (
+                <li key={fIdx} className="flex items-start gap-3 text-sm">
+                  <CheckIcon />
+                  <span className="text-[#737373]">{feat}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href={plan.href}
+              className={`block text-center rounded-full py-3 text-sm font-semibold transition-all active:scale-95 ${
+                plan.featured
+                  ? "bg-[#191919] text-white hover:bg-[#191919]/90 shadow-sm"
+                  : "border border-[#ddd] bg-white text-[#191919] hover:bg-[#f4f4f4]"
+              }`}
+            >
+              {plan.cta}
+            </a>
+          </motion.div>
+        ))}
+      </StaggerContainer>
+    </SectionShell>
   );
 }

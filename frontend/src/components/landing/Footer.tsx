@@ -1,20 +1,10 @@
+import CuroLogo from "./CuroLogo";
+
 const sections = [
-  {
-    title: "Product",
-    links: ["Features", "Integrations", "Pricing", "Changelog"]
-  },
-  {
-    title: "Company",
-    links: ["About", "Blog", "Careers", "Contact"]
-  },
-  {
-    title: "Resources",
-    links: ["Documentation", "API Reference", "Help Center", "Status"]
-  },
-  {
-    title: "Legal",
-    links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"]
-  }
+  { title: "Product", links: ["Features", "Integrations", "Pricing", "Changelog"] },
+  { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
+  { title: "Resources", links: ["Documentation", "API Reference", "Help Center", "Status"] },
+  { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR"] },
 ];
 
 export default function Footer() {
@@ -23,14 +13,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12 mb-12">
           <div className="col-span-2 md:col-span-1">
-            <a href="#" className="flex items-center gap-2 text-lg font-bold tracking-tight text-white font-display mb-4">
-              <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <circle cx="12" cy="12" r="2.5" />
-                <path d="M12 14.5v2" />
-              </svg>
-              Curo
-            </a>
+            <CuroLogo color="text-white" size="sm" className="mb-4" />
             <p className="text-sm text-white/50 leading-relaxed max-w-xs">
               Centralized secrets management for teams that need secure, consistent environment variables at scale.
             </p>
@@ -43,10 +26,7 @@ export default function Footer() {
               <ul className="space-y-3">
                 {section.links.map((link, lIdx) => (
                   <li key={lIdx}>
-                    <a
-                      href="#"
-                      className="text-sm text-white/70 hover:text-white transition-colors"
-                    >
+                    <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">
                       {link}
                     </a>
                   </li>

@@ -1,4 +1,6 @@
 import DotsLine from "./DotsLine";
+import ButtonPrimary from "./ButtonPrimary";
+import ButtonSecondary from "./ButtonSecondary";
 
 export default function BottomCTA() {
   return (
@@ -12,21 +14,15 @@ export default function BottomCTA() {
           Join teams that use Curo to keep secrets secure, environments consistent, and deployments reliable across every project.
         </p>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-          <a
-            href="#pricing"
-            className="w-full sm:w-auto rounded-full bg-[#191919] px-10 py-4 text-sm sm:text-base font-semibold text-white shadow-md hover:bg-[#191919]/90 transition-all active:scale-[0.97] text-center"
-          >
+          <ButtonPrimary href="#pricing" size="lg">
             Start free trial
-          </a>
-          <a
-            href="#"
-            className="group w-full sm:w-auto rounded-full border border-[#ddd] bg-white px-10 py-4 text-sm sm:text-base font-semibold text-[#191919] shadow-sm hover:bg-[#f4f4f4] transition-all active:scale-[0.97] text-center inline-flex items-center justify-center gap-2"
-          >
+          </ButtonPrimary>
+          <ButtonSecondary href="#" size="lg">
             Talk to sales
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-          </a>
+          </ButtonSecondary>
         </div>
       </div>
     </section>
