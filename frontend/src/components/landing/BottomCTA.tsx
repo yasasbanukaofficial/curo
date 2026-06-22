@@ -1,6 +1,7 @@
 import DotsLine from "./DotsLine";
 import ButtonPrimary from "./ButtonPrimary";
 import ButtonSecondary from "./ButtonSecondary";
+import { ChevronRightIcon } from "../ui/Icons";
 
 export default function BottomCTA() {
   return (
@@ -19,9 +20,7 @@ export default function BottomCTA() {
           </ButtonPrimary>
           <ButtonSecondary href="#" size="lg">
             Talk to sales
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRightIcon />
           </ButtonSecondary>
         </div>
       </div>

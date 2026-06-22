@@ -3,6 +3,7 @@ import Corner from "./Corner";
 import CuroLogo from "./CuroLogo";
 import NavLink from "./NavLink";
 import ButtonPrimary from "./ButtonPrimary";
+import { MenuIcon, CloseIcon } from "../ui/Icons";
 
 const links = [
   { href: "#features", label: "Features" },
@@ -33,13 +34,7 @@ export default function Navbar() {
           </div>
           <div className="md:hidden flex items-center">
             <button onClick={() => setIsOpen(!isOpen)} className="text-[#191919] hover:text-[#636363] focus:outline-none">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              {isOpen ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
             </button>
           </div>
         </div>
