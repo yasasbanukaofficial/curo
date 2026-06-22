@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import Corner from "./Corner";
 import CuroLogo from "./CuroLogo";
 import NavLink from "./NavLink";
@@ -15,9 +16,31 @@ const links = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScroll = useRef(0);
+
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", (y) => {
+    const delta = y - lastScroll.current;
+    if (delta > 15) {
+      setHidden(true);
+    } else if (delta < -15) {
+      setHidden(false);
+    }
+    lastScroll.current = y;
+  });
+
+  useEffect(() => {
+    lastScroll.current = 0;
+  }, []);
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-[#fcfcfc] pt-5">
+    <motion.nav
+      className="fixed top-0 z-50 w-full bg-[#fcfcfc] pt-5"
+      animate={{ y: hidden ? -88 : 0 }}
+      transition={{ duration: 0.3, ease: [0.25, 0, 0, 1] }}
+    >
       <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <div className="flex h-16 justify-between items-center border-b border-[#efefef]">
           <div className="flex items-center gap-8">
@@ -55,6 +78,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+    </motion.nav>
   );
 }
