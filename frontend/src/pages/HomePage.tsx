@@ -1,6 +1,6 @@
 import Navbar from "../components/landing/Navbar";
 import Hero from "../components/landing/Hero";
-import AnimationStage from "../components/animations/AnimationStage";
+import AnimationSection from "../components/animations/AnimationSection";
 import Footer from "../components/landing/Footer";
 import SmoothScroll from "../components/animations/SmoothScroll";
 
@@ -10,7 +10,7 @@ function HomePage() {
       <div className="min-h-screen bg-[#fcfcfc] pt-24">
         <Navbar />
         <Hero />
-        <AnimationStage />
+        <AnimationSection />
         <Footer />
       </div>
     </SmoothScroll>

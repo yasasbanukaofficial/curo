@@ -22,7 +22,7 @@ const tools = [
   { name: "AWS", icon: <FaAws className="w-16 h-16 md:w-10 md:h-10 text-[#FF9900]" /> },
 ];
 
-export default function ApplePromoStage() {
+export default function AnimationSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [currentAct, setCurrentAct] = useState(1);
@@ -239,24 +239,25 @@ export default function ApplePromoStage() {
 
   return (
     <div ref={containerRef} className="relative w-full" style={{ height: '1400vh', background: '#fcfcfc' }}>
-      <div className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center font-sans">
+      <div className="sticky top-0 w-full h-screen overflow-hidden font-sans">
         <div className="absolute top-0 left-0 h-[2px] bg-[#1D1D1F] z-50 transition-all duration-100 ease-out" ref={progressBarRef} style={{ width: '0%' }}></div>
-        
-        {/* Dynamic Texts */}
-        <div className={`absolute top-12 md:top-20 left-6 md:left-20 z-40 max-w-md pointer-events-none transition-all duration-500`}>
-          <AnimatePresence mode="popLayout">
-            <motion.div key={currentAct}
-              initial={{ opacity: 0, y: directionRef.current === 'down' ? 20 : -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: directionRef.current === 'down' ? -20 : 20 }}
-              transition={{ duration: 0.35 }}>
-              {getActText()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full h-full relative flex items-center justify-center">
+          
+          {/* Dynamic Texts */}
+          <div className={`absolute top-12 md:top-20 left-6 md:left-20 z-40 max-w-md pointer-events-none transition-all duration-500`}>
+            <AnimatePresence mode="popLayout">
+              <motion.div key={currentAct}
+                initial={{ opacity: 0, y: directionRef.current === 'down' ? 20 : -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: directionRef.current === 'down' ? -20 : 20 }}
+                transition={{ duration: 0.35 }}>
+                {getActText()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-        {/* Global Stage */}
-        <div className="relative w-full max-w-[1200px] h-[700px] flex items-center justify-center z-10 pointer-events-none scale-[0.6] sm:scale-[0.8] md:scale-[0.9] lg:scale-100 origin-center">
+          {/* Global Stage */}
+          <div className="relative w-full max-w-[1200px] h-[700px] flex items-center justify-center z-10 pointer-events-none scale-[0.6] sm:scale-[0.8] md:scale-[0.9] lg:scale-100 origin-center">
           
           {/* --- SCENE 1: HERO --- */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -428,6 +429,7 @@ export default function ApplePromoStage() {
             </Button>
           </div>
 
+        </div>
         </div>
       </div>
       <style>{`
