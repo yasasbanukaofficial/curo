@@ -8,14 +8,16 @@ export default function TopNav() {
   const [search, setSearch] = useState("");
 
   return (
-    <header className="flex items-center h-14 px-6 bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-[#222] transition-colors duration-200">
-      <div className="flex-1 flex items-center">
+    <header className="flex items-center h-16 px-4 md:px-6 bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-[#222] transition-colors duration-200">
+      <div className="flex items-center">
         <CuroLogo size="sm" />
       </div>
 
-      <SearchInput value={search} onChange={setSearch} placeholder="Search secrets, projects, integrations..." />
+      <div className="flex-1 flex justify-center px-3">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search secrets, projects, integrations..." />
+      </div>
 
-      <div className="flex-1 flex items-center justify-end gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
         <DashboardButton className="relative w-9 h-9 rounded-xl text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <Bell className="w-[18px] h-[18px]" />
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-[#FF3B30] rounded-full" />

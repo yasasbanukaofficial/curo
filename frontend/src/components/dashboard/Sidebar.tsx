@@ -89,7 +89,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   return (
-    <aside className="w-[280px] bg-white dark:bg-[#111] border-r border-black/[0.04] dark:border-[#222] flex flex-col flex-shrink-0 transition-colors duration-200">
+    <aside className="hidden lg:flex w-[280px] bg-white dark:bg-[#111] border-r border-black/[0.04] dark:border-[#222] flex-col flex-shrink-0 transition-colors duration-200">
       <div className="px-5 pt-5 pb-4">
         <ProjectSwitcher />
       </div>
