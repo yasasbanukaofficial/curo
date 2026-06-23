@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card, CuroBadge } from "./Card";
 
 interface CrudPageLayoutProps {
   form: ReactNode;
@@ -25,12 +26,12 @@ interface FormCardProps {
 
 export function FormCard({ children, title, description }: FormCardProps) {
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 sm:p-10">
-      <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-700 uppercase">Curo</span>
+    <Card>
+      <CuroBadge />
       <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -42,12 +43,12 @@ interface ListCardProps {
 
 export function ListCard({ children, title, count }: ListCardProps) {
   return (
-    <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 sm:p-10">
+    <Card>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{count}</span>
       </div>
       {children}
-    </div>
+    </Card>
   );
 }

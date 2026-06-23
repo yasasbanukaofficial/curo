@@ -11,7 +11,7 @@ const variantStyles = {
   primary:
     "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98]",
   outline:
-    "border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[0.98]",
+    "border border-[#ddd] bg-white text-[#191919] shadow-sm hover:bg-[#f4f4f4] active:scale-[0.98]",
   secondary:
     "text-white bg-[#191919] hover:bg-[#191919]/90 active:scale-[0.97]",
   danger:
@@ -21,13 +21,13 @@ const variantStyles = {
 };
 
 const sizeStyles = {
-  sm: "px-4 py-2 text-sm font-semibold shadow-sm rounded-[5px]",
-  md: "px-8 py-3.5 text-sm sm:text-base font-semibold shadow-md rounded-[5px]",
-  lg: "px-10 py-4 text-sm sm:text-base font-semibold shadow-md rounded-[5px]",
+  sm: "px-4 py-2 text-sm shadow-sm rounded-[5px]",
+  md: "px-8 py-3.5 text-sm sm:text-base shadow-md rounded-[5px]",
+  lg: "px-10 py-4 text-sm sm:text-base shadow-md rounded-[5px]",
 };
 
 export function Button({ children, variant = "primary", size = "md", href, className = "", ...props }: ButtonProps) {
-  const base = "cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2";
+  const base = "font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2";
 
   if (href) {
     return (

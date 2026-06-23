@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
-import { FormInput, FormSelect } from "../components/ui/FormInput";
+import { FormInput, FormSelect, FormSecretInput } from "../components/ui/FormInput";
 import { Button, ActionButtons } from "../components/ui/Button";
 import { Table, TableHead, Th, TableRow, Td, EmptyRow } from "../components/ui/Table";
-import { PlusIcon, EyeIcon, EyeOffIcon } from "../components/ui/Icons";
+import { PlusIcon } from "../components/ui/Icons";
 import SubmittedSuccess from "../components/ui/SubmittedSuccess";
 import FetchById from "../components/ui/FetchById";
 import CrudPageLayout, { FormCard, ListCard } from "../components/ui/CrudPageLayout";
@@ -13,7 +13,6 @@ function FormPage() {
   const [secretKey, setSecretKey] = useState("");
   const [project, setProject] = useState("");
   const [environment, setEnvironment] = useState("");
-  const [showSecret, setShowSecret] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [secrets, setSecrets] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
@@ -145,19 +144,12 @@ function FormPage() {
         >
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <FormInput id="name" label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. DATABASE_URL" required />
-            <div>
-              <label htmlFor="secretKey" className="block text-sm font-medium text-slate-700">Secret Key</label>
-              <div className="relative mt-1.5">
-                <input id="secretKey" type={showSecret ? "text" : "password"} value={secretKey} onChange={(e) => setSecretKey(e.target.value)}
-                  placeholder={editingId ? "Leave blank to keep current value" : "Enter your secret value"}
-                  required={!editingId}
-                  className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-11 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
-                />
-                <button type="button" onClick={() => setShowSecret((v) => !v)} className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600 cursor-pointer">
-                  {showSecret ? <EyeOffIcon /> : <EyeIcon />}
-                </button>
-              </div>
-            </div>
+            <FormSecretInput
+              id="secretKey" label="Secret Key"
+              value={secretKey} onChange={(e) => setSecretKey(e.target.value)}
+              placeholder={editingId ? "Leave blank to keep current value" : "Enter your secret value"}
+              required={!editingId}
+            />
             <FormSelect id="project" label="Project Name" value={project} onChange={(e) => { setProject(e.target.value); setEnvironment(""); }} required>
               <option value="" disabled>Select a project</option>
               {projects.map((p: any) => <option key={p._id} value={p._id}>{p.projectName}</option>)}

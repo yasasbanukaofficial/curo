@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Table, TableHead, Th, TableRow, Td, EmptyRow } from "../components/ui/Table";
+import { Card, CuroBadge } from "../components/ui/Card";
 
 function AuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -38,7 +39,7 @@ function AuditLogsPage() {
       <div className="w-full max-w-5xl">
         <div className="flex items-center justify-between">
           <div>
-            <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-700 uppercase">Curo</span>
+            <CuroBadge />
             <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">Audit Logs</h1>
             <p className="mt-1 text-sm text-slate-500">Track every action on secrets.</p>
             {currentUser && (
@@ -50,7 +51,7 @@ function AuditLogsPage() {
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{logs.length}</span>
         </div>
 
-        <div className="mt-6 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 sm:p-10">
+        <Card className="mt-6">
           <Table>
             <TableHead>
               <Th>Action</Th>
@@ -74,7 +75,7 @@ function AuditLogsPage() {
               ))}
             </tbody>
           </Table>
-        </div>
+        </Card>
       </div>
     </main>
   );

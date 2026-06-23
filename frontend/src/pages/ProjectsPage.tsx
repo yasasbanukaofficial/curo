@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
-import { FormInput } from "../components/ui/FormInput";
+import { FormInput, FormTextarea } from "../components/ui/FormInput";
 import { Button, ActionButtons } from "../components/ui/Button";
 import { Table, TableHead, Th, TableRow, Td, EmptyRow } from "../components/ui/Table";
 import { PlusIcon } from "../components/ui/Icons";
@@ -103,13 +103,11 @@ function ProjectsPage() {
         >
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <FormInput id="name" label="Project Name" value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="e.g. My Awesome App" required />
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-slate-700">Description</label>
-              <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)}
-                placeholder="Briefly describe the project..." rows={3} required
-                className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none resize-y"
-              />
-            </div>
+            <FormTextarea
+              id="description" label="Description"
+              value={description} onChange={(e) => setDescription(e.target.value)}
+              placeholder="Briefly describe the project..." rows={3} required
+            />
             <div className="flex gap-3">
               <Button type="submit" className="flex-1"><PlusIcon /> {editingId ? "Update Project" : "Create Project"}</Button>
               {editingId && <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>}
