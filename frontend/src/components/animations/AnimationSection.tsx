@@ -20,16 +20,12 @@ export default function AnimationSection() {
   useEffect(() => {
     let ctx = gsap.context(() => {
       const actBoundaries = [
-        { act: 1, start: 0, end: 2 },
-        { act: 2, start: 2, end: 4.5 },
+        { act: 1, start: 0, end: 4.5 },
         { act: 3, start: 4.5, end: 7 },
         { act: 4, start: 7, end: 9.5 },
-        { act: 5, start: 9.5, end: 12 },
-        { act: 6, start: 12, end: 14 },
-        { act: 7, start: 14, end: 16.5 },
-        { act: 8, start: 16.5, end: 19 },
-        { act: 9, start: 19, end: 21.5 },
-        { act: 10, start: 21.5, end: Infinity },
+        { act: 5, start: 9.5, end: 14 },
+        { act: 7, start: 14, end: 19 },
+        { act: 10, start: 19, end: Infinity },
       ];
 
       const tl = gsap.timeline({
@@ -96,7 +92,7 @@ export default function AnimationSection() {
       tl.to('.env-flow-badge', { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: 'power2.out' }, 14.5);
       tl.to(['.pipeline-node', '.pipeline-arrow', '.env-flow-badge'], { opacity: 0, y: -30, duration: 1 }, 16);
 
-      tl.to('.final-cta-wrapper', { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'expo.out' }, 17);
+      tl.to('.final-cta-wrapper', { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'expo.out' }, 19);
 
     }, containerRef);
 
@@ -106,15 +102,10 @@ export default function AnimationSection() {
   const getActText = () => {
     switch(currentAct) {
       case 1: return <><div className="text-[#FF3B30] text-xs uppercase font-bold tracking-widest mb-2">Secrets everywhere</div><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Secrets are<br/>everywhere.</h2></>;
-      case 2: return <h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Out of control.</h2>;
       case 3: return <><div className="text-[#1D1D1F] text-xs uppercase font-bold tracking-widest mb-2">Centralize</div><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">One source<br/>of truth.</h2></>;
       case 4: return <h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Centralized.</h2>;
       case 5: return <><div className="text-[#1D1D1F] text-xs uppercase font-bold tracking-widest mb-2">Manage</div><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Manage every<br/>environment.</h2></>;
-      case 6: return <h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Full control.</h2>;
       case 7: return <><div className="text-[#1D1D1F] text-xs uppercase font-bold tracking-widest mb-2">Sync</div><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Developer<br/>workflow first.</h2></>;
-      case 8: return <h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Instant sync.</h2>;
-      case 9: return <><div className="text-[#1D1D1F] text-xs uppercase font-bold tracking-widest mb-2">Deploy</div><h2 className="text-3xl md:text-[48px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight">Deploy<br/>confidently.</h2></>;
-      case 10: return null;
       default: return null;
     }
   };
@@ -265,7 +256,7 @@ export default function AnimationSection() {
 
           <div className="final-cta-wrapper absolute inset-0 flex flex-col items-center justify-center pointer-events-auto">
             <h2 className="text-4xl md:text-[64px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight text-center mb-8">
-              Ready to centralize?
+              Ready to centralize and sync?
             </h2>
             <Button variant="secondary" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
               Get Started for Free
