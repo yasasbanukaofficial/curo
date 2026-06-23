@@ -29,8 +29,9 @@ export default function Navbar() {
   return (
     <motion.nav
       className="fixed top-0 z-50 w-full bg-[#fcfcfc] pt-5"
+      initial={{ y: -88 }}
       animate={{ y: hidden ? -88 : 0 }}
-      transition={{ duration: 0.3, ease: [0.25, 0, 0, 1] }}
+      transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
     >
       <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <div className="flex h-16 items-center border-b border-[#efefef]">
