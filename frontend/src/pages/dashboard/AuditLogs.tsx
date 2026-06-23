@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 import SearchInput from "../../components/dashboard/SearchInput";
 import FilterTabs from "../../components/dashboard/FilterTabs";
+import DashboardCard from "../../components/dashboard/DashboardCard";
 import { ActionBadge, EnvBadge } from "../../components/dashboard/Badges";
 import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
 
@@ -32,7 +33,7 @@ export default function AuditLogs() {
   });
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 p-6 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Audit Logs</h1>
@@ -48,39 +49,65 @@ export default function AuditLogs() {
 
       <div className="flex items-center gap-3 mb-5">
         <SearchInput value={search} onChange={setSearch} placeholder="Search by target or user..." />
-        <FilterTabs options={actionFilters} value={filter} onChange={setFilter} />
+        <div className="hidden sm:block">
+          <FilterTabs options={actionFilters} value={filter} onChange={setFilter} />
+        </div>
       </div>
 
-      <DashboardTable>
-        <thead>
-          <tr className="border-b border-black/[0.04] dark:border-[#222]">
-            <Th>Event</Th>
-            <Th>Target</Th>
-            <Th>User</Th>
-            <Th>Environment</Th>
-            <Th>Time</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((l, i) => (
-            <Tr key={i}>
-              <Td><ActionBadge label={l.action} /></Td>
-              <Td><span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{l.target}</span></Td>
-              <Td>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-[9px] font-semibold text-[#8E8E93]">
-                    {l.user.charAt(0)}
+      <div className="hidden sm:block">
+        <DashboardTable>
+          <thead>
+            <tr className="border-b border-black/[0.04] dark:border-[#222]">
+              <Th>Event</Th>
+              <Th>Target</Th>
+              <Th>User</Th>
+              <Th>Environment</Th>
+              <Th>Time</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((l, i) => (
+              <Tr key={i}>
+                <Td><ActionBadge label={l.action} /></Td>
+                <Td><span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{l.target}</span></Td>
+                <Td>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-[9px] font-semibold text-[#8E8E93]">
+                      {l.user.charAt(0)}
+                    </div>
+                    <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{l.user}</span>
+                    <span className="text-[10px] text-[#8E8E93]">({l.role})</span>
                   </div>
-                  <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{l.user}</span>
-                  <span className="text-[10px] text-[#8E8E93]">({l.role})</span>
+                </Td>
+                <Td><EnvBadge label={l.env} /></Td>
+                <Td className="text-sm text-[#8E8E93] dark:text-[#666]">{l.time}</Td>
+              </Tr>
+            ))}
+          </tbody>
+        </DashboardTable>
+      </div>
+
+      <div className="sm:hidden space-y-3">
+        {filtered.map((l, i) => (
+          <DashboardCard key={i}>
+            <div className="flex items-start justify-between mb-3">
+              <ActionBadge label={l.action} />
+              <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{l.time}</span>
+            </div>
+            <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-2">{l.target}</p>
+            <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-[9px] font-semibold text-[#8E8E93]">
+                  {l.user.charAt(0)}
                 </div>
-              </Td>
-              <Td><EnvBadge label={l.env} /></Td>
-              <Td className="text-sm text-[#8E8E93] dark:text-[#666]">{l.time}</Td>
-            </Tr>
-          ))}
-        </tbody>
-      </DashboardTable>
+                <span className="text-xs text-[#1D1D1F] dark:text-[#E5E5E5]">{l.user}</span>
+                <span className="text-[10px] text-[#8E8E93]">({l.role})</span>
+              </div>
+              <EnvBadge label={l.env} />
+            </div>
+          </DashboardCard>
+        ))}
+      </div>
     </div>
   );
 }

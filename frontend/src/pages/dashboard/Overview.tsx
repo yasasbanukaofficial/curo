@@ -34,24 +34,24 @@ const liveActivity = [
 function StatCard({ label, value, change, icon: Icon }: typeof statCards[number]) {
   return (
     <DashboardCard hover className="flex-1 min-w-[160px]">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <p className="text-xs text-[#8E8E93] dark:text-[#666] font-medium">{label}</p>
         <Icon className="w-4 h-4 text-[#8E8E93] dark:text-[#666]" />
       </div>
       <p className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] tracking-tight">{value}</p>
-      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">{change}</p>
+      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1.5">{change}</p>
     </DashboardCard>
   );
 }
 
 export default function Overview() {
   return (
-    <div className="flex-1 flex flex-col min-w-0 p-6 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
-      <DashboardCard className="mb-6">
+    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+      <DashboardCard className="mb-8">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-[#8E8E93] dark:text-[#666] font-medium">Good afternoon</p>
-            <h1 className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mt-0.5">Yasas</h1>
+            <h1 className="text-xl md:text-2xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mt-0.5">Yasas</h1>
             <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-1.5">
               1,248 secrets across 14 projects · 99.99% sync success
             </p>
@@ -67,49 +67,49 @@ export default function Overview() {
         </div>
       </DashboardCard>
 
-      <div className="flex gap-4 mb-6 flex-wrap">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
         {statCards.map((s) => <StatCard key={s.label} {...s} />)}
       </div>
 
-      <div className="flex gap-6 flex-1 min-h-0">
-        <div className="flex-[2] flex flex-col gap-6 min-w-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+        <div className="md:col-span-2 flex flex-col gap-6 md:gap-8">
           <DashboardCard>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-5">
               <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Environment Health</h3>
               <span className="text-[11px] text-[#30D158] font-medium">All systems operational</span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {environments.map((env) => (
-                <div key={env.name} className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 transition-all duration-200 hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-[#30D158]" />
-                    <div>
+                <div key={env.name} className="flex items-center justify-between py-3.5 px-3 md:px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 transition-all duration-200 hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+                  <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
+                    <CheckCircle className="w-5 h-5 text-[#30D158] flex-shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{env.name}</p>
-                      <div className="flex items-center gap-3 mt-0.5">
+                      <div className="flex flex-wrap items-center gap-x-3 mt-1">
                         <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{env.secrets} secrets</span>
                         <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">·</span>
                         <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Last sync {env.lastSync}</span>
                       </div>
                     </div>
                   </div>
-                  <RotateCw className="w-3.5 h-3.5 text-[#8E8E93] dark:text-[#666]" />
+                  <RotateCw className="w-3.5 h-3.5 text-[#8E8E93] dark:text-[#666] flex-shrink-0" />
                 </div>
               ))}
             </div>
           </DashboardCard>
 
-          <DashboardCard className="flex-1">
-            <div className="flex items-center justify-between mb-4">
+          <DashboardCard>
+            <div className="flex items-center justify-between mb-5">
               <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Recent Secret Activity</h3>
-              <DashboardButton className="text-[11px] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] font-medium">
+              <DashboardButton className="hidden sm:inline-flex text-[11px] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] font-medium">
                 View all
               </DashboardButton>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {recentChanges.map((item) => (
                 <div
                   key={`${item.secret}-${item.time}`}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50"
+                  className="flex items-center justify-between py-3 px-3 rounded-xl transition-all duration-200 hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-2 h-2 rounded-full bg-[#1D1D1F] dark:bg-[#E5E5E5] flex-shrink-0" />
@@ -127,12 +127,15 @@ export default function Overview() {
                 </div>
               ))}
             </div>
+            <DashboardButton className="sm:hidden w-full mt-4 text-[11px] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] font-medium justify-center">
+              View all
+            </DashboardButton>
           </DashboardCard>
         </div>
 
-        <div className="flex-1 min-w-[260px] max-w-[320px]">
+        <div className="hidden md:block md:col-span-1">
           <DashboardCard className="h-full">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-5">
               <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Live Activity</h3>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-[#30D158] rounded-full animate-pulse" />
@@ -143,20 +146,48 @@ export default function Overview() {
               {liveActivity.map((item, i) => (
                 <div key={i} className="relative pl-5 pb-5 last:pb-0">
                   {i < liveActivity.length - 1 && (
-                    <div className="absolute left-[5px] top-2 bottom-0 w-px bg-black/[0.06] dark:bg-white/[0.06]" />
+                    <div className="absolute left-[5px] top-2.5 bottom-0 w-px bg-black/[0.06] dark:bg-white/[0.06]" />
                   )}
-                  <div className="absolute left-0 top-1.5 w-[10px] h-[10px] rounded-full border-2 border-[#1D1D1F] dark:border-[#E5E5E5] bg-white dark:bg-[#111]" />
+                  <div className="absolute left-0 top-2 w-[10px] h-[10px] rounded-full border-2 border-[#1D1D1F] dark:border-[#E5E5E5] bg-white dark:bg-[#111]" />
                   <div className="min-w-0">
                     <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5] leading-snug">
                       <span className="font-medium">{item.user}</span> {item.action} <span className="font-medium">{item.target}</span>
                     </p>
-                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">{item.time}</p>
+                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">{item.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           </DashboardCard>
         </div>
+      </div>
+
+      <div className="md:hidden mt-8">
+        <DashboardCard>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-5">
+            <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Live Activity</h3>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-[#30D158] rounded-full animate-pulse" />
+              <span className="text-[10px] text-[#30D158] font-medium">Live</span>
+            </span>
+          </div>
+          <div className="space-y-0">
+            {liveActivity.map((item, i) => (
+              <div key={i} className="relative pl-5 pb-5 last:pb-0">
+                {i < liveActivity.length - 1 && (
+                  <div className="absolute left-[5px] top-2.5 bottom-0 w-px bg-black/[0.06] dark:bg-white/[0.06]" />
+                )}
+                <div className="absolute left-0 top-2 w-[10px] h-[10px] rounded-full border-2 border-[#1D1D1F] dark:border-[#E5E5E5] bg-white dark:bg-[#111]" />
+                <div className="min-w-0">
+                  <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5] leading-snug">
+                    <span className="font-medium">{item.user}</span> {item.action} <span className="font-medium">{item.target}</span>
+                  </p>
+                  <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">{item.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DashboardCard>
       </div>
     </div>
   );

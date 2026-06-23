@@ -10,7 +10,7 @@ const environments = [
 
 export default function Environments() {
   return (
-    <div className="flex-1 flex flex-col min-w-0 p-6 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Environments</h1>
