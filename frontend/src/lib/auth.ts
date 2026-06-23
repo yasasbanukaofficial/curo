@@ -2,14 +2,14 @@ import type { LoginFormValues, RegisterFormValues } from "../types/auth";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export async function loginUser(values: LoginFormValues): Promise<void> {
+export async function loginUser(_values: LoginFormValues): Promise<void> {
   // TODO: Implement login API call
   // POST /auth/login with email, password
   // On success: store user state, redirect to /dashboard
   // On error: throw with error message
 }
 
-export async function registerUser(values: RegisterFormValues): Promise<void> {
+export async function registerUser(_values: RegisterFormValues): Promise<void> {
   // TODO: Implement register API call
   // POST /auth/register with name, email, password
   // On success: auto-login or redirect to /login

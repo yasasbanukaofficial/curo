@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ZodSchema, ZodError } from "zod";
+import type { ZodSchema } from "zod";
 
 export interface LoginFormValues {
   email: string;

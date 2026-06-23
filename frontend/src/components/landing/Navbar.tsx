@@ -50,6 +50,12 @@ export default function Navbar() {
               <StarIcon className="h-3.5 w-3.5" />
             </a>
             <a
+              href="/pricing"
+              className="px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
+            >
+              Pricing
+            </a>
+            <a
               href="#"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
             >
@@ -83,6 +89,13 @@ export default function Navbar() {
             <GitHubIcon className="h-5 w-5" />
             <span>Star</span>
             <StarIcon className="h-4 w-4" />
+          </a>
+          <a
+            href="/pricing"
+            onClick={() => setIsOpen(false)}
+            className="block py-2 text-base font-medium text-[#636363] hover:text-[#191919]"
+          >
+            Pricing
           </a>
           <a
             href="#"
