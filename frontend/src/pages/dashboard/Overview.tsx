@@ -1,0 +1,163 @@
+import { KeyRound, FolderKanban, Users, Rocket, CheckCircle, RotateCw } from "lucide-react";
+import DashboardCard from "../../components/dashboard/DashboardCard";
+import DashboardButton from "../../components/dashboard/DashboardButton";
+
+const statCards = [
+  { label: "Secrets", value: "1,248", change: "+24 this week", icon: KeyRound },
+  { label: "Projects", value: "14", change: "2 new this month", icon: FolderKanban },
+  { label: "Developers", value: "23", change: "5 active now", icon: Users },
+  { label: "Deployments", value: "482", change: "99.99% success", icon: Rocket },
+];
+
+const environments = [
+  { name: "Development", lastSync: "2m ago", secrets: 342 },
+  { name: "Staging", lastSync: "5m ago", secrets: 289 },
+  { name: "Production", lastSync: "1m ago", secrets: 617 },
+];
+
+const recentChanges = [
+  { secret: "DATABASE_URL", action: "updated", user: "Yasas", time: "2m ago", env: "production" },
+  { secret: "OPENAI_API_KEY", action: "rotated", user: "System", time: "5m ago", env: "staging" },
+  { secret: "JWT_SECRET", action: "created", user: "Yasas", time: "10m ago", env: "production" },
+  { secret: "STRIPE_API_KEY", action: "updated", user: "Alex", time: "18m ago", env: "production" },
+  { secret: "REDIS_URL", action: "deleted", user: "Sam", time: "25m ago", env: "development" },
+];
+
+const liveActivity = [
+  { user: "Yasas", action: "updated", target: "STRIPE_KEY", time: "2m ago" },
+  { user: "Admin", action: "granted access to", target: "Production vault", time: "4m ago" },
+  { user: "System", action: "synced", target: "Production environment", time: "5m ago" },
+  { user: "Yasas", action: "created", target: "OPENAI_API_KEY", time: "8m ago" },
+  { user: "Sam", action: "deployed", target: "main → production", time: "12m ago" },
+];
+
+function StatCard({ label, value, change, icon: Icon }: typeof statCards[number]) {
+  return (
+    <DashboardCard hover className="flex-1 min-w-[160px]">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-[#8E8E93] dark:text-[#666] font-medium">{label}</p>
+        <Icon className="w-4 h-4 text-[#8E8E93] dark:text-[#666]" />
+      </div>
+      <p className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] tracking-tight">{value}</p>
+      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">{change}</p>
+    </DashboardCard>
+  );
+}
+
+export default function Overview() {
+  return (
+    <div className="flex-1 flex flex-col min-w-0 p-6 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+      <DashboardCard className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-[#8E8E93] dark:text-[#666] font-medium">Good afternoon</p>
+            <h1 className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mt-0.5">Yasas</h1>
+            <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-1.5">
+              1,248 secrets across 14 projects · 99.99% sync success
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-3">
+            <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+              Add Secret
+            </DashboardButton>
+            <DashboardButton className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl hover:bg-[#eee] dark:hover:bg-[#222]">
+              New Project
+            </DashboardButton>
+          </div>
+        </div>
+      </DashboardCard>
+
+      <div className="flex gap-4 mb-6 flex-wrap">
+        {statCards.map((s) => <StatCard key={s.label} {...s} />)}
+      </div>
+
+      <div className="flex gap-6 flex-1 min-h-0">
+        <div className="flex-[2] flex flex-col gap-6 min-w-0">
+          <DashboardCard>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Environment Health</h3>
+              <span className="text-[11px] text-[#30D158] font-medium">All systems operational</span>
+            </div>
+            <div className="space-y-1">
+              {environments.map((env) => (
+                <div key={env.name} className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 transition-all duration-200 hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-[#30D158]" />
+                    <div>
+                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{env.name}</p>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{env.secrets} secrets</span>
+                        <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">·</span>
+                        <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Last sync {env.lastSync}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <RotateCw className="w-3.5 h-3.5 text-[#8E8E93] dark:text-[#666]" />
+                </div>
+              ))}
+            </div>
+          </DashboardCard>
+
+          <DashboardCard className="flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Recent Secret Activity</h3>
+              <DashboardButton className="text-[11px] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] font-medium">
+                View all
+              </DashboardButton>
+            </div>
+            <div className="space-y-1">
+              {recentChanges.map((item) => (
+                <div
+                  key={`${item.secret}-${item.time}`}
+                  className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-[#1D1D1F] dark:bg-[#E5E5E5] flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{item.secret}</p>
+                      <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
+                        <span className="font-medium">{item.action}</span> by {item.user}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[10px] font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] px-2 py-0.5 rounded-md">{item.env}</span>
+                    <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{item.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DashboardCard>
+        </div>
+
+        <div className="flex-1 min-w-[260px] max-w-[320px]">
+          <DashboardCard className="h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Live Activity</h3>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-[#30D158] rounded-full animate-pulse" />
+                <span className="text-[10px] text-[#30D158] font-medium">Live</span>
+              </span>
+            </div>
+            <div className="space-y-0">
+              {liveActivity.map((item, i) => (
+                <div key={i} className="relative pl-5 pb-5 last:pb-0">
+                  {i < liveActivity.length - 1 && (
+                    <div className="absolute left-[5px] top-2 bottom-0 w-px bg-black/[0.06] dark:bg-white/[0.06]" />
+                  )}
+                  <div className="absolute left-0 top-1.5 w-[10px] h-[10px] rounded-full border-2 border-[#1D1D1F] dark:border-[#E5E5E5] bg-white dark:bg-[#111]" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5] leading-snug">
+                      <span className="font-medium">{item.user}</span> {item.action} <span className="font-medium">{item.target}</span>
+                    </p>
+                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">{item.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DashboardCard>
+        </div>
+      </div>
+    </div>
+  );
+}

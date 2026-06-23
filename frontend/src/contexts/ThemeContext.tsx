@@ -17,6 +17,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem("curo-theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   const toggle = () => setTheme((t) => (t === "light" ? "dark" : "light"));
