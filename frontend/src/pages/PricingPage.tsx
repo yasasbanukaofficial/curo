@@ -236,7 +236,7 @@ export default function PricingPage() {
             <p className="text-sm sm:text-base text-[#6E6E73] leading-relaxed mb-8 max-w-2xl mx-auto">
               Join thousands of teams that trust Curo for their secret management.
             </p>
-            <Button variant="secondary" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
+            <Button variant="secondary" href="/register" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
               Get Started for Free
               <PiArrowUpRight className="h-5 w-5" />
             </Button>

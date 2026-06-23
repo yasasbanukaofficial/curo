@@ -66,7 +66,7 @@ export default function Navbar() {
           <div className="flex-1 flex items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
               <a href="/login" className="text-sm font-medium text-[#636363] hover:text-[#191919] transition-colors">Sign In</a>
-              <Button variant="secondary" href="#deploy" size="sm">Get Started</Button>
+              <Button variant="secondary" href="/register" size="sm">Get Started</Button>
             </div>
             <div className="md:hidden flex items-center">
               <button onClick={() => setIsOpen(!isOpen)} className="text-[#191919] hover:text-[#636363] focus:outline-none">
@@ -107,7 +107,7 @@ export default function Navbar() {
           </a>
           <div className="pt-4 border-t border-[#efefef] flex flex-col gap-2">
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363]">Sign In</a>
-            <Button variant="secondary" href="#deploy" onClick={() => setIsOpen(false)} className="w-full text-base font-medium" size="sm">
+            <Button variant="secondary" href="/register" onClick={() => setIsOpen(false)} className="w-full text-base font-medium" size="sm">
               Get Started
             </Button>
           </div>

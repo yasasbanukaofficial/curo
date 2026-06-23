@@ -258,7 +258,7 @@ export default function AnimationSection() {
             <h2 className="text-4xl md:text-[64px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight text-center mb-8">
               Ready to centralize and sync?
             </h2>
-            <Button variant="secondary" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
+            <Button variant="secondary" href="/register" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
               Get Started for Free
             </Button>
           </div>

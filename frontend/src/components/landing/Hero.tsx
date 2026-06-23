@@ -40,7 +40,7 @@ export default function Hero() {
             Curo securely stores, manages, and syncs environment variables across your projects, teams, and environments.
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Button variant="secondary" href="#deploy">
+            <Button variant="secondary" href="/register">
               Get Started
             </Button>
             <Button variant="outline" href="#secrets">
