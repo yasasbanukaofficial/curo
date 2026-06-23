@@ -85,7 +85,8 @@ export default function AnimationSection() {
       gsap.set('.terminal-text', { width: 0 });
 
       // Scene 2: Core
-      gsap.set('.file-node', { y: -200, opacity: 0, scale: 0.8 });
+      gsap.set('.file-node-left', { x: -200, opacity: 0, scale: 0.8 });
+      gsap.set('.file-node-right', { x: 200, opacity: 0, scale: 0.8 });
       gsap.set('.central-engine', { scale: 0.5, opacity: 0 });
       gsap.set('.output-node', { y: 200, opacity: 0, scale: 0.8 });
       gsap.set('.flow-line', { opacity: 0, scaleY: 0 });
@@ -101,10 +102,16 @@ export default function AnimationSection() {
       gsap.set('.integration-line', { opacity: 0 });
 
       // Scene 4: Pricing
-      gsap.set('.pricing-card', { x: 0, y: 0, scale: 0.8, opacity: 0, rotation: 0 });
-      gsap.set('.card-1', { zIndex: 30 }); // Starter
-      gsap.set('.card-2', { zIndex: 20 }); // Team
-      gsap.set('.card-3', { zIndex: 10 }); // Enterprise
+      if (isMobile) {
+        gsap.set('.card-1', { x: 0, y: 0, scale: 0.8, opacity: 0, rotation: 0, zIndex: 30 });
+        gsap.set('.card-2', { x: 0, y: 200, scale: 0.8, opacity: 0, rotation: 0, zIndex: 20 });
+        gsap.set('.card-3', { x: 0, y: 400, scale: 0.8, opacity: 0, rotation: 0, zIndex: 10 });
+      } else {
+        gsap.set('.pricing-card', { x: 0, y: 0, scale: 0.8, opacity: 0, rotation: 0 });
+        gsap.set('.card-1', { zIndex: 30 });
+        gsap.set('.card-2', { zIndex: 20 });
+        gsap.set('.card-3', { zIndex: 10 });
+      }
 
       // Final CTA
       gsap.set('.final-cta-wrapper', { opacity: 0, scale: 0.9, y: 50 });
@@ -140,7 +147,7 @@ export default function AnimationSection() {
       tl.to(['.act3-dashboard', '.act4-terminal', '.avatar-orbit-container'], { opacity: 0, scale: 0.8, filter: 'blur(10px)', duration: 1 }, 10.5);
 
       // Act 5: Core - Inputs
-      tl.to('.file-node', { y: -100, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: 'back.out(1.2)' }, 11.5);
+      tl.to(['.file-node-left', '.file-node-right'], { x: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: 'back.out(1.2)' }, 11.5);
       tl.to('.central-engine', { scale: 1, opacity: 1, duration: 1, ease: 'back.out(1.5)' }, 12);
       tl.to('.flow-line.in', { opacity: 0.5, scaleY: 1, duration: 1, transformOrigin: 'top center' }, 12.5);
 
@@ -148,7 +155,6 @@ export default function AnimationSection() {
       tl.to('.central-engine', { rotation: 180, boxShadow: '0 0 60px rgba(29,29,31,0.4)', duration: 1.5, ease: 'power2.inOut' }, 14);
 
       // Act 7: Core - Output
-      tl.to('.flow-line.out', { opacity: 0.5, scaleY: 1, duration: 1, transformOrigin: 'top center' }, 15.5);
       tl.to('.output-node', { y: 100, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: 'back.out(1.2)' }, 16);
 
       // Transition to Integrations
@@ -239,6 +245,13 @@ export default function AnimationSection() {
 
   return (
     <div ref={containerRef} className="relative w-full" style={{ height: '1400vh', background: '#fcfcfc' }}>
+      {/* Nav anchor targets - positioned at each act's scroll position */}
+      <div id="problem" className="absolute top-0 left-0 w-px h-px scroll-mt-24" />
+      <div id="features" className="absolute top-[15%] left-0 w-px h-px scroll-mt-24" />
+      <div id="centralized" className="absolute top-[33%] left-0 w-px h-px scroll-mt-24" />
+      <div id="integrations" className="absolute top-[58%] left-0 w-px h-px scroll-mt-24" />
+      <div id="pricing" className="absolute top-[76%] left-0 w-px h-px scroll-mt-24" />
+
       <div className="sticky top-0 w-full h-screen overflow-hidden font-sans">
         <div className="absolute top-0 left-0 h-[2px] bg-[#1D1D1F] z-50 transition-all duration-100 ease-out" ref={progressBarRef} style={{ width: '0%' }}></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full h-full relative flex items-center justify-center">
@@ -342,26 +355,25 @@ export default function AnimationSection() {
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {/* Engine (also used in Integrations) */}
             <div className="central-engine absolute top-1/2 left-1/2 -mt-20 -ml-20 md:-mt-16 md:-ml-16 w-40 h-40 md:w-32 md:h-32 bg-[#1D1D1F] rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center z-20">
-              <PiFlask className="w-16 h-16 md:w-14 md:h-14 text-white" />
-              <div className="flow-line out absolute top-full left-1/2 w-0.5 h-32 bg-[#30D158] -ml-[1px]"></div>
+              <PiFlask className="w-12 h-12 md:w-10 md:h-10 text-white" />
             </div>
             {/* Inputs */}
-            <div className="flex gap-10 md:gap-16 absolute top-6 md:top-10">
-              <div className="file-node w-24 h-32 md:w-24 md:h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
+            <div className="flex gap-8 md:gap-12 absolute top-24 md:top-12">
+              <div className="file-node file-node-left w-28 h-36 md:w-24 md:h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
                 <span className="text-2xl md:text-2xl mb-2">📄</span>
                 <span className="text-xs md:text-xs font-mono text-[#6E6E73]">.env.local</span>
-                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#1D1D1F] -ml-[1px]"></div>
+                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[60px] bg-[#1D1D1F] -ml-[1px]"></div>
               </div>
-              <div className="file-node w-24 h-32 md:w-24 md:h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
+              <div className="file-node file-node-right w-28 h-36 md:w-24 md:h-32 bg-white rounded-xl border border-[#E5E5EA] shadow-sm flex flex-col items-center justify-center relative">
                 <span className="text-2xl md:text-2xl mb-2">⚙️</span>
                 <span className="text-xs md:text-xs font-mono text-[#6E6E73]">config.yml</span>
-                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[100px] bg-[#1D1D1F] -ml-[1px]"></div>
+                <div className="flow-line in absolute top-full left-1/2 w-0.5 h-[60px] bg-[#1D1D1F] -ml-[1px]"></div>
               </div>
             </div>
             {/* Outputs */}
               <div className="flex gap-4 md:gap-8 absolute bottom-6 md:bottom-10">
               {['Development', 'Staging', 'Production'].map((env, i) => (
-                <div key={i} className="output-node w-28 h-20 md:w-32 md:h-20 bg-[#F5F5F7] rounded-xl border border-[#E5E5EA] flex items-center justify-center text-[#1D1D1F] font-medium text-xs md:text-sm">
+                <div key={i} className="output-node w-32 h-24 md:w-32 md:h-20 bg-[#F5F5F7] rounded-xl border border-[#E5E5EA] flex items-center justify-center text-[#1D1D1F] font-medium text-xs md:text-sm">
                   {env}
                 </div>
               ))}
@@ -386,31 +398,31 @@ export default function AnimationSection() {
 
           {/* --- SCENE 4: PRICING --- */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="pricing-card card-1 absolute w-[420px] md:w-[300px] bg-white rounded-3xl border border-[#E5E5EA] shadow-xl p-8 md:p-8 pointer-events-auto">
-              <h3 className="text-3xl md:text-xl font-semibold text-[#1D1D1F] mb-3">Starter</h3>
-              <div className="text-5xl md:text-4xl font-bold text-[#1D1D1F] mb-6">$29<span className="text-base md:text-sm font-normal text-[#6E6E73]">/mo</span></div>
-              <ul className="space-y-3 md:space-y-3 mb-8 text-base md:text-sm text-[#6E6E73]">
+            <div className="pricing-card card-1 absolute w-[320px] sm:w-[360px] md:w-[300px] bg-white rounded-3xl border border-[#E5E5EA] shadow-xl p-6 sm:p-8 md:p-8 pointer-events-auto inset-x-0 mx-auto">
+              <h3 className="text-2xl sm:text-3xl md:text-xl font-semibold text-[#1D1D1F] mb-3">Starter</h3>
+              <div className="text-4xl sm:text-5xl md:text-4xl font-bold text-[#1D1D1F] mb-6">$29<span className="text-sm sm:text-base md:text-sm font-normal text-[#6E6E73]">/mo</span></div>
+              <ul className="space-y-2 sm:space-y-3 md:space-y-3 mb-6 sm:mb-8 md:mb-8 text-sm sm:text-base md:text-sm text-[#6E6E73]">
                 <li>✓ Up to 5 team members</li>
                 <li>✓ 50,000 secrets</li>
                 <li>✓ Basic vault setup</li>
               </ul>
               <Button variant="outline" size="md" className="w-full bg-[#F5F5F7] border-0 text-[#1D1D1F] hover:bg-[#E5E5EA] rounded-[5px]">Start Free Trial</Button>
             </div>
-            <div className="pricing-card card-2 absolute w-[420px] md:w-[300px] bg-white rounded-3xl border-2 border-[#1D1D1F] shadow-2xl p-8 md:p-8 pointer-events-auto">
+            <div className="pricing-card card-2 absolute w-[320px] sm:w-[360px] md:w-[300px] bg-white rounded-3xl border-2 border-[#1D1D1F] shadow-2xl p-6 sm:p-8 md:p-8 pointer-events-auto inset-x-0 mx-auto">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1D1D1F] text-white text-xs md:text-xs font-bold px-3 py-1 rounded-full">Popular</div>
-              <h3 className="text-3xl md:text-xl font-semibold text-[#1D1D1F] mb-3">Team</h3>
-              <div className="text-5xl md:text-4xl font-bold text-[#1D1D1F] mb-6">$159<span className="text-base md:text-sm font-normal text-[#6E6E73]">/mo</span></div>
-              <ul className="space-y-3 md:space-y-3 mb-8 text-base md:text-sm text-[#6E6E73]">
+              <h3 className="text-2xl sm:text-3xl md:text-xl font-semibold text-[#1D1D1F] mb-3">Team</h3>
+              <div className="text-4xl sm:text-5xl md:text-4xl font-bold text-[#1D1D1F] mb-6">$159<span className="text-sm sm:text-base md:text-sm font-normal text-[#6E6E73]">/mo</span></div>
+              <ul className="space-y-2 sm:space-y-3 md:space-y-3 mb-6 sm:mb-8 md:mb-8 text-sm sm:text-base md:text-sm text-[#6E6E73]">
                 <li>✓ Up to 25 team members</li>
                 <li>✓ Advanced access controls</li>
                 <li>✓ Version history & rollbacks</li>
               </ul>
               <Button variant="secondary" size="md" className="w-full py-4 shadow-md rounded-[5px]">Upgrade to Team</Button>
             </div>
-            <div className="pricing-card card-3 absolute w-[420px] md:w-[300px] bg-[#F5F5F7] rounded-3xl border border-[#E5E5EA] shadow-2xl p-8 md:p-8 pointer-events-auto">
-              <h3 className="text-3xl md:text-xl font-semibold mb-3">Enterprise</h3>
-              <div className="text-5xl md:text-4xl font-bold mb-6">Custom</div>
-              <ul className="space-y-3 md:space-y-3 mb-8 text-base md:text-sm text-[#6E6E73]">
+            <div className="pricing-card card-3 absolute w-[320px] sm:w-[360px] md:w-[300px] bg-[#F5F5F7] rounded-3xl border border-[#E5E5EA] shadow-2xl p-6 sm:p-8 md:p-8 pointer-events-auto inset-x-0 mx-auto">
+              <h3 className="text-2xl sm:text-3xl md:text-xl font-semibold mb-3">Enterprise</h3>
+              <div className="text-4xl sm:text-5xl md:text-4xl font-bold mb-6">Custom</div>
+              <ul className="space-y-2 sm:space-y-3 md:space-y-3 mb-6 sm:mb-8 md:mb-8 text-sm sm:text-base md:text-sm text-[#6E6E73]">
                 <li>✓ Unlimited everything</li>
                 <li>✓ Dedicated manager</li>
                 <li>✓ Custom SLA guarantees</li>
