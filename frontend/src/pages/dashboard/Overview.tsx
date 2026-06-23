@@ -46,7 +46,7 @@ function StatCard({ label, value, change, icon: Icon }: typeof statCards[number]
 
 export default function Overview() {
   return (
-    <div className="flex-1 flex flex-col min-w-0 p-6 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+    <div className="flex-1 flex flex-col min-w-0 p-6 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <DashboardCard className="mb-6">
         <div className="flex items-center justify-between">
           <div>

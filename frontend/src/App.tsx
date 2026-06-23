@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import Overview from "./pages/dashboard/Overview";
+import Projects from "./pages/dashboard/Projects";
 import Secrets from "./pages/dashboard/Secrets";
 import Environments from "./pages/dashboard/Environments";
 import Integrations from "./pages/dashboard/Integrations";
@@ -18,6 +19,7 @@ function App() {
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<Overview />} />
+        <Route path="projects" element={<Projects />} />
         <Route path="secrets" element={<Secrets />} />
         <Route path="environments" element={<Environments />} />
         <Route path="integrations" element={<Integrations />} />

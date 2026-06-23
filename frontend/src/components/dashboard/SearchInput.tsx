@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, Command } from "lucide-react";
 
 interface SearchInputProps {
   value: string;
@@ -21,8 +21,12 @@ export default function SearchInput({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full h-9 pl-10 pr-4 text-sm bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl rounded-xl border border-black/[0.04] dark:border-[#222] outline-none text-[#1D1D1F] dark:text-[#E5E5E5] placeholder-[#8E8E93] dark:placeholder-[#666] transition-colors duration-200"
+        className="w-full h-9 pl-10 pr-12 text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none text-[#1D1D1F] dark:text-[#E5E5E5] placeholder-[#8E8E93] dark:placeholder-[#666] transition-colors duration-200"
       />
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] font-medium text-[#8E8E93] dark:text-[#666]">
+        <Command className="w-3 h-3" />
+        <span>K</span>
+      </div>
     </div>
   );
 }
