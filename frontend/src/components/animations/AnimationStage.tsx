@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SiNotion, SiSlack, SiGoogledocs, SiConfluence, SiGithub, SiLinear, SiVercel, SiRailway } from 'react-icons/si';
 import { FaAws } from 'react-icons/fa';
 import { PiFlask } from 'react-icons/pi';
+import { Button } from '../ui/Button';
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
@@ -25,6 +26,8 @@ export default function ApplePromoStage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [currentAct, setCurrentAct] = useState(1);
+  const prevActRef = useRef(1);
+  const directionRef = useRef<'down' | 'up'>('down');
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -56,7 +59,12 @@ export default function ApplePromoStage() {
               progressBarRef.current.style.width = `${self.progress * 100}%`;
             }
             const boundary = actBoundaries.find(b => currentTime >= b.start && currentTime < b.end);
-            setCurrentAct(boundary ? boundary.act : 13);
+            const newAct = boundary ? boundary.act : 13;
+            if (newAct !== prevActRef.current) {
+              directionRef.current = newAct > prevActRef.current ? 'down' : 'up';
+              prevActRef.current = newAct;
+            }
+            setCurrentAct(newAct);
           }
         }
       });
@@ -236,8 +244,12 @@ export default function ApplePromoStage() {
         
         {/* Dynamic Texts */}
         <div className={`absolute top-12 md:top-20 left-6 md:left-20 z-40 max-w-md pointer-events-none transition-all duration-500`}>
-          <AnimatePresence mode="wait">
-            <motion.div key={currentAct} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
+          <AnimatePresence mode="popLayout">
+            <motion.div key={currentAct}
+              initial={{ opacity: 0, y: directionRef.current === 'down' ? 20 : -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: directionRef.current === 'down' ? -20 : 20 }}
+              transition={{ duration: 0.35 }}>
               {getActText()}
             </motion.div>
           </AnimatePresence>
@@ -381,7 +393,7 @@ export default function ApplePromoStage() {
                 <li>✓ 50,000 secrets</li>
                 <li>✓ Basic vault setup</li>
               </ul>
-              <button className="w-full py-4 bg-[#F5F5F7] text-center rounded-full text-base md:text-sm font-medium text-[#1D1D1F] hover:bg-[#E5E5EA] transition-colors cursor-pointer">Start Free Trial</button>
+              <Button variant="outline" size="md" className="w-full bg-[#F5F5F7] border-0 text-[#1D1D1F] hover:bg-[#E5E5EA] rounded-[5px]">Start Free Trial</Button>
             </div>
             <div className="pricing-card card-2 absolute w-[420px] md:w-[300px] bg-white rounded-3xl border-2 border-[#1D1D1F] shadow-2xl p-8 md:p-8 pointer-events-auto">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1D1D1F] text-white text-xs md:text-xs font-bold px-3 py-1 rounded-full">Popular</div>
@@ -392,7 +404,7 @@ export default function ApplePromoStage() {
                 <li>✓ Advanced access controls</li>
                 <li>✓ Version history & rollbacks</li>
               </ul>
-              <button className="w-full py-4 bg-[#1D1D1F] text-center rounded-full text-base md:text-sm font-medium text-white shadow-md hover:bg-[#333] transition-colors cursor-pointer">Upgrade to Team</button>
+              <Button variant="secondary" size="md" className="w-full py-4 shadow-md rounded-[5px]">Upgrade to Team</Button>
             </div>
             <div className="pricing-card card-3 absolute w-[420px] md:w-[300px] bg-[#F5F5F7] rounded-3xl border border-[#E5E5EA] shadow-2xl p-8 md:p-8 pointer-events-auto">
               <h3 className="text-3xl md:text-xl font-semibold mb-3">Enterprise</h3>
@@ -402,7 +414,7 @@ export default function ApplePromoStage() {
                 <li>✓ Dedicated manager</li>
                 <li>✓ Custom SLA guarantees</li>
               </ul>
-              <button className="w-full py-4 bg-white text-center rounded-full text-base md:text-sm font-medium text-[#1D1D1F] border border-[#E5E5EA] hover:bg-[#fcfcfc] transition-colors cursor-pointer">Contact Sales</button>
+              <Button variant="outline" size="md" className="w-full py-4 text-[#1D1D1F] border-[#E5E5EA] hover:bg-[#fcfcfc] rounded-[5px]">Contact Sales</Button>
             </div>
           </div>
 
@@ -411,9 +423,9 @@ export default function ApplePromoStage() {
             <h2 className="text-4xl md:text-[64px] leading-[1.1] font-medium text-[#1D1D1F] tracking-tight text-center mb-8">
               Ready to centralize?
             </h2>
-            <button className="bg-[#1D1D1F] text-white px-8 py-4 rounded-full font-medium text-lg hover:bg-[#333] transition-colors shadow-lg cursor-pointer">
+            <Button variant="secondary" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
               Get Started for Free
-            </button>
+            </Button>
           </div>
 
         </div>
