@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import { Table, TableHead, Th, TableRow, Td, EmptyRow } from "../components/ui/Table";
+import { Card, CuroBadge } from "../components/ui/Card";
 
 function AuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -18,12 +20,8 @@ function AuditLogsPage() {
   };
 
   const fetchAuditLogs = async () => {
-    const {
-      data: { data: auditLogs },
-    } = await api.get("/audits/all");
-    if (auditLogs) {
-      setLogs(auditLogs);
-    }
+    const { data: { data: auditLogs } } = await api.get("/audits/all");
+    if (auditLogs) setLogs(auditLogs);
   };
 
   const actionBadge = (action: string) => {
@@ -33,13 +31,7 @@ function AuditLogsPage() {
       DELETED: "bg-red-100 text-red-700",
       VIEWED: "bg-amber-100 text-amber-700",
     };
-    return (
-      <span
-        className={`rounded-md px-2 py-0.5 text-xs font-medium ${styles[action] || "bg-slate-100 text-slate-600"}`}
-      >
-        {action}
-      </span>
-    );
+    return <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${styles[action] || "bg-slate-100 text-slate-600"}`}>{action}</span>;
   };
 
   return (
@@ -47,76 +39,43 @@ function AuditLogsPage() {
       <div className="w-full max-w-5xl">
         <div className="flex items-center justify-between">
           <div>
-            <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-700 uppercase">
-              Curo
-            </span>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Audit Logs
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Track every action on secrets.
-            </p>
+            <CuroBadge />
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">Audit Logs</h1>
+            <p className="mt-1 text-sm text-slate-500">Track every action on secrets.</p>
             {currentUser && (
               <p className="mt-1 text-xs text-slate-400">
-                User: {currentUser.email || currentUser.name} —{" "}
-                <code className="text-slate-500">{currentUser._id}</code>
+                User: {currentUser.email || currentUser.name} — <code className="text-slate-500">{currentUser._id}</code>
               </p>
             )}
           </div>
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-            {logs.length}
-          </span>
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{logs.length}</span>
         </div>
 
-        <div className="mt-6 overflow-x-auto rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 sm:p-10">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th className="pb-3 pr-4">Action</th>
-                <th className="pb-3 pr-4">Resource</th>
-                <th className="pb-3 pr-4">User</th>
-                <th className="pb-3 pr-4">Details</th>
-                <th className="pb-3">Date</th>
-              </tr>
-            </thead>
+        <Card className="mt-6">
+          <Table>
+            <TableHead>
+              <Th>Action</Th>
+              <Th>Resource</Th>
+              <Th>User</Th>
+              <Th>Details</Th>
+              <Th className="pb-3">Date</Th>
+            </TableHead>
             <tbody>
-              {logs.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="py-12 text-center text-sm text-slate-400"
-                  >
-                    No audit logs yet.
-                  </td>
-                </tr>
-              )}
+              {logs.length === 0 && <EmptyRow colSpan={5} message="No audit logs yet." />}
               {logs.map((log: any) => (
-                <tr
-                  key={log._id}
-                  className="border-b border-slate-100 last:border-0"
-                >
-                  <td className="py-3 pr-4">{actionBadge(log.action)}</td>
-                  <td className="py-3 pr-4">
-                    <span className="rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                      SECRET
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 text-xs text-slate-600">
-                    {currentUser?.name || currentUser?.email || "—"}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <code className="text-xs text-slate-600">
-                      {JSON.stringify(log.metadata)}
-                    </code>
-                  </td>
-                  <td className="py-3 whitespace-nowrap text-xs text-slate-400">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </td>
-                </tr>
+                <TableRow key={log._id}>
+                  <Td>{actionBadge(log.action)}</Td>
+                  <Td>
+                    <span className="rounded-md bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">SECRET</span>
+                  </Td>
+                  <Td className="py-3 pr-4 text-xs text-slate-600">{currentUser?.name || currentUser?.email || "—"}</Td>
+                  <Td className="py-3 pr-4"><code className="text-xs text-slate-600">{JSON.stringify(log.metadata)}</code></Td>
+                  <Td className="py-3 whitespace-nowrap text-xs text-slate-400">{new Date(log.createdAt).toLocaleString()}</Td>
+                </TableRow>
               ))}
             </tbody>
-          </table>
-        </div>
+          </Table>
+        </Card>
       </div>
     </main>
   );
