@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import Corner from "./Corner";
 import CuroLogo from "./CuroLogo";
+import NavLink from "./NavLink";
 import { Button } from "../ui/Button";
 import { MenuIcon, CloseIcon, GitHubIcon, StarIcon, ExternalLinkIcon } from "../ui/Icons";
 
@@ -39,29 +40,18 @@ export default function Navbar() {
             <CuroLogo />
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="https://github.com/yasasbanukaofficial/curo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
-            >
+            <NavLink href="https://github.com/yasasbanukaofficial/curo" target="_blank" rel="noopener noreferrer">
               <GitHubIcon className="h-4 w-4" />
               <span>Star</span>
               <StarIcon className="h-3.5 w-3.5" />
-            </a>
-            <a
-              href="/pricing"
-              className="px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
-            >
+            </NavLink>
+            <NavLink href="/pricing">
               Pricing
-            </a>
-            <a
-              href="#"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
-            >
+            </NavLink>
+            <NavLink href="#">
               <span>Docs</span>
               <ExternalLinkIcon className="h-3.5 w-3.5" />
-            </a>
+            </NavLink>
           </div>
           <div className="flex-1 flex items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
@@ -79,32 +69,18 @@ export default function Navbar() {
       </div>
       {isOpen && (
         <div className="md:hidden border-b border-[#efefef] bg-[#fcfcfc] px-4 pt-2 pb-4 space-y-2">
-          <a
-            href="https://github.com/yasasbanukaofficial/curo"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] hover:text-[#191919]"
-          >
+          <NavLink href="https://github.com/yasasbanukaofficial/curo" target="_blank" rel="noopener noreferrer" mobile onClick={() => setIsOpen(false)}>
             <GitHubIcon className="h-5 w-5" />
             <span>Star</span>
             <StarIcon className="h-4 w-4" />
-          </a>
-          <a
-            href="/pricing"
-            onClick={() => setIsOpen(false)}
-            className="block py-2 text-base font-medium text-[#636363] hover:text-[#191919]"
-          >
+          </NavLink>
+          <NavLink href="/pricing" mobile onClick={() => setIsOpen(false)}>
             Pricing
-          </a>
-          <a
-            href="#"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] hover:text-[#191919]"
-          >
+          </NavLink>
+          <NavLink href="#" mobile onClick={() => setIsOpen(false)}>
             <span>Docs</span>
             <ExternalLinkIcon className="h-4 w-4" />
-          </a>
+          </NavLink>
           <div className="pt-4 border-t border-[#efefef] flex flex-col gap-2">
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363]">Sign In</a>
             <Button variant="secondary" href="/register" onClick={() => setIsOpen(false)} className="w-full text-base font-medium" size="sm">
