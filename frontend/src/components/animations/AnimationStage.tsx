@@ -28,6 +28,22 @@ export default function ApplePromoStage() {
 
   useEffect(() => {
     let ctx = gsap.context(() => {
+      const actBoundaries = [
+        { act: 1, start: 0, end: 2 },
+        { act: 2, start: 2, end: 4.5 },
+        { act: 3, start: 4.5, end: 8 },
+        { act: 4, start: 8, end: 10.5 },
+        { act: 5, start: 10.5, end: 14 },
+        { act: 6, start: 14, end: 15.5 },
+        { act: 7, start: 15.5, end: 18.5 },
+        { act: 8, start: 18.5, end: 20 },
+        { act: 9, start: 20, end: 24 },
+        { act: 10, start: 24, end: 25.5 },
+        { act: 11, start: 25.5, end: 27.5 },
+        { act: 12, start: 27.5, end: 29.5 },
+        { act: 13, start: 29.5, end: Infinity },
+      ];
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
@@ -35,14 +51,12 @@ export default function ApplePromoStage() {
           end: 'bottom bottom',
           scrub: 1.5,
           onUpdate: (self) => {
-            const p = self.progress;
+            const currentTime = tl.time();
             if (progressBarRef.current) {
-              progressBarRef.current.style.width = `${p * 100}%`;
+              progressBarRef.current.style.width = `${self.progress * 100}%`;
             }
-            
-            // Map progress 0-1 to Acts 1-13
-            const act = Math.min(13, Math.max(1, Math.ceil(p * 13)));
-            setCurrentAct(act);
+            const boundary = actBoundaries.find(b => currentTime >= b.start && currentTime < b.end);
+            setCurrentAct(boundary ? boundary.act : 13);
           }
         }
       });
@@ -57,6 +71,7 @@ export default function ApplePromoStage() {
       gsap.set('.secret-row', { opacity: 0, x: -10 });
       gsap.set('.check-sync', { scale: 0 });
       gsap.set('.avatar-orbit', { opacity: 0 });
+      gsap.set('.avatar-orbit-container', { opacity: 0 });
       gsap.set('.connect-line', { strokeDashoffset: 100, strokeDasharray: 100 });
       gsap.set('.act4-terminal', { opacity: 0 });
       gsap.set('.terminal-text', { width: 0 });
@@ -89,9 +104,6 @@ export default function ApplePromoStage() {
       // Ambient breathing loop
       gsap.to('.act1-card', { rotation: 1, yoyo: true, repeat: -1, duration: 2, ease: 'sine.inOut', stagger: 0.2 });
 
-      // --- TIMELINE ---
-      // 0 to 1 scaling (we have 13 acts, so ~0.076 per act)
-
       // Act 1: The old way
       tl.to('.act1-card', { x: 0, opacity: 1, duration: 1, stagger: 0.15, ease: 'power2.out' }, 0);
       tl.to('.act1-strikethrough', { scaleX: 1, duration: 1.5, ease: 'power2.inOut' }, 0.5);
@@ -108,7 +120,7 @@ export default function ApplePromoStage() {
       tl.to('.act3-dashboard', { opacity: 1, scaleX: 1, scaleY: 1, duration: 1.2, ease: 'elastic.out(1, 0.75)' }, 4.5);
       tl.to('.secret-row', { opacity: 1, x: 0, duration: 0.5, stagger: 0.2 }, 5.2);
       tl.to('.check-sync', { scale: 1, duration: 0.4, stagger: 0.1, ease: 'back.out(2)' }, 5.8);
-      tl.to('.avatar-orbit', { opacity: 1, duration: 0.5 }, 6);
+      tl.to(['.avatar-orbit', '.avatar-orbit-container'], { opacity: 1, duration: 0.5 }, 6);
 
       // Act 4: Terminal
       tl.to('.act3-dashboard', { scale: 1.04, y: -12, duration: 1, ease: 'power2.out' }, 7.5);
