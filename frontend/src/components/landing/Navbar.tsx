@@ -2,17 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import Corner from "./Corner";
 import CuroLogo from "./CuroLogo";
-import NavLink from "./NavLink";
 import { Button } from "../ui/Button";
-import { MenuIcon, CloseIcon } from "../ui/Icons";
-
-const links = [
-  { href: "#features", label: "Features" },
-  { href: "#problem", label: "Problem" },
-  { href: "#centralized", label: "System" },
-  { href: "#integrations", label: "Integrations" },
-  { href: "#pricing", label: "Pricing" },
-];
+import { MenuIcon, CloseIcon, GitHubIcon, StarIcon, ExternalLinkIcon } from "../ui/Icons";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,15 +37,29 @@ export default function Navbar() {
           <div className="flex-1 flex items-center">
             <CuroLogo />
           </div>
-          <div className="hidden md:flex items-center gap-6">
-            {links.map((link) => (
-              <NavLink key={link.href} href={link.href}>{link.label}</NavLink>
-            ))}
+          <div className="hidden md:flex items-center gap-3">
+            <a
+              href="https://github.com/yasasbanukaofficial/curo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
+            >
+              <GitHubIcon className="h-4 w-4" />
+              <span>Star</span>
+              <StarIcon className="h-3.5 w-3.5" />
+            </a>
+            <a
+              href="#"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-[#636363] hover:text-[#191919] hover:bg-[#F5F5F7] transition-colors"
+            >
+              <span>Docs</span>
+              <ExternalLinkIcon className="h-3.5 w-3.5" />
+            </a>
           </div>
           <div className="flex-1 flex items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
               <a href="/login" className="text-sm font-medium text-[#636363] hover:text-[#191919] transition-colors">Sign In</a>
-              <Button variant="secondary" href="#pricing" size="sm">Get Started</Button>
+              <Button variant="secondary" href="#deploy" size="sm">Get Started</Button>
             </div>
             <div className="md:hidden flex items-center">
               <button onClick={() => setIsOpen(!isOpen)} className="text-[#191919] hover:text-[#636363] focus:outline-none">
@@ -67,14 +72,28 @@ export default function Navbar() {
       </div>
       {isOpen && (
         <div className="md:hidden border-b border-[#efefef] bg-[#fcfcfc] px-4 pt-2 pb-4 space-y-2">
-          {links.map((link) => (
-            <NavLink key={link.href} href={link.href} mobile onClick={() => setIsOpen(false)}>
-              {link.label}
-            </NavLink>
-          ))}
+          <a
+            href="https://github.com/yasasbanukaofficial/curo"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] hover:text-[#191919]"
+          >
+            <GitHubIcon className="h-5 w-5" />
+            <span>Star</span>
+            <StarIcon className="h-4 w-4" />
+          </a>
+          <a
+            href="#"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] hover:text-[#191919]"
+          >
+            <span>Docs</span>
+            <ExternalLinkIcon className="h-4 w-4" />
+          </a>
           <div className="pt-4 border-t border-[#efefef] flex flex-col gap-2">
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363]">Sign In</a>
-            <Button variant="secondary" href="#pricing" onClick={() => setIsOpen(false)} className="w-full text-base font-medium" size="sm">
+            <Button variant="secondary" href="#deploy" onClick={() => setIsOpen(false)} className="w-full text-base font-medium" size="sm">
               Get Started
             </Button>
           </div>

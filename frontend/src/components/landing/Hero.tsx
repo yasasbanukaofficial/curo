@@ -18,10 +18,10 @@ export default function Hero() {
             Curo securely stores, manages, and syncs environment variables across your projects, teams, and environments.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Button variant="secondary" href="#pricing">
+            <Button variant="secondary" href="#deploy">
               Get Started
             </Button>
-            <Button variant="outline" href="#features">
+            <Button variant="outline" href="#secrets">
               See examples
               <PiArrowUpRight className="h-4 w-4" />
             </Button>

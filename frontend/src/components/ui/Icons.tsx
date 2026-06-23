@@ -97,6 +97,22 @@ export function TwitterIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+export function StarIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  );
+}
+
+export function ExternalLinkIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    </svg>
+  );
+}
+
 export function GitHubIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
