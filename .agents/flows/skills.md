@@ -279,6 +279,17 @@ GET /api/v1/auth/me
     ← { success: true, data: { id, name, email, provider, createdAt } }
 ```
 
+**Project type (`backend/src/types/project.ts`):**
+
+```typescript
+interface IProject {
+  projectName: string;
+  description: string;
+  projectLink?: string;       // GitHub or GitLab URL
+  userId: Types.ObjectId;
+}
+```
+
 ### Projects Domain
 
 ```
@@ -294,9 +305,18 @@ POST /api/v1/projects/create
   → createProject (controller)
     → projectService.createProject(userId, body)
       → Validate: projectName, description
-      → ProjectModel.create({ projectName, description, userId })
+      → ProjectModel.create({ projectName, description, projectLink?, userId })
       → Catch 11000 → DUPLICATE_PROJECT
     ← { success: true, status: 201, msg: "Project created successfully" }
+
+PUT /api/v1/projects/update/:projectId
+  → authenticate (middleware)
+  → updateProject (controller)
+    → projectService.updateProject(userId, projectId, body)
+      → Validate: at least one of projectName, description, projectLink
+      → ProjectModel.findOneAndUpdate()
+      → Catch PROJECT_NOT_FOUND
+    ← { success: true, status: 200, msg: "Project updated successfully" }
 ```
 
 ### Teams Domain

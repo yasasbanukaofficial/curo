@@ -12,6 +12,11 @@ export const _projectSchema = new Schema<IProject>({
     required: [true, "Description is required"],
     minLength: [2, "Description is too short"],
   },
+  projectLink: {
+    type: String,
+    required: false,
+    trim: true,
+  },
   userId: {
     type: Schema.Types.ObjectId,
     required: [true, "User ID is required"],

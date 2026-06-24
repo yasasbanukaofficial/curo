@@ -1,6 +1,15 @@
 import { ProjectModel } from "../models/project.model";
 import { IProject } from "../types/project";
 
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const projectService = {
   getProjectById: async (
     userId: string,
@@ -13,6 +22,7 @@ export const projectService = {
       return {
         projectName: projectDoc.projectName,
         description: projectDoc.description,
+        projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
       };
     } catch (error) {
@@ -30,6 +40,7 @@ export const projectService = {
         _id: projectDoc._id,
         projectName: projectDoc.projectName,
         description: projectDoc.description,
+        projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
       }));
       return allProjects;
@@ -39,15 +50,20 @@ export const projectService = {
     }
   },
   createProject: async (userId: string, data: IProject): Promise<boolean> => {
-    const { projectName, description } = data;
+    const { projectName, description, projectLink } = data;
     if (!projectName || !description) {
       throw new Error("INVALID_PAYLOAD");
+    }
+
+    if (projectLink && !isValidUrl(projectLink)) {
+      throw new Error("INVALID_PROJECT_LINK");
     }
 
     try {
       await ProjectModel.create({
         projectName,
         description,
+        projectLink: projectLink || undefined,
         userId,
       });
 
@@ -65,13 +81,16 @@ export const projectService = {
     projectId: string,
     data: Partial<IProject>,
   ): Promise<boolean> => {
-    const { projectName, description } = data;
     if (!projectId) {
       throw new Error("PROJECT_ID_NOT_EXISTING");
     }
 
-    if (!projectName && !description) {
+    if (!data.projectName && !data.description && !data.projectLink) {
       throw new Error("INVALID_PAYLOAD");
+    }
+
+    if (data.projectLink && !isValidUrl(data.projectLink)) {
+      throw new Error("INVALID_PROJECT_LINK");
     }
 
     try {

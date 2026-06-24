@@ -92,6 +92,14 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    if (error.message === "INVALID_PROJECT_LINK") {
+      return sendResponse(res, {
+        success: false,
+        status: 400,
+        msg: "Project link must be a valid URL",
+      });
+    }
+
     if (error.message === "DUPLICATE_PROJECT") {
       return sendResponse(res, {
         success: false,
