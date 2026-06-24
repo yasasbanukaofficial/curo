@@ -1,6 +1,7 @@
 import { KeyRound, FolderKanban, Users, Rocket, CheckCircle, RotateCw } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
+import StatCard from "../../components/dashboard/StatCard";
 
 const statCards = [
   { label: "Secrets", value: "1,248", change: "+24 this week", icon: KeyRound },
@@ -30,19 +31,6 @@ const liveActivity = [
   { user: "Yasas", action: "created", target: "OPENAI_API_KEY", time: "8m ago" },
   { user: "Sam", action: "deployed", target: "main → production", time: "12m ago" },
 ];
-
-function StatCard({ label, value, change, icon: Icon }: typeof statCards[number]) {
-  return (
-    <DashboardCard hover className="flex-1 min-w-[160px]">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-xs text-[#8E8E93] dark:text-[#666] font-medium">{label}</p>
-        <Icon className="w-4 h-4 text-[#8E8E93] dark:text-[#666]" />
-      </div>
-      <p className="text-2xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] tracking-tight">{value}</p>
-      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1.5">{change}</p>
-    </DashboardCard>
-  );
-}
 
 export default function Overview() {
   return (

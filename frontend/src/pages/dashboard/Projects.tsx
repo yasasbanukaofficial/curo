@@ -3,7 +3,6 @@ import { Plus, FolderKanban, KeyRound, Users, Layers3, ArrowRight } from "lucide
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 import SearchInput from "../../components/dashboard/SearchInput";
-import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
 
 const projects = [
   { name: "Acme API", desc: "Production API server", secrets: 248, envs: 3, members: 8, updated: "2m ago" },

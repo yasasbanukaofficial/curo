@@ -37,3 +37,18 @@ export function ActionBadge({ label, className = "" }: BadgeProps) {
     </span>
   );
 }
+
+const providerStyles: Record<string, string> = {
+  local: "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]",
+  google: "bg-[#007AFF]/10 text-[#007AFF]",
+  github: "bg-[#1A1A1A]/10 dark:bg-white/10 text-[#1A1A1A] dark:text-[#E5E5E5]",
+};
+
+export function ProviderBadge({ label, className = "" }: BadgeProps) {
+  const style = providerStyles[label.toLowerCase()] || providerStyles.local;
+  return (
+    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md capitalize ${style} ${className}`}>
+      {label}
+    </span>
+  );
+}
