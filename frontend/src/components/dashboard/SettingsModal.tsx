@@ -156,8 +156,12 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
 
               <div className="rounded-2xl border border-black/[0.04] dark:border-[#222] bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-xl bg-[var(--accent)] dark:bg-white flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-white dark:text-[#1D1D1F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  <div className="h-7 w-7 text-[var(--accent)] dark:text-white flex-shrink-0">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-full w-full">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <circle cx="12" cy="12" r="2.5" />
+                      <path d="M12 14.5v2" />
+                    </svg>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Curo</p>
