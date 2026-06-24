@@ -79,7 +79,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         onClick={theme === "dark" ? toggle : undefined}
                         className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
                           theme === "light"
-                            ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
+                            ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] shadow-sm"
                             : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
                         }`}
                       >
@@ -90,7 +90,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         onClick={theme === "light" ? toggle : undefined}
                         className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
                           theme === "dark"
-                            ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
+                            ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] shadow-sm"
                             : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
                         }`}
                       >
@@ -153,6 +153,43 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                   </div>
                 </div>
               </div>
+
+              <div className="rounded-2xl border border-black/[0.04] dark:border-[#222] bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--accent)] dark:bg-white flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-white dark:text-[#1D1D1F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Curo</p>
+                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Secrets management, simplified.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-0.5">Version</p>
+                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">1.0.0</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-0.5">Status</p>
+                    <p className="text-sm text-[#30D158]">All Systems Operational</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-0.5">Session</p>
+                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">Active</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-0.5">Security</p>
+                    <p className="text-sm text-[#30D158]">End-to-End Encrypted</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pt-3 border-t border-black/[0.04] dark:border-[#222]">
+                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] gap-1">Documentation</DashboardButton>
+                  <span className="text-[#8E8E93] dark:text-[#666] text-[11px]">·</span>
+                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] gap-1">Changelog</DashboardButton>
+                  <span className="text-[#8E8E93] dark:text-[#666] text-[11px]">·</span>
+                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] gap-1">Support</DashboardButton>
+                </div>
+              </div>
             </div>
           )}
 
@@ -166,8 +203,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               <div className="rounded-2xl border border-[var(--accent)] dark:border-white bg-[var(--accent)] dark:bg-white p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-lg font-bold text-white dark:text-[#1D1D1F]">Team</p>
-                    <p className="text-sm text-white/70 dark:text-[#1D1D1F]/70 mt-0.5">$29/mo per seat</p>
+                    <p className="text-lg font-bold text-white dark:text-[var(--accent)]">Team</p>
+                    <p className="text-sm text-white/70 dark:text-[var(--accent)]/70 mt-0.5">$29/mo per seat</p>
                   </div>
                   <span className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-white/20 dark:bg-[var(--accent)]/20 text-white dark:text-[var(--accent)]">Current Plan</span>
                 </div>
@@ -180,8 +217,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                     "Environment sync",
                     "Priority email support",
                   ].map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/80 dark:text-[#1D1D1F]/80">
-                      <Check className="w-4 h-4 text-white dark:text-[#1D1D1F] flex-shrink-0" />
+                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/80 dark:text-[var(--accent)]/80">
+                      <Check className="w-4 h-4 text-white dark:text-[var(--accent)] flex-shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -194,7 +231,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                     <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Need more?</p>
                     <p className="text-xs text-[#8E8E93] dark:text-[#666] mt-0.5">Upgrade to Enterprise for unlimited team members, SSO, and more.</p>
                   </div>
-                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
+                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10 flex-shrink-0">
                     Upgrade Plan
                   </DashboardButton>
                 </div>

@@ -208,7 +208,7 @@ export default function Account() {
                     <DashboardButton
                       type="submit"
                       disabled={profileFormik.isSubmitting}
-                      className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {profileFormik.isSubmitting ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -227,7 +227,7 @@ export default function Account() {
                 ) : (
                   <DashboardButton
                     onClick={() => setEditMode(true)}
-                    className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
+                    className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
                   >
                     Edit Profile
                   </DashboardButton>

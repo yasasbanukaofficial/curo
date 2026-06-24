@@ -52,7 +52,7 @@ export default function Integrations() {
               className={`w-full h-8 text-xs font-medium rounded-[10px] ${
                 item.connected
                   ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#eee] dark:hover:bg-[#222]"
-                  : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
+                  : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
               }`}
             >
               {item.connected ? (

@@ -317,7 +317,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
+                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -346,7 +346,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
+                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -375,7 +375,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
+                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -415,6 +415,7 @@ export default function Projects() {
                     error={settingsFormik.touched.projectLink ? settingsFormik.errors.projectLink : undefined}
                     touched={!!settingsFormik.touched.projectLink}
                   />
+                  <p className="text-[11px] text-[#8E8E93] dark:text-[#666] -mt-1">Accepts GitHub and GitLab repository URLs.</p>
                   <FormTextarea
                     label="Description"
                     name="description"
@@ -428,7 +429,7 @@ export default function Projects() {
                   />
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10 disabled:opacity-50 disabled:cursor-not-allowed">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
@@ -464,7 +465,7 @@ export default function Projects() {
                 {filtered.length} projects · {projects.reduce((a, p) => a + p.secretCount, 0)} total secrets
               </p>
             </div>
-            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]">
+            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10">
               <Plus className="w-4 h-4" />
               New Project
             </DashboardButton>
