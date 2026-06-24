@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Plus, FolderKanban, KeyRound, Users, Layers3, ArrowRight } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 import SearchInput from "../../components/dashboard/SearchInput";
+import CreateProjectModal from "../../components/dashboard/CreateProjectModal";
 
 const projects = [
   { name: "Acme API", desc: "Production API server", secrets: 248, envs: 3, members: 8, updated: "2m ago" },
@@ -17,6 +19,16 @@ const projects = [
 
 export default function Projects() {
   const [search, setSearch] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.openNewProject) {
+      setShowCreateModal(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const filtered = projects.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -32,7 +44,7 @@ export default function Projects() {
             {filtered.length} projects · {projects.reduce((a, p) => a + p.secrets, 0)} total secrets
           </p>
         </div>
-        <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+        <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
           <Plus className="w-4 h-4" />
           New Project
         </DashboardButton>
@@ -81,6 +93,8 @@ export default function Projects() {
           </DashboardCard>
         ))}
       </div>
+
+      <CreateProjectModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />
     </div>
   );
 }

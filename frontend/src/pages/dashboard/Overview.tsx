@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { KeyRound, FolderKanban, Users, Rocket, CheckCircle, RotateCw } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
@@ -33,6 +34,8 @@ const liveActivity = [
 ];
 
 export default function Overview() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <DashboardCard className="mb-8">
@@ -48,7 +51,7 @@ export default function Overview() {
             <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
               Add Secret
             </DashboardButton>
-            <DashboardButton className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl hover:bg-[#eee] dark:hover:bg-[#222]">
+            <DashboardButton onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl hover:bg-[#eee] dark:hover:bg-[#222]">
               New Project
             </DashboardButton>
           </div>
