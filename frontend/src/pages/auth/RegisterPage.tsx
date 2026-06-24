@@ -1,10 +1,10 @@
 import { useFormik } from "formik";
-import AuthFormLayout from "../components/ui/AuthFormLayout";
-import AuthField from "../components/ui/AuthField";
-import { Button } from "../components/ui/Button";
-import { registerSchema, validateZod } from "../types/auth";
-import { registerUser, loginWithGoogle, loginWithGithub } from "../lib/auth";
-import type { RegisterFormValues } from "../types/auth";
+import AuthFormLayout from "../../components/ui/AuthFormLayout";
+import AuthField from "../../components/ui/AuthField";
+import { Button } from "../../components/ui/Button";
+import { registerSchema, validateZod } from "../../types/auth";
+import { registerUser, loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import type { RegisterFormValues } from "../../types/auth";
 
 export default function RegisterPage() {
   const formik = useFormik<RegisterFormValues>({

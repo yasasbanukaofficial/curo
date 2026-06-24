@@ -1,11 +1,11 @@
 import { useFormik } from "formik";
 import { Link } from "react-router-dom";
-import AuthFormLayout from "../components/ui/AuthFormLayout";
-import AuthField from "../components/ui/AuthField";
-import { Button } from "../components/ui/Button";
-import { loginSchema, validateZod } from "../types/auth";
-import { loginUser, loginWithGoogle, loginWithGithub } from "../lib/auth";
-import type { LoginFormValues } from "../types/auth";
+import AuthFormLayout from "../../components/ui/AuthFormLayout";
+import AuthField from "../../components/ui/AuthField";
+import { Button } from "../../components/ui/Button";
+import { loginSchema, validateZod } from "../../types/auth";
+import { loginUser, loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import type { LoginFormValues } from "../../types/auth";
 
 export default function LoginPage() {
   const formik = useFormik<LoginFormValues>({

@@ -1,9 +1,9 @@
 import { useFormik } from "formik";
 import { z } from "zod";
-import AuthFormLayout from "../components/ui/AuthFormLayout";
-import AuthField from "../components/ui/AuthField";
-import { Button } from "../components/ui/Button";
-import { validateZod } from "../types/auth";
+import AuthFormLayout from "../../components/ui/AuthFormLayout";
+import AuthField from "../../components/ui/AuthField";
+import { Button } from "../../components/ui/Button";
+import { validateZod } from "../../types/auth";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address").trim().toLowerCase(),
