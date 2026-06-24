@@ -19,3 +19,8 @@ body,
   height: 100%;
   font-family: var(--font-sans);
 }
+
+:root {
+  --accent: #1D1D1F;
+  --accent-rgb: 29, 29, 31;
+}

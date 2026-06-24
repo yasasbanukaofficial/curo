@@ -52,7 +52,7 @@ export default function MobileNav({ onOpenSettings }: MobileNavProps) {
               {item.label}
             </span>
             {active && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[#1D1D1F] dark:bg-[#E5E5E5] rounded-b-full" />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[var(--accent)] dark:bg-[#E5E5E5] rounded-b-full" />
             )}
           </DashboardButton>
         );

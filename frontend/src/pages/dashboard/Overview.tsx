@@ -48,7 +48,7 @@ export default function Overview() {
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-3">
-            <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+            <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]">
               Add Secret
             </DashboardButton>
             <DashboardButton onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
@@ -103,7 +103,7 @@ export default function Overview() {
                   className="flex items-center justify-between py-3 px-3 rounded-xl transition-all duration-200 hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-2 h-2 rounded-full bg-[#1D1D1F] dark:bg-[#E5E5E5] flex-shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent)] dark:bg-[#E5E5E5] flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{item.secret}</p>
                       <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">

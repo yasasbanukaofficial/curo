@@ -18,15 +18,22 @@ const TEAMS = [
   { id: "team_3", name: "Side Project" },
 ];
 
+const gitUrlPattern = /^https:\/\/(github\.com|gitlab\.com)\/.+\/.+$/;
+
 const createProjectSchema = z.object({
   projectName: z.string().trim().min(2, "Project name must be at least 2 characters").max(100, "Project name is too long"),
   description: z.string().trim().min(2, "Description must be at least 2 characters").max(500, "Description is too long"),
   team: z.string().min(1, "Please select a team"),
+  projectLink: z
+    .string()
+    .regex(gitUrlPattern, "Must be a valid GitHub or GitLab URL (e.g. https://github.com/org/repo)")
+    .optional()
+    .or(z.literal("")),
 });
 
 export default function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const formik = useFormik({
-    initialValues: { projectName: "", description: "", team: "" },
+    initialValues: { projectName: "", description: "", team: "", projectLink: "" },
     validate: validateZod(createProjectSchema),
     onSubmit: (values, { setSubmitting, resetForm }) => {
       console.log("Project created:", values);
@@ -50,8 +57,8 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
     >
       <form onSubmit={formik.handleSubmit} noValidate className="space-y-5 pt-1">
         <div className="flex items-start gap-4 p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl border border-black/[0.04] dark:border-[#222]">
-          <div className="w-10 h-10 rounded-xl bg-[#1D1D1F]/10 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-            <FolderKanban className="w-5 h-5 text-[#1D1D1F] dark:text-[#E5E5E5]" />
+          <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+            <FolderKanban className="w-5 h-5 text-[var(--accent)] dark:text-[#E5E5E5]" />
           </div>
           <div className="text-sm text-[#8E8E93] dark:text-[#666] leading-relaxed">
             Projects group related secrets, environments, and access controls together. Each project gets its own isolated vault.
@@ -83,6 +90,17 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
             required
           />
         </div>
+
+        <FormField
+          label="Repository URL"
+          name="projectLink"
+          placeholder="https://github.com/org/repo"
+          value={formik.values.projectLink}
+          onChange={(v) => formik.setFieldValue("projectLink", v)}
+          onBlur={formik.handleBlur}
+          error={formik.touched.projectLink ? formik.errors.projectLink : undefined}
+          touched={!!formik.touched.projectLink}
+        />
 
         <FormTextarea
           label="Description"

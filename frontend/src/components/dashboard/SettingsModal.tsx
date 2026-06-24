@@ -22,9 +22,8 @@ const accentColors = [
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const navigate = useNavigate();
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, accent, setAccent } = useTheme();
   const [tab, setTab] = useState<SettingsTab>("general");
-  const [accent, setAccent] = useState(accentColors[0]);
 
   if (!open) return null;
 
@@ -80,7 +79,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         onClick={theme === "dark" ? toggle : undefined}
                         className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
                           theme === "light"
-                            ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
+                            ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
                             : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
                         }`}
                       >
@@ -91,7 +90,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                         onClick={theme === "light" ? toggle : undefined}
                         className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
                           theme === "dark"
-                            ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
+                            ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
                             : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
                         }`}
                       >
@@ -106,17 +105,17 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                       {accentColors.map((c) => (
                         <DashboardButton
                           key={c.value}
-                          onClick={() => setAccent(c)}
+                          onClick={() => setAccent(c.value)}
                           className="p-0.5 rounded-full"
                           style={{ backgroundColor: "transparent" }}
                         >
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-                              accent.value === c.value ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#111] ring-[#1D1D1F] dark:ring-[#E5E5E5]" : ""
+                              accent === c.value ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#111] ring-[var(--accent)] dark:ring-[#E5E5E5]" : ""
                             }`}
                             style={{ backgroundColor: c.value }}
                           >
-                            {accent.value === c.value && <Check className="w-4 h-4 text-white" />}
+                            {accent === c.value && <Check className="w-4 h-4 text-white" />}
                           </div>
                         </DashboardButton>
                       ))}
@@ -164,13 +163,13 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                 <p className="text-xs text-[#8E8E93] dark:text-[#666]">You are currently on the <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Team</span> plan.</p>
               </div>
 
-              <div className="rounded-2xl border border-[#1D1D1F] dark:border-white bg-[#1D1D1F] dark:bg-white p-6">
+              <div className="rounded-2xl border border-[var(--accent)] dark:border-white bg-[var(--accent)] dark:bg-white p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-lg font-bold text-white dark:text-[#1D1D1F]">Team</p>
                     <p className="text-sm text-white/70 dark:text-[#1D1D1F]/70 mt-0.5">$29/mo per seat</p>
                   </div>
-                  <span className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-white/20 dark:bg-[#1D1D1F]/20 text-white dark:text-[#1D1D1F]">Current Plan</span>
+                  <span className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-white/20 dark:bg-[var(--accent)]/20 text-white dark:text-[var(--accent)]">Current Plan</span>
                 </div>
                 <ul className="space-y-2.5">
                   {[
@@ -195,7 +194,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                     <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Need more?</p>
                     <p className="text-xs text-[#8E8E93] dark:text-[#666] mt-0.5">Upgrade to Enterprise for unlimited team members, SSO, and more.</p>
                   </div>
-                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
+                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
                     Upgrade Plan
                   </DashboardButton>
                 </div>

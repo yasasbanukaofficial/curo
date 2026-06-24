@@ -30,6 +30,7 @@ interface Project {
   id: string;
   name: string;
   description: string;
+  projectLink?: string;
   secretCount: number;
   environmentCount: number;
   teamCount: number;
@@ -60,14 +61,14 @@ interface AvailableTeam {
 type DetailTab = "overview" | "secrets" | "environments" | "teams" | "settings";
 
 const MOCK_PROJECTS: Project[] = [
-  { id: "proj_1", name: "Acme API", description: "Production API server", secretCount: 248, environmentCount: 3, teamCount: 2, memberCount: 8, updatedAt: "2m ago", createdAt: "Jan 2026", secrets: ["sec_1", "sec_2", "sec_3"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
-  { id: "proj_2", name: "Main App", description: "Customer-facing web app", secretCount: 186, environmentCount: 3, teamCount: 2, memberCount: 12, updatedAt: "5m ago", createdAt: "Dec 2025", secrets: ["sec_1", "sec_4"], environments: ["env_1", "env_2"], teams: ["team_1", "team_2"] },
+  { id: "proj_1", name: "Acme API", description: "Production API server", projectLink: "https://github.com/acme/api", secretCount: 248, environmentCount: 3, teamCount: 2, memberCount: 8, updatedAt: "2m ago", createdAt: "Jan 2026", secrets: ["sec_1", "sec_2", "sec_3"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
+  { id: "proj_2", name: "Main App", description: "Customer-facing web app", projectLink: "https://github.com/acme/app", secretCount: 186, environmentCount: 3, teamCount: 2, memberCount: 12, updatedAt: "5m ago", createdAt: "Dec 2025", secrets: ["sec_1", "sec_4"], environments: ["env_1", "env_2"], teams: ["team_1", "team_2"] },
   { id: "proj_3", name: "Mobile Backend", description: "iOS/Android API gateway", secretCount: 94, environmentCount: 2, teamCount: 1, memberCount: 5, updatedAt: "15m ago", createdAt: "Mar 2026", secrets: ["sec_3"], environments: ["env_1", "env_3"], teams: ["team_1"] },
-  { id: "proj_4", name: "Data Pipeline", description: "ETL and analytics infra", secretCount: 312, environmentCount: 2, teamCount: 1, memberCount: 6, updatedAt: "1h ago", createdAt: "Feb 2026", secrets: ["sec_2", "sec_5"], environments: ["env_2"], teams: [] },
+  { id: "proj_4", name: "Data Pipeline", description: "ETL and analytics infra", projectLink: "https://gitlab.com/acme/pipeline", secretCount: 312, environmentCount: 2, teamCount: 1, memberCount: 6, updatedAt: "1h ago", createdAt: "Feb 2026", secrets: ["sec_2", "sec_5"], environments: ["env_2"], teams: [] },
   { id: "proj_5", name: "Admin Dashboard", description: "Internal admin panel", secretCount: 67, environmentCount: 3, teamCount: 1, memberCount: 4, updatedAt: "2h ago", createdAt: "Apr 2026", secrets: ["sec_4"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
   { id: "proj_6", name: "Documentation", description: "Developer docs site", secretCount: 12, environmentCount: 1, teamCount: 1, memberCount: 3, updatedAt: "1d ago", createdAt: "May 2026", secrets: [], environments: ["env_1"], teams: [] },
   { id: "proj_7", name: "CLI Tool", description: "Command-line interface", secretCount: 41, environmentCount: 2, teamCount: 1, memberCount: 4, updatedAt: "2d ago", createdAt: "May 2026", secrets: ["sec_5"], environments: ["env_1", "env_2"], teams: [] },
-  { id: "proj_8", name: "Auth Service", description: "SSO and auth provider", secretCount: 89, environmentCount: 3, teamCount: 1, memberCount: 7, updatedAt: "3d ago", createdAt: "Apr 2026", secrets: ["sec_1", "sec_2"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
+  { id: "proj_8", name: "Auth Service", description: "SSO and auth provider", projectLink: "https://github.com/acme/auth", secretCount: 89, environmentCount: 3, teamCount: 1, memberCount: 7, updatedAt: "3d ago", createdAt: "Apr 2026", secrets: ["sec_1", "sec_2"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
 ];
 
 const ALL_SECRETS: AvailableSecret[] = [
@@ -93,9 +94,16 @@ const ALL_TEAMS: AvailableTeam[] = [
   { id: "team_3", name: "Side Project" },
 ];
 
+const gitUrlPattern = /^https:\/\/(github\.com|gitlab\.com)\/.+\/.+$/;
+
 const updateProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(100, "Name is too long"),
   description: z.string().trim().min(1, "Description is required").max(500, "Description is too long"),
+  projectLink: z
+    .string()
+    .regex(gitUrlPattern, "Must be a valid GitHub or GitLab URL (e.g. https://github.com/org/repo)")
+    .optional()
+    .or(z.literal("")),
 });
 
 export default function Projects() {
@@ -123,7 +131,7 @@ export default function Projects() {
   );
 
   const settingsFormik = useFormik({
-    initialValues: { name: "", description: "" },
+    initialValues: { name: "", description: "", projectLink: "" },
     validate: validateZod(updateProjectSchema),
     onSubmit: (values, { setSubmitting }) => {
       if (!selectedProject) return;
@@ -131,6 +139,7 @@ export default function Projects() {
         ...selectedProject,
         name: values.name,
         description: values.description,
+        projectLink: values.projectLink || undefined,
       };
       setProjects((prev) => prev.map((p) => p.id === selectedProject.id ? updated : p));
       setSelectedProject(updated);
@@ -141,7 +150,7 @@ export default function Projects() {
 
   function openSettingsForm() {
     if (!selectedProject) return;
-    settingsFormik.setValues({ name: selectedProject.name, description: selectedProject.description });
+    settingsFormik.setValues({ name: selectedProject.name, description: selectedProject.description, projectLink: selectedProject.projectLink || "" });
     setDetailTab("settings");
   }
 
@@ -242,6 +251,16 @@ export default function Projects() {
                     <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Members</p>
                     <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.memberCount} members</p>
                   </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Repository</p>
+                    {selectedProject.projectLink ? (
+                      <a href={selectedProject.projectLink} target="_blank" rel="noopener noreferrer" className="text-sm text-[#007AFF] hover:underline inline-flex items-center gap-1">
+                        {selectedProject.projectLink}
+                      </a>
+                    ) : (
+                      <p className="text-sm text-[#8E8E93] dark:text-[#666]">—</p>
+                    )}
+                  </div>
                 </div>
               </DashboardCard>
             </div>
@@ -298,7 +317,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -327,7 +346,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -356,7 +375,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -386,6 +405,16 @@ export default function Projects() {
                     touched={!!settingsFormik.touched.name}
                     required
                   />
+                  <FormField
+                    label="Repository URL"
+                    name="projectLink"
+                    placeholder="https://github.com/org/repo"
+                    value={settingsFormik.values.projectLink}
+                    onChange={(v) => settingsFormik.setFieldValue("projectLink", v)}
+                    onBlur={settingsFormik.handleBlur}
+                    error={settingsFormik.touched.projectLink ? settingsFormik.errors.projectLink : undefined}
+                    touched={!!settingsFormik.touched.projectLink}
+                  />
                   <FormTextarea
                     label="Description"
                     name="description"
@@ -399,7 +428,7 @@ export default function Projects() {
                   />
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
@@ -435,7 +464,7 @@ export default function Projects() {
                 {filtered.length} projects · {projects.reduce((a, p) => a + p.secretCount, 0)} total secrets
               </p>
             </div>
-            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[#E5E5E5]">
               <Plus className="w-4 h-4" />
               New Project
             </DashboardButton>
@@ -474,6 +503,15 @@ export default function Projects() {
                     {p.teamCount} teams
                   </div>
                 </div>
+
+                {p.projectLink && (
+                  <div className="mb-4">
+                    <a href={p.projectLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5 text-xs text-[#007AFF] hover:underline">
+                      <FolderKanban className="w-3 h-3" />
+                      {p.projectLink.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                    </a>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
                   <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Updated {p.updatedAt}</span>
