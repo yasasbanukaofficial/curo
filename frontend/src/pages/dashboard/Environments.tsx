@@ -18,7 +18,7 @@ export default function Environments() {
             {environments.length} environments · All systems operational
           </p>
         </div>
-        <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10">
+        <DashboardButton className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
           <Plus className="w-4 h-4" />
           Add Environment
         </DashboardButton>

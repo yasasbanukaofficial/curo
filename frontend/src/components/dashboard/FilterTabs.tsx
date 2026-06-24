@@ -23,7 +23,7 @@ export default function FilterTabs({
           onClick={() => onChange(option)}
           className={`px-4 h-8 text-sm font-medium rounded-lg capitalize transition-all duration-200 ${
             value === option
-              ? "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] shadow-sm"
+              ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
               : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
           }`}
         >

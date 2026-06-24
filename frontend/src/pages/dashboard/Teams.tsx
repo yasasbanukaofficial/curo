@@ -447,7 +447,7 @@ export default function Teams() {
               <DashboardCard>
                 <div className="flex items-center justify-between mb-5">
                   <SectionHeader title="Members" description={`${selectedTeam.members.length} members in this team.`} />
-                  <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10">
+                  <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
                     <UserPlus className="w-3.5 h-3.5" />Invite
                   </DashboardButton>
                 </div>
@@ -525,7 +525,7 @@ export default function Teams() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
@@ -564,7 +564,7 @@ export default function Teams() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
+                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -605,7 +605,7 @@ export default function Teams() {
               <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Teams</h1>
               <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{teams.length} teams · Manage your teams and members</p>
             </div>
-            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"><Plus className="w-4 h-4" />Create Team</DashboardButton>
+            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"><Plus className="w-4 h-4" />Create Team</DashboardButton>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {teams.map((team) => (
