@@ -4,6 +4,7 @@ interface FormInputProps {
   type?: string;
   value: string;
   onChange?: (value: string) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
@@ -14,6 +15,7 @@ export default function FormInput({
   type = "text",
   value,
   onChange,
+  onBlur,
   placeholder,
   disabled,
   error,
@@ -31,6 +33,7 @@ export default function FormInput({
           type={type}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
           className={`w-full h-10 text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] border border-black/[0.04] dark:border-[#222] rounded-xl px-3 ${

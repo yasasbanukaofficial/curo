@@ -5,6 +5,7 @@ interface FormFieldProps {
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   error?: string;
   touched?: boolean;
   required?: boolean;
@@ -22,6 +23,7 @@ export default function FormField({
   placeholder,
   value,
   onChange,
+  onBlur,
   error,
   touched,
   required = false,
@@ -47,6 +49,7 @@ export default function FormField({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         disabled={disabled}
         className={`w-full h-10 px-3.5 text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none text-[#1D1D1F] dark:text-[#E5E5E5] placeholder-[#8E8E93] dark:placeholder-[#666] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${inputClassName}`}
       />
