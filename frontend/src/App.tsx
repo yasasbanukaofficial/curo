@@ -7,6 +7,7 @@ import Secrets from "./pages/dashboard/Secrets";
 import Environments from "./pages/dashboard/Environments";
 import Integrations from "./pages/dashboard/Integrations";
 import AuditLogs from "./pages/dashboard/AuditLogs";
+import Settings from "./pages/dashboard/Settings";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -24,6 +25,7 @@ function App() {
         <Route path="environments" element={<Environments />} />
         <Route path="integrations" element={<Integrations />} />
         <Route path="audits" element={<AuditLogs />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
