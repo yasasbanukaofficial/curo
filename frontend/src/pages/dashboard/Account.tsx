@@ -58,7 +58,7 @@ function formatDate(iso: string) {
   });
 }
 
-export default function Settings() {
+export default function Account() {
   const [profile] = useState<UserProfile>(MOCK_USER);
   const [editMode, setEditMode] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -128,7 +128,7 @@ export default function Settings() {
   return (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Settings</h1>
+        <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Account</h1>
         <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">
           Manage your account settings and preferences
         </p>
