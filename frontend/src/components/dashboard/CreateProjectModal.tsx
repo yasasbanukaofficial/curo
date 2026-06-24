@@ -95,7 +95,7 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
             <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">URL</label>
             <div className="relative group">
               <HelpCircle className="w-3.5 h-3.5 text-[#8E8E93] cursor-help" />
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-[11px] text-white bg-[#1D1D1F] dark:bg-[#333] rounded-lg shadow-lg max-w-[260px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="absolute bottom-full left-0 mb-2 px-3 py-2 text-[11px] text-white bg-[#1D1D1F] dark:bg-[#333] rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Link to the project — live site, deployed app, or GitHub/GitLab repository URL.
               </div>
             </div>
