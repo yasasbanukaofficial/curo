@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   FolderKanban,
+  Users,
   KeyRound,
   ScrollText,
   Settings,
@@ -10,6 +11,7 @@ import {
 const navItems = [
   { label: "Overview", icon: LayoutDashboard, path: "/dashboard/overview" },
   { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
+  { label: "Teams", icon: Users, path: "/dashboard/teams" },
   { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
   { label: "Audit", icon: ScrollText, path: "/dashboard/audits" },
   { label: "Settings", icon: Settings, path: "/dashboard/settings" },

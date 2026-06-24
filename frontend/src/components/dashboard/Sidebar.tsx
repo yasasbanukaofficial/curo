@@ -5,6 +5,7 @@ import DashboardButton from "./DashboardButton";
 import {
   LayoutDashboard,
   FolderKanban,
+  Users,
   KeyRound,
   Layers3,
   PlugZap,
@@ -22,6 +23,7 @@ const projects = ["Acme Production", "Acme Staging", "Main App"];
 const mainNav = [
   { label: "Overview", icon: LayoutDashboard, path: "/dashboard/overview" },
   { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
+  { label: "Teams", icon: Users, path: "/dashboard/teams" },
   { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
   { label: "Environments", icon: Layers3, path: "/dashboard/environments" },
   { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
