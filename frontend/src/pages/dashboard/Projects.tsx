@@ -14,6 +14,7 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
+  HelpCircle,
 } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
@@ -21,6 +22,7 @@ import SearchInput from "../../components/dashboard/SearchInput";
 import CreateProjectModal from "../../components/dashboard/CreateProjectModal";
 import FilterTabs from "../../components/dashboard/FilterTabs";
 import FormField from "../../components/dashboard/FormField";
+import FormInput from "../../components/dashboard/FormInput";
 import FormTextarea from "../../components/dashboard/FormTextarea";
 import AlertModal from "../../components/dashboard/AlertModal";
 import { useToast } from "../../components/dashboard/Toast";
@@ -94,14 +96,12 @@ const ALL_TEAMS: AvailableTeam[] = [
   { id: "team_3", name: "Side Project" },
 ];
 
-const gitUrlPattern = /^https:\/\/(github\.com|gitlab\.com)\/.+\/.+$/;
-
 const updateProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(100, "Name is too long"),
   description: z.string().trim().min(1, "Description is required").max(500, "Description is too long"),
   projectLink: z
     .string()
-    .regex(gitUrlPattern, "Must be a valid GitHub or GitLab URL (e.g. https://github.com/org/repo)")
+    .url("Must be a valid URL")
     .optional()
     .or(z.literal("")),
 });
@@ -317,7 +317,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
+                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -346,7 +346,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
+                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -375,7 +375,7 @@ export default function Projects() {
                       className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
                         assigned
                           ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[var(--accent)] dark:bg-white text-white dark:text-[var(--accent)] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10"
+                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
                       }`}
                     >
                       {assigned ? "Remove" : "Assign"}
@@ -405,17 +405,25 @@ export default function Projects() {
                     touched={!!settingsFormik.touched.name}
                     required
                   />
-                  <FormField
-                    label="Repository URL"
-                    name="projectLink"
-                    placeholder="https://github.com/org/repo"
-                    value={settingsFormik.values.projectLink}
-                    onChange={(v) => settingsFormik.setFieldValue("projectLink", v)}
-                    onBlur={settingsFormik.handleBlur}
-                    error={settingsFormik.touched.projectLink ? settingsFormik.errors.projectLink : undefined}
-                    touched={!!settingsFormik.touched.projectLink}
-                  />
-                  <p className="text-[11px] text-[#8E8E93] dark:text-[#666] -mt-1">Accepts GitHub and GitLab repository URLs.</p>
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">URL</label>
+                      <div className="relative group">
+                        <HelpCircle className="w-3.5 h-3.5 text-[#8E8E93] cursor-help" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-[11px] text-white bg-[#1D1D1F] dark:bg-[#333] rounded-lg shadow-lg max-w-[260px] w-max opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                          Link to the project — live site, deployed app, or GitHub/GitLab repository URL.
+                        </div>
+                      </div>
+                    </div>
+                    <FormInput
+                      value={settingsFormik.values.projectLink}
+                      onChange={(v) => settingsFormik.setFieldValue("projectLink", v)}
+                      onBlur={settingsFormik.handleBlur}
+                      placeholder="https://example.com"
+                      error={settingsFormik.touched.projectLink ? settingsFormik.errors.projectLink : undefined}
+                    />
+                  </div>
+
                   <FormTextarea
                     label="Description"
                     name="description"
@@ -429,7 +437,7 @@ export default function Projects() {
                   />
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
@@ -465,7 +473,7 @@ export default function Projects() {
                 {filtered.length} projects · {projects.reduce((a, p) => a + p.secretCount, 0)} total secrets
               </p>
             </div>
-            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[var(--accent)] dark:bg-white dark:text-[var(--accent)] rounded-[10px] hover:bg-[var(--accent)]/90 dark:hover:bg-[var(--accent)]/10">
+            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
               <Plus className="w-4 h-4" />
               New Project
             </DashboardButton>
