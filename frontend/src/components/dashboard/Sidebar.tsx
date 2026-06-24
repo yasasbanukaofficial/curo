@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
 import DashboardButton from "./DashboardButton";
 import {
   LayoutDashboard,
@@ -13,26 +12,34 @@ import {
   Settings,
   UserCircle,
   ChevronDown,
-  Sun,
-  Moon,
   Check,
 } from "lucide-react";
 
 const projects = ["Acme Production", "Acme Staging", "Main App"];
 
-const mainNav = [
-  { label: "Overview", icon: LayoutDashboard, path: "/dashboard/overview" },
-  { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
-  { label: "Teams", icon: Users, path: "/dashboard/teams" },
-  { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
-  { label: "Environments", icon: Layers3, path: "/dashboard/environments" },
-  { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
-  { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
+const navSections = [
+  {
+    label: "Workspace",
+    items: [
+      { label: "Overview", icon: LayoutDashboard, path: "/dashboard/overview" },
+      { label: "Teams", icon: Users, path: "/dashboard/teams" },
+      { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
+      { label: "Environments", icon: Layers3, path: "/dashboard/environments" },
+      { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
+      { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
+    ],
+  },
 ];
 
 const bottomNav = [
-  { label: "Settings", icon: Settings, path: "/dashboard/settings" },
   { label: "Account", icon: UserCircle, path: "/dashboard/account" },
+  { label: "Settings", icon: Settings, path: "" },
 ];
 
 function ProjectSwitcher() {
@@ -85,8 +92,12 @@ function ProjectSwitcher() {
   );
 }
 
-export default function Sidebar() {
-  const { theme, toggle } = useTheme();
+interface SidebarProps {
+  showSettings: boolean;
+  onToggleSettings: (open: boolean) => void;
+}
+
+export default function Sidebar({ showSettings, onToggleSettings }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -96,43 +107,49 @@ export default function Sidebar() {
         <ProjectSwitcher />
       </div>
 
-      <div className="px-3 mb-2">
-        <p className="px-2 text-[10px] font-medium text-[#8E8E93] dark:text-[#666] tracking-[0.08em] uppercase">
-          Navigation
-        </p>
-      </div>
-
-      <nav className="flex-1 px-3 space-y-0.5">
-        {mainNav.map((item) => {
-          const Icon = item.icon;
-          const active = location.pathname === item.path
-            || (item.path === "/dashboard/overview" && location.pathname === "/dashboard");
-          return (
-            <DashboardButton
-              key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
-                active
-                  ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
-                  : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </DashboardButton>
-          );
-        })}
+      <nav className="flex-1 px-3 overflow-y-auto space-y-5">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            <p className="px-2 mb-1.5 text-[10px] font-medium text-[#8E8E93] dark:text-[#666] tracking-[0.08em] uppercase">
+              {section.label}
+            </p>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = location.pathname === item.path
+                  || (item.path === "/dashboard/overview" && location.pathname === "/dashboard");
+                return (
+                  <DashboardButton
+                    key={item.label}
+                    onClick={() => navigate(item.path)}
+                    className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
+                      active
+                        ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
+                        : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </DashboardButton>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="px-3 pt-3 pb-5 border-t border-black/[0.04] dark:border-[#222]">
         <nav className="space-y-0.5">
           {bottomNav.map((item) => {
             const Icon = item.icon;
-            const active = location.pathname === item.path;
+            const active = item.path ? location.pathname === item.path : false;
             return (
               <DashboardButton
                 key={item.label}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  if (item.path) navigate(item.path);
+                  else if (item.label === "Settings") onToggleSettings(true);
+                }}
                 className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
                   active
                     ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
@@ -145,37 +162,8 @@ export default function Sidebar() {
             );
           })}
         </nav>
-
-        <div className="mt-4 px-2">
-          <p className="text-[10px] font-medium text-[#8E8E93] dark:text-[#666] tracking-[0.08em] uppercase mb-3">
-            Appearance
-          </p>
-          <div className="flex items-center bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl p-0.5 transition-colors duration-200">
-            <DashboardButton
-              onClick={theme === "dark" ? toggle : undefined}
-              className={`flex-1 h-9 gap-1.5 text-sm rounded-lg font-medium ${
-                theme === "light"
-                  ? "bg-white dark:bg-[#333] shadow-sm text-[#1D1D1F] dark:text-[#E5E5E5]"
-                  : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
-              }`}
-            >
-              <Sun className="w-3.5 h-3.5" />
-              Light
-            </DashboardButton>
-            <DashboardButton
-              onClick={theme === "light" ? toggle : undefined}
-              className={`flex-1 h-9 gap-1.5 text-sm rounded-lg font-medium ${
-                theme === "dark"
-                  ? "bg-white dark:bg-[#333] shadow-sm text-[#1D1D1F] dark:text-[#E5E5E5]"
-                  : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
-              }`}
-            >
-              <Moon className="w-3.5 h-3.5" />
-              Dark
-            </DashboardButton>
-          </div>
-        </div>
       </div>
+
     </aside>
   );
 }
