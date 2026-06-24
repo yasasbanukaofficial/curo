@@ -17,7 +17,9 @@ import SectionHeader from "../../components/dashboard/SectionHeader";
 import FormInput from "../../components/dashboard/FormInput";
 import FormField from "../../components/dashboard/FormField";
 import Modal from "../../components/dashboard/Modal";
+import AlertModal from "../../components/dashboard/AlertModal";
 import { ProviderBadge } from "../../components/dashboard/Badges";
+import { useToast } from "../../components/dashboard/Toast";
 import {
   settingsProfileSchema,
   changePasswordSchema,
@@ -59,15 +61,13 @@ function formatDate(iso: string) {
 }
 
 export default function Account() {
+  const toast = useToast();
   const [profile] = useState<UserProfile>(MOCK_USER);
   const [editMode, setEditMode] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState("");
 
   const [connectedAccounts] = useState({
     google: { connected: !!profile.googleId, email: "yasas@gmail.com" },
@@ -78,11 +78,10 @@ export default function Account() {
     initialValues: { name: profile.name, email: profile.email },
     validate: validateZod(settingsProfileSchema),
     onSubmit: (_values, { setSubmitting }) => {
-      setSaveSuccess(false);
       setTimeout(() => {
         setSubmitting(false);
-        setSaveSuccess(true);
         setEditMode(false);
+        toast.success("Profile saved", "Your profile has been updated successfully.");
       }, 1000);
     },
   });
@@ -91,15 +90,11 @@ export default function Account() {
     initialValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
     validate: validateZod(changePasswordSchema),
     onSubmit: (_values, { setSubmitting, resetForm }) => {
-      setPasswordSuccess(false);
       setTimeout(() => {
         setSubmitting(false);
-        setPasswordSuccess(true);
-        setTimeout(() => {
-          setShowPasswordModal(false);
-          resetForm();
-          setPasswordSuccess(false);
-        }, 1500);
+        setShowPasswordModal(false);
+        resetForm();
+        toast.success("Password updated", "Your password has been changed successfully.");
       }, 1000);
     },
   });
@@ -111,12 +106,10 @@ export default function Account() {
 
   function handleOpenPasswordModal() {
     passwordFormik.resetForm();
-    setPasswordSuccess(false);
     setShowPasswordModal(true);
   }
 
   function handleDeleteAccount() {
-    setDeleteConfirm("");
     setShowDeleteModal(false);
   }
 
@@ -215,7 +208,7 @@ export default function Account() {
                     <DashboardButton
                       type="submit"
                       disabled={profileFormik.isSubmitting}
-                      className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {profileFormik.isSubmitting ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -226,7 +219,7 @@ export default function Account() {
                     </DashboardButton>
                     <DashboardButton
                       onClick={handleCancelEdit}
-                      className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
+                      className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
                     >
                       Cancel
                     </DashboardButton>
@@ -234,18 +227,13 @@ export default function Account() {
                 ) : (
                   <DashboardButton
                     onClick={() => setEditMode(true)}
-                    className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                    className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
                   >
                     Edit Profile
                   </DashboardButton>
                 )}
 
-                {saveSuccess && (
-                  <span className="flex items-center gap-1.5 text-[11px] text-[#30D158] font-medium ml-2">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Saved successfully
-                  </span>
-                )}
+
               </div>
             </form>
           </DashboardCard>
@@ -349,7 +337,7 @@ export default function Account() {
             <div className="mt-5">
               <DashboardButton
                 onClick={handleOpenPasswordModal}
-                className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl hover:bg-[#eee] dark:hover:bg-[#222]"
+                className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]"
               >
                 <KeyRound className="w-4 h-4" />
                 Change Password
@@ -379,7 +367,7 @@ export default function Account() {
             <div className="mt-5">
               <DashboardButton
                 onClick={() => setShowDeleteModal(true)}
-                className="h-9 px-4 text-sm font-medium text-white bg-[#FF3B30] rounded-xl hover:bg-[#FF3B30]/90"
+                className="h-9 px-4 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete Account
@@ -391,7 +379,7 @@ export default function Account() {
 
       <Modal
         open={showPasswordModal}
-        onClose={() => { setShowPasswordModal(false); passwordFormik.resetForm(); setPasswordSuccess(false); }}
+        onClose={() => { setShowPasswordModal(false); passwordFormik.resetForm(); }}
         title="Change Password"
         description="Enter your current password and choose a new one."
         submitLabel="Update Password"
@@ -442,40 +430,20 @@ export default function Account() {
           </div>
         )}
 
-        {passwordSuccess && (
-          <div className="flex items-center gap-1.5 mt-4 text-[11px] text-[#30D158] font-medium">
-            <CheckCircle className="w-3.5 h-3.5" />
-            Password updated successfully
-          </div>
-        )}
+
       </Modal>
 
-      <Modal
+      <AlertModal
         open={showDeleteModal}
-        onClose={() => { setShowDeleteModal(false); setDeleteConfirm(""); }}
+        onClose={() => setShowDeleteModal(false)}
+        variant="warning"
         title="Delete Account"
-        description="This action is permanent and cannot be undone."
-        submitLabel="Permanently Delete"
-        submitDisabled={deleteConfirm !== "delete"}
-        onSubmit={handleDeleteAccount}
-        className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20"
-        bodyClassName="space-y-4"
-      >
-        <div className="p-3 bg-[#FF3B30]/5 rounded-xl">
-          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] leading-relaxed">
-            All your data will be permanently deleted, including projects, secrets, environments,
-            integrations, and audit logs. Your account cannot be recovered.
-          </p>
-        </div>
-
-        <FormField
-          label={'Type "delete" to confirm'}
-          name="deleteConfirm"
-          placeholder='Type "delete" to confirm'
-          value={deleteConfirm}
-          onChange={setDeleteConfirm}
-        />
-      </Modal>
+        message="All your data will be permanently deleted, including projects, secrets, environments, integrations, and audit logs. Your account cannot be recovered."
+        buttons={[
+          { label: "Cancel", onClick: () => setShowDeleteModal(false), variant: "secondary" },
+          { label: "Delete Account", onClick: handleDeleteAccount, variant: "destructive" },
+        ]}
+      />
     </div>
   );
 }
