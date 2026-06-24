@@ -3,6 +3,7 @@ import { z } from "zod";
 import { FolderKanban, Users } from "lucide-react";
 import Modal from "./Modal";
 import FormField from "./FormField";
+import FormSelect from "./FormSelect";
 import FormTextarea from "./FormTextarea";
 import { validateZod } from "../../types/settings";
 
@@ -69,31 +70,18 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
             touched={!!formik.touched.projectName}
             required
           />
-          <div>
-            <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">
-              Team <span className="text-[#FF3B30] ml-0.5">*</span>
-            </label>
-            <div className="relative">
-              <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] pointer-events-none" />
-              <select
-                name="team"
-                value={formik.values.team}
-                onChange={(e) => formik.setFieldValue("team", e.target.value)}
-                onBlur={formik.handleBlur}
-                className={`w-full h-10 pl-10 pr-3 text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none text-[#1D1D1F] dark:text-[#E5E5E5] transition-colors duration-200 appearance-none cursor-pointer ${
-                  !formik.values.team ? "text-[#8E8E93]" : ""
-                }`}
-              >
-                <option value="" disabled>Select a team</option>
-                {TEAMS.map((t) => (
-                  <option key={t.id} value={t.id} className="text-[#1D1D1F] dark:text-[#E5E5E5]">{t.name}</option>
-                ))}
-              </select>
-            </div>
-            {formik.touched.team && formik.errors.team && (
-              <p className="mt-1.5 text-xs text-[#FF3B30]">{formik.errors.team}</p>
-            )}
-          </div>
+          <FormSelect
+            label="Team"
+            name="team"
+            value={formik.values.team}
+            onChange={(v) => formik.setFieldValue("team", v)}
+            options={TEAMS.map((t) => ({ label: t.name, value: t.id }))}
+            placeholder="Select a team"
+            icon={<Users className="w-4 h-4 text-[#8E8E93]" />}
+            error={formik.touched.team ? formik.errors.team : undefined}
+            touched={!!formik.touched.team}
+            required
+          />
         </div>
 
         <FormTextarea
