@@ -78,7 +78,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                     <div className="flex items-center gap-2">
                       <DashboardButton
                         onClick={theme === "dark" ? toggle : undefined}
-                        className={`flex-1 h-10 gap-2 text-sm rounded-xl font-medium ${
+                        className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
                           theme === "light"
                             ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
                             : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
@@ -89,7 +89,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                       </DashboardButton>
                       <DashboardButton
                         onClick={theme === "light" ? toggle : undefined}
-                        className={`flex-1 h-10 gap-2 text-sm rounded-xl font-medium ${
+                        className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
                           theme === "dark"
                             ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
                             : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
@@ -195,7 +195,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                     <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Need more?</p>
                     <p className="text-xs text-[#8E8E93] dark:text-[#666] mt-0.5">Upgrade to Enterprise for unlimited team members, SSO, and more.</p>
                   </div>
-                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-xl hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
+                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
                     Upgrade Plan
                   </DashboardButton>
                 </div>

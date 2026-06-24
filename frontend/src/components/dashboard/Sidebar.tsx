@@ -93,11 +93,10 @@ function ProjectSwitcher() {
 }
 
 interface SidebarProps {
-  showSettings: boolean;
   onToggleSettings: (open: boolean) => void;
 }
 
-export default function Sidebar({ showSettings, onToggleSettings }: SidebarProps) {
+export default function Sidebar({ onToggleSettings }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
 

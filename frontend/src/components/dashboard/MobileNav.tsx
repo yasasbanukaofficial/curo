@@ -8,6 +8,7 @@ import {
   UserCircle,
   Settings,
 } from "lucide-react";
+import DashboardButton from "./DashboardButton";
 
 interface MobileNavProps {
   onOpenSettings: () => void;
@@ -34,13 +35,13 @@ export default function MobileNav({ onOpenSettings }: MobileNavProps) {
         const active = item.path && (location.pathname === item.path
           || (item.path === "/dashboard/overview" && location.pathname === "/dashboard"));
         return (
-          <button
+          <DashboardButton
             key={item.label}
             onClick={() => {
               if (item.path) navigate(item.path);
               else onOpenSettings();
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 h-full min-w-0 px-2 transition-colors duration-200 cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-0.5 h-full min-w-0 px-2 rounded-none ${
               active
                 ? "text-[#1D1D1F] dark:text-[#E5E5E5]"
                 : "text-[#8E8E93] dark:text-[#666]"
@@ -53,7 +54,7 @@ export default function MobileNav({ onOpenSettings }: MobileNavProps) {
             {active && (
               <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[#1D1D1F] dark:bg-[#E5E5E5] rounded-b-full" />
             )}
-          </button>
+          </DashboardButton>
         );
       })}
     </nav>

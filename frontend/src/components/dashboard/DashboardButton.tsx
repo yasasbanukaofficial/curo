@@ -12,7 +12,7 @@ export default function DashboardButton({
   href,
   ...props
 }: DashboardButtonProps) {
-  const base = "inline-flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer";
+  const base = "font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2";
 
   if (href) {
     return (

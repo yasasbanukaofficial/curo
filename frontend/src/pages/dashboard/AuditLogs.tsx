@@ -41,7 +41,7 @@ export default function AuditLogs() {
             {filtered.length} events · Real-time audit trail
           </p>
         </div>
-        <DashboardButton className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl hover:bg-[#eee] dark:hover:bg-[#222]">
+        <DashboardButton className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
           <Download className="w-4 h-4" />
           Export
         </DashboardButton>

@@ -18,12 +18,12 @@ export default function TopNav() {
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
-        <DashboardButton className="relative w-9 h-9 rounded-xl text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton className="relative w-9 h-9 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <Bell className="w-[18px] h-[18px]" />
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-[#FF3B30] rounded-full" />
         </DashboardButton>
 
-        <DashboardButton className="w-9 h-9 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-semibold text-sm hover:shadow-sm">
+        <DashboardButton className="w-9 h-9 rounded-[10px] bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-semibold text-sm hover:shadow-sm">
           YB
         </DashboardButton>
       </div>
