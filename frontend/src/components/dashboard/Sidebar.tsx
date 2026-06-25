@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DashboardButton from "./DashboardButton";
+import AlertModal from "./AlertModal";
+import { logoutUser } from "../../lib/auth";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -15,9 +17,10 @@ import {
   Check,
   Sun,
   LogOut,
+  Plus,
 } from "lucide-react";
 
-const projects = ["Acme Production", "Acme Staging", "Main App"];
+const projects: string[] = [];
 
 const navSections = [
   {
@@ -41,8 +44,9 @@ const navSections = [
 
 function ProjectSwitcher() {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(projects[0]);
+  const [selected, setSelected] = useState(projects[0] ?? "");
   const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -53,6 +57,18 @@ function ProjectSwitcher() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  if (projects.length === 0) {
+    return (
+      <DashboardButton
+        onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
+        className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] bg-white hover:bg-[#F5F5F7] rounded-xl border border-black/20 justify-start"
+      >
+        <Plus className="w-4 h-4" />
+        Create new project
+      </DashboardButton>
+    );
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -90,10 +106,10 @@ function ProjectSwitcher() {
 }
 
 const user = {
-  name: "Yasas Bandara",
-  email: "yasas@curo.dev",
-  tier: "Free",
-  initials: "YB",
+  name: "",
+  email: "",
+  tier: "",
+  initials: "",
 };
 
 interface UserDropdownProps {
@@ -102,8 +118,14 @@ interface UserDropdownProps {
 
 function UserCard({ onToggleSettings }: UserDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logoutUser();
+    navigate("/");
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -196,7 +218,7 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
 
           <div className="mt-2 pt-2 border-t border-black/[0.04] dark:border-[#222] px-1.5">
             <DashboardButton
-              onClick={() => { setOpen(false); /* TODO: replace with auth logout */ }}
+              onClick={() => { setOpen(false); setShowLogoutModal(true); }}
               className="w-full h-9 px-3 text-sm rounded-lg justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
             >
               <LogOut className="w-4 h-4" />
@@ -205,6 +227,18 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
           </div>
         </div>
       )}
+
+      <AlertModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        variant="warning"
+        title="Log out"
+        message="Are you sure you want to log out? You will need to sign in again to access your account."
+        buttons={[
+          { label: "Cancel", onClick: () => setShowLogoutModal(false), variant: "secondary" },
+          { label: "Log out", onClick: () => { setShowLogoutModal(false); handleLogout(); }, variant: "destructive" },
+        ]}
+      />
     </div>
   );
 }
