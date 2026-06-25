@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import { z } from "zod";
-import { Plus, KeyRound, Eye, EyeOff, Copy, MoreHorizontal, Edit3, Trash2 } from "lucide-react";
+import { Plus, KeyRound, MoreHorizontal, Edit3, Trash2, ShieldAlert } from "lucide-react";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 import SearchInput from "../../components/dashboard/SearchInput";
 import FilterTabs from "../../components/dashboard/FilterTabs";
@@ -75,7 +75,7 @@ const createSecretSchema = z.object({
 
 const updateSecretSchema = z.object({
   secName: z.string().trim().min(2, "Secret name is too short").max(100, "Name is too long"),
-  secKey: z.string().trim().min(2, "Secret key is too short"),
+  secKey: z.string().trim().optional(),
   projectId: z.string().min(1, "Project is required"),
   environmentId: z.string().optional(),
 });
@@ -85,7 +85,7 @@ export default function Secrets() {
   const [secrets, setSecrets] = useState<Secret[]>(MOCK_SECRETS);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<EnvFilter>("all");
-  const [visible, setVisible] = useState<Record<string, boolean>>({});
+  const isAdmin = true;
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editSecret, setEditSecret] = useState<Secret | null>(null);
@@ -134,7 +134,7 @@ export default function Secrets() {
       const updated: Secret = {
         ...editSecret,
         secName: values.secName,
-        secKey: values.secKey,
+        secKey: values.secKey || editSecret.secKey,
         projectId: values.projectId,
         environmentId: values.environmentId,
         updatedAt: "Just now",
@@ -150,7 +150,7 @@ export default function Secrets() {
     setEditSecret(secret);
     editFormik.setValues({
       secName: secret.secName,
-      secKey: secret.secKey,
+      secKey: "",
       projectId: secret.projectId,
       environmentId: secret.environmentId,
     });
@@ -223,9 +223,7 @@ export default function Secrets() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((s) => {
-              const isVisible = visible[s.id];
-              return (
+            {filtered.map((s) => (
                 <Tr key={s.id}>
                   <Td>
                     <div className="flex items-center gap-2.5">
@@ -235,15 +233,8 @@ export default function Secrets() {
                   </Td>
                   <Td className="hidden md:table-cell">
                     <div className="flex items-center gap-2">
-                      <code className="text-xs font-mono text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] px-2 py-1 rounded-md max-w-[220px] truncate">
-                        {isVisible ? s.secKey : s.secKey.replace(/[^\s:/.@-]/g, "•")}
-                      </code>
-                      <DashboardButton
-                        onClick={() => setVisible((v) => ({ ...v, [s.id]: !v[s.id] }))}
-                        className="text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
-                      >
-                        {isVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </DashboardButton>
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#8E8E93]" />
+                      <span className="text-xs text-[#8E8E93] dark:text-[#666]">Value hidden</span>
                     </div>
                   </Td>
                   <Td><EnvBadge label={getEnvName(s.environmentId)} /></Td>
@@ -252,47 +243,34 @@ export default function Secrets() {
                   </Td>
                   <Td className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <DashboardButton
-                        onClick={() => { navigator.clipboard?.writeText(s.secKey); toast.info("Copied", `${s.secName} copied to clipboard.`); }}
-                        className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </DashboardButton>
-                      <div className="relative">
-                        <DashboardButton
-                          onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s.id ? null : s.id); }}
-                          className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                        >
-                          <MoreHorizontal className="w-3.5 h-3.5" />
-                        </DashboardButton>
-                        {dropdownMenu(s)}
-                      </div>
+                      {isAdmin && (
+                        <div className="relative">
+                          <DashboardButton
+                            onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s.id ? null : s.id); }}
+                            className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                          >
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </DashboardButton>
+                          {dropdownMenu(s)}
+                        </div>
+                      )}
                     </div>
                   </Td>
                 </Tr>
-              );
-            })}
+              ))}
           </tbody>
         </DashboardTable>
       </div>
 
       <div className="sm:hidden space-y-3">
-        {filtered.map((s) => {
-          const isVisible = visible[s.id];
-          return (
+        {filtered.map((s) => (
             <DashboardCard key={s.id}>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2.5">
                   <KeyRound className="w-4 h-4 text-[#8E8E93]" />
                   <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{s.secName}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <DashboardButton
-                    onClick={() => setVisible((v) => ({ ...v, [s.id]: !v[s.id] }))}
-                    className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                  >
-                    {isVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </DashboardButton>
+                {isAdmin && (
                   <div className="relative">
                     <DashboardButton
                       onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s.id ? null : s.id); }}
@@ -307,13 +285,12 @@ export default function Secrets() {
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="mb-3">
-                <code className="block text-xs font-mono text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] px-2 py-1.5 rounded-md truncate">
-                  {isVisible ? s.secKey : s.secKey.replace(/[^\s:/.@-]/g, "•")}
-                </code>
+              <div className="mb-3 flex items-center gap-2">
+                <ShieldAlert className="w-3.5 h-3.5 text-[#8E8E93]" />
+                <span className="text-xs text-[#8E8E93] dark:text-[#666]">Value hidden</span>
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
@@ -324,8 +301,7 @@ export default function Secrets() {
                 <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">by {s.author}</span>
               </div>
             </DashboardCard>
-          );
-        })}
+          ))}
       </div>
 
       <Modal
@@ -340,6 +316,13 @@ export default function Secrets() {
       >
         <form onSubmit={createFormik.handleSubmit} noValidate>
           <div className="space-y-4">
+            <div className="p-3.5 rounded-xl bg-[#007AFF]/5 border border-[#007AFF]/20">
+              <p className="text-xs font-medium text-[#007AFF] mb-1">Once created, the secret value cannot be viewed again</p>
+              <p className="text-[11px] text-[#8E8E93] dark:text-[#666] leading-relaxed">
+                You can edit the name, rotate the key, or delete the secret. The original value
+                will never be displayed to any user, including admins.
+              </p>
+            </div>
             <FormField
               label="Secret Name"
               name="secName"
@@ -410,16 +393,22 @@ export default function Secrets() {
               touched={!!editFormik.touched.secName}
               required
             />
+            <div className="p-3.5 rounded-xl bg-[#FF9F0A]/5 border border-[#FF9F0A]/20">
+              <p className="text-xs font-medium text-[#FF9F0A] mb-1">Secret key hidden</p>
+              <p className="text-[11px] text-[#8E8E93] dark:text-[#666] leading-relaxed">
+                The current secret value is not displayed for security reasons. If you need to rotate
+                this secret, enter a new value below. Team members cannot view existing secret values.
+              </p>
+            </div>
             <FormField
-              label="Secret Key"
+              label="New Secret Key (optional)"
               name="secKey"
-              placeholder="Enter the secret value"
+              placeholder="Enter a new secret value to rotate"
               value={editFormik.values.secKey}
               onChange={(v) => editFormik.setFieldValue("secKey", v)}
               onBlur={editFormik.handleBlur}
               error={editFormik.touched.secKey ? editFormik.errors.secKey : undefined}
               touched={!!editFormik.touched.secKey}
-              required
             />
             <FormSelect
               label="Project"
