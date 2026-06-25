@@ -13,7 +13,7 @@ import {
 import DashboardButton from "./DashboardButton";
 
 const user = {
-  initials: "YB",
+  initials: "U",
 };
 
 const navItems = [

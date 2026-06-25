@@ -14,8 +14,6 @@ export default function ForgotPasswordPage() {
     initialValues: { email: "" },
     validate: validateZod(forgotPasswordSchema),
     onSubmit: (values, { setSubmitting }) => {
-      // TODO: Implement forgot password API call
-      // POST /auth/forgot-password with email
       console.log("Forgot password for:", values.email);
       setSubmitting(false);
     },

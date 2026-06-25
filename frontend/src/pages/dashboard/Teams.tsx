@@ -78,76 +78,9 @@ interface Team {
   createdAt: string;
 }
 
-const MOCK_TEAMS: Team[] = [
-  {
-    id: "team_1",
-    name: "Acme Corp",
-    slug: "acme-corp",
-    plan: "enterprise",
-    billingEmail: "billing@acme.com",
-    subscriptionStatus: "active",
-    enforce2fa: true,
-    allowedDomains: ["acme.com"],
-    memberCount: 12,
-    createdAt: "2025-09-15",
-    projects: ["proj_1", "proj_2"],
-    members: [
-      { id: "m1", name: "Yasas", email: "yasas@acme.com", role: "owner", status: "active", joinedAt: "Sep 2025" },
-      { id: "m2", name: "Alex", email: "alex@acme.com", role: "admin", status: "active", joinedAt: "Oct 2025" },
-      { id: "m3", name: "Sam", email: "sam@acme.com", role: "developer", status: "active", joinedAt: "Nov 2025" },
-      { id: "m4", name: "Taylor", email: "taylor@acme.com", role: "viewer", status: "active", joinedAt: "Jan 2026" },
-    ],
-    invites: [
-      { id: "i1", email: "jordan@acme.com", role: "developer", expiresAt: "Jul 1, 2026" },
-    ],
-  },
-  {
-    id: "team_2",
-    name: "Personal",
-    slug: "personal",
-    plan: "starter",
-    subscriptionStatus: "active",
-    enforce2fa: false,
-    allowedDomains: [],
-    memberCount: 1,
-    createdAt: "2025-08-01",
-    projects: ["proj_3"],
-    members: [
-      { id: "m5", name: "Yasas", email: "yasas@example.com", role: "owner", status: "active", joinedAt: "Aug 2025" },
-    ],
-    invites: [],
-  },
-  {
-    id: "team_3",
-    name: "Side Project",
-    slug: "side-project",
-    plan: "team",
-    billingEmail: "dev@sideproject.io",
-    subscriptionStatus: "trialing",
-    enforce2fa: false,
-    allowedDomains: ["sideproject.io"],
-    memberCount: 4,
-    createdAt: "2026-03-10",
-    projects: [],
-    members: [
-      { id: "m6", name: "Yasas", email: "yasas@sideproject.io", role: "admin", status: "active", joinedAt: "Mar 2026" },
-      { id: "m7", name: "Riley", email: "riley@sideproject.io", role: "developer", status: "active", joinedAt: "Mar 2026" },
-      { id: "m8", name: "Jordan", email: "jordan@sideproject.io", role: "developer", status: "invited", joinedAt: "Apr 2026" },
-    ],
-    invites: [
-      { id: "i2", email: "casey@sideproject.io", role: "viewer", expiresAt: "Jul 5, 2026" },
-    ],
-  },
-];
+const MOCK_TEAMS: Team[] = [];
 
-const ALL_PROJECTS: TeamProject[] = [
-  { id: "proj_1", name: "Acme API", description: "Production API server", secretCount: 248, environmentCount: 3, assigned: true },
-  { id: "proj_2", name: "Main App", description: "Customer-facing web app", secretCount: 186, environmentCount: 3, assigned: true },
-  { id: "proj_3", name: "Mobile Backend", description: "iOS/Android API gateway", secretCount: 94, environmentCount: 2, assigned: true },
-  { id: "proj_4", name: "Data Pipeline", description: "ETL and analytics infra", secretCount: 312, environmentCount: 2, assigned: false },
-  { id: "proj_5", name: "Admin Dashboard", description: "Internal admin panel", secretCount: 67, environmentCount: 3, assigned: false },
-  { id: "proj_6", name: "Documentation", description: "Developer docs site", secretCount: 12, environmentCount: 1, assigned: false },
-];
+const ALL_PROJECTS: TeamProject[] = [];
 
 interface NewTeamMemberInvite {
   email: string;
@@ -279,7 +212,7 @@ export default function Teams() {
         createdAt: new Date().toISOString().split("T")[0],
         projects: [],
         members: [
-          { id: "m_owner", name: "You", email: "user@example.com", role: "owner", status: "active", joinedAt: "Just now" },
+          { id: "m_owner", name: "", email: "", role: "owner", status: "active", joinedAt: "Just now" },
           ...createMembers.map((m, i) => ({
             id: `m_new_${i}`,
             name: m.email.split("@")[0],

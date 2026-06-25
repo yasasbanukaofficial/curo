@@ -43,14 +43,14 @@ interface UserProfile {
 }
 
 const MOCK_USER: UserProfile = {
-  _id: "usr_abc123",
-  name: "Yasas",
-  email: "yasas@example.com",
-  provider: ["local", "github"],
+  _id: "",
+  name: "",
+  email: "",
+  provider: [],
   googleId: undefined,
-  githubId: "gh_yasas",
-  createdAt: "2025-09-15T08:30:00.000Z",
-  updatedAt: "2026-06-20T14:22:00.000Z",
+  githubId: undefined,
+  createdAt: "",
+  updatedAt: "",
 };
 
 function formatDate(iso: string) {
@@ -76,8 +76,8 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [connectedAccounts] = useState({
-    google: { connected: !!profile.googleId, email: "yasas@gmail.com" },
-    github: { connected: !!profile.githubId, username: "yasas" },
+    google: { connected: !!profile.googleId, email: "" },
+    github: { connected: !!profile.githubId, username: "" },
   });
 
   const profileFormik = useFormik<SettingsProfileValues>({
@@ -208,7 +208,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Connected as yasas</p>
+                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Connected</p>
                       </div>
                     </div>
                     <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20">Disconnect</DashboardButton>

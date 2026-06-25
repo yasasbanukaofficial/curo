@@ -42,14 +42,14 @@ interface UserProfile {
 }
 
 const MOCK_USER: UserProfile = {
-  _id: "usr_abc123",
-  name: "Yasas",
-  email: "yasas@example.com",
-  provider: ["local", "github"],
+  _id: "",
+  name: "",
+  email: "",
+  provider: [],
   googleId: undefined,
-  githubId: "gh_yasas",
-  createdAt: "2025-09-15T08:30:00.000Z",
-  updatedAt: "2026-06-20T14:22:00.000Z",
+  githubId: undefined,
+  createdAt: "",
+  updatedAt: "",
 };
 
 function formatDate(iso: string) {
@@ -70,8 +70,8 @@ export default function Account() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [connectedAccounts] = useState({
-    google: { connected: !!profile.googleId, email: "yasas@gmail.com" },
-    github: { connected: !!profile.githubId, username: "yasas" },
+    google: { connected: !!profile.googleId, email: "" },
+    github: { connected: !!profile.githubId, username: "" },
   });
 
   const profileFormik = useFormik<SettingsProfileValues>({

@@ -39,17 +39,9 @@ interface Project {
   name: string;
 }
 
-const MOCK_ENVIRONMENTS: Environment[] = [
-  { id: "env_1", name: "Development", projectId: "proj_1", userId: "user_1", secretCount: 342, projectName: "Acme API", createdAt: "2025-06-01", updatedAt: "2m ago" },
-  { id: "env_2", name: "Staging", projectId: "proj_1", userId: "user_1", secretCount: 289, projectName: "Acme API", createdAt: "2025-06-15", updatedAt: "5m ago" },
-  { id: "env_3", name: "Production", projectId: "proj_2", userId: "user_1", secretCount: 617, projectName: "Main App", createdAt: "2025-07-01", updatedAt: "1m ago" },
-];
+const MOCK_ENVIRONMENTS: Environment[] = [];
 
-const MOCK_PROJECTS: Project[] = [
-  { id: "proj_1", name: "Acme API" },
-  { id: "proj_2", name: "Main App" },
-  { id: "proj_3", name: "Mobile Backend" },
-];
+const MOCK_PROJECTS: Project[] = [];
 
 const createEnvironmentSchema = z.object({
   name: z.string().trim().min(1, "Environment name is required").max(50, "Name is too long"),
@@ -76,7 +68,7 @@ export default function Environments() {
         id: `env_${Date.now()}`,
         name: values.name,
         projectId: values.projectId,
-        userId: "user_1",
+        userId: "",
         secretCount: 0,
         projectName: MOCK_PROJECTS.find((p) => p.id === values.projectId)?.name || "",
         createdAt: new Date().toISOString().split("T")[0],

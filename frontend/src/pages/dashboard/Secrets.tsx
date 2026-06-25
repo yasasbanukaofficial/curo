@@ -37,28 +37,11 @@ interface Environment {
   name: string;
 }
 
-const MOCK_SECRETS: Secret[] = [
-  { id: "sec_1", secName: "DATABASE_URL", secKey: "postgresql://prod:••••••@db.example.com:5432/main", projectId: "proj_1", userId: "user_1", environmentId: "env_3", updatedAt: "2m ago", author: "Yasas" },
-  { id: "sec_2", secName: "OPENAI_API_KEY", secKey: "sk-proj-••••••••••••", projectId: "proj_1", userId: "user_2", environmentId: "env_3", updatedAt: "5m ago", author: "System" },
-  { id: "sec_3", secName: "JWT_SECRET", secKey: "••••••••••••••••", projectId: "proj_1", userId: "user_1", environmentId: "env_3", updatedAt: "10m ago", author: "Yasas" },
-  { id: "sec_4", secName: "STRIPE_API_KEY", secKey: "sk_live_••••••••••••", projectId: "proj_2", userId: "user_3", environmentId: "env_3", updatedAt: "18m ago", author: "Alex" },
-  { id: "sec_5", secName: "REDIS_URL", secKey: "redis://:••••••@redis.example.com:6379", projectId: "proj_2", userId: "user_4", environmentId: "env_1", updatedAt: "25m ago", author: "Sam" },
-  { id: "sec_6", secName: "SENDGRID_API_KEY", secKey: "SG.••••••••••••", projectId: "proj_3", userId: "user_1", environmentId: "env_2", updatedAt: "1h ago", author: "Yasas" },
-  { id: "sec_7", secName: "AWS_ACCESS_KEY_ID", secKey: "AKIA••••••••••••", projectId: "proj_3", userId: "user_3", environmentId: "env_2", updatedAt: "2h ago", author: "Alex" },
-  { id: "sec_8", secName: "GITHUB_TOKEN", secKey: "ghp_••••••••••••", projectId: "proj_2", userId: "user_4", environmentId: "env_1", updatedAt: "3h ago", author: "Sam" },
-];
+const MOCK_SECRETS: Secret[] = [];
 
-const MOCK_PROJECTS: Project[] = [
-  { id: "proj_1", name: "Acme API" },
-  { id: "proj_2", name: "Main App" },
-  { id: "proj_3", name: "Mobile Backend" },
-];
+const MOCK_PROJECTS: Project[] = [];
 
-const MOCK_ENVIRONMENTS: Environment[] = [
-  { id: "env_1", name: "Development" },
-  { id: "env_2", name: "Staging" },
-  { id: "env_3", name: "Production" },
-];
+const MOCK_ENVIRONMENTS: Environment[] = [];
 
 const envFilters = ["all", "production", "staging", "development"] as const;
 type EnvFilter = (typeof envFilters)[number];
@@ -87,7 +70,7 @@ export default function Secrets() {
   const [secrets, setSecrets] = useState<Secret[]>(MOCK_SECRETS);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<EnvFilter>("all");
-  const isAdmin = true;
+  const isAdmin = false;
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editSecret, setEditSecret] = useState<Secret | null>(null);
@@ -122,7 +105,7 @@ export default function Secrets() {
         secName: values.secName,
         secKey: values.secKey,
         projectId: values.projectId,
-        userId: "user_1",
+        userId: "",
         environmentId: values.environmentId,
         updatedAt: "Just now",
         author: "You",

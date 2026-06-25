@@ -18,24 +18,7 @@ interface FlatResult {
   item: SearchResult;
 }
 
-const searchData: SearchResult[] = [
-  { id: "proj_1", label: "Acme API", description: "Production API server", category: "project", path: "/dashboard/projects" },
-  { id: "proj_2", label: "Main App", description: "Customer-facing web app", category: "project", path: "/dashboard/projects" },
-  { id: "proj_3", label: "Mobile Backend", description: "iOS/Android API gateway", category: "project", path: "/dashboard/projects" },
-  { id: "proj_4", label: "Data Pipeline", description: "ETL and analytics infra", category: "project", path: "/dashboard/projects" },
-  { id: "sec_1", label: "DATABASE_URL", description: "postgresql://prod:***", category: "secret", path: "/dashboard/secrets" },
-  { id: "sec_2", label: "OPENAI_API_KEY", description: "sk-proj-***", category: "secret", path: "/dashboard/secrets" },
-  { id: "sec_3", label: "JWT_SECRET", description: "JSON Web Token secret", category: "secret", path: "/dashboard/secrets" },
-  { id: "sec_4", label: "STRIPE_API_KEY", description: "sk_live_***", category: "secret", path: "/dashboard/secrets" },
-  { id: "env_1", label: "Development", description: "3 secrets", category: "environment", path: "/dashboard/environments" },
-  { id: "env_2", label: "Staging", description: "2 secrets", category: "environment", path: "/dashboard/environments" },
-  { id: "env_3", label: "Production", description: "5 secrets", category: "environment", path: "/dashboard/environments" },
-  { id: "team_1", label: "Acme Corp", description: "8 members", category: "team", path: "/dashboard/teams" },
-  { id: "team_2", label: "Personal", description: "2 members", category: "team", path: "/dashboard/teams" },
-  { id: "int_1", label: "GitHub", description: "Connected", category: "integration", path: "/dashboard/integrations" },
-  { id: "int_2", label: "Slack", description: "Not connected", category: "integration", path: "/dashboard/integrations" },
-  { id: "audit_1", label: "Audit Logs", description: "Real-time event trail", category: "audit", path: "/dashboard/audits" },
-];
+const searchData: SearchResult[] = [];
 
 const categoryIcons: Record<string, typeof FolderKanban> = {
   project: FolderKanban,

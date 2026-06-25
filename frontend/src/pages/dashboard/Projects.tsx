@@ -62,39 +62,13 @@ interface AvailableTeam {
 
 type DetailTab = "overview" | "secrets" | "environments" | "teams" | "settings";
 
-const MOCK_PROJECTS: Project[] = [
-  { id: "proj_1", name: "Acme API", description: "Production API server", projectLink: "https://github.com/acme/api", secretCount: 248, environmentCount: 3, teamCount: 2, memberCount: 8, updatedAt: "2m ago", createdAt: "Jan 2026", secrets: ["sec_1", "sec_2", "sec_3"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
-  { id: "proj_2", name: "Main App", description: "Customer-facing web app", projectLink: "https://github.com/acme/app", secretCount: 186, environmentCount: 3, teamCount: 2, memberCount: 12, updatedAt: "5m ago", createdAt: "Dec 2025", secrets: ["sec_1", "sec_4"], environments: ["env_1", "env_2"], teams: ["team_1", "team_2"] },
-  { id: "proj_3", name: "Mobile Backend", description: "iOS/Android API gateway", secretCount: 94, environmentCount: 2, teamCount: 1, memberCount: 5, updatedAt: "15m ago", createdAt: "Mar 2026", secrets: ["sec_3"], environments: ["env_1", "env_3"], teams: ["team_1"] },
-  { id: "proj_4", name: "Data Pipeline", description: "ETL and analytics infra", projectLink: "https://gitlab.com/acme/pipeline", secretCount: 312, environmentCount: 2, teamCount: 1, memberCount: 6, updatedAt: "1h ago", createdAt: "Feb 2026", secrets: ["sec_2", "sec_5"], environments: ["env_2"], teams: [] },
-  { id: "proj_5", name: "Admin Dashboard", description: "Internal admin panel", secretCount: 67, environmentCount: 3, teamCount: 1, memberCount: 4, updatedAt: "2h ago", createdAt: "Apr 2026", secrets: ["sec_4"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
-  { id: "proj_6", name: "Documentation", description: "Developer docs site", secretCount: 12, environmentCount: 1, teamCount: 1, memberCount: 3, updatedAt: "1d ago", createdAt: "May 2026", secrets: [], environments: ["env_1"], teams: [] },
-  { id: "proj_7", name: "CLI Tool", description: "Command-line interface", secretCount: 41, environmentCount: 2, teamCount: 1, memberCount: 4, updatedAt: "2d ago", createdAt: "May 2026", secrets: ["sec_5"], environments: ["env_1", "env_2"], teams: [] },
-  { id: "proj_8", name: "Auth Service", description: "SSO and auth provider", projectLink: "https://github.com/acme/auth", secretCount: 89, environmentCount: 3, teamCount: 1, memberCount: 7, updatedAt: "3d ago", createdAt: "Apr 2026", secrets: ["sec_1", "sec_2"], environments: ["env_1", "env_2", "env_3"], teams: ["team_1"] },
-];
+const MOCK_PROJECTS: Project[] = [];
 
-const ALL_SECRETS: AvailableSecret[] = [
-  { id: "sec_1", name: "DATABASE_URL", env: "production" },
-  { id: "sec_2", name: "OPENAI_API_KEY", env: "production" },
-  { id: "sec_3", name: "JWT_SECRET", env: "staging" },
-  { id: "sec_4", name: "STRIPE_API_KEY", env: "production" },
-  { id: "sec_5", name: "REDIS_URL", env: "development" },
-  { id: "sec_6", name: "SENDGRID_API_KEY", env: "staging" },
-  { id: "sec_7", name: "AWS_ACCESS_KEY_ID", env: "staging" },
-  { id: "sec_8", name: "GITHUB_TOKEN", env: "development" },
-];
+const ALL_SECRETS: AvailableSecret[] = [];
 
-const ALL_ENVIRONMENTS: AvailableEnvironment[] = [
-  { id: "env_1", name: "Development" },
-  { id: "env_2", name: "Staging" },
-  { id: "env_3", name: "Production" },
-];
+const ALL_ENVIRONMENTS: AvailableEnvironment[] = [];
 
-const ALL_TEAMS: AvailableTeam[] = [
-  { id: "team_1", name: "Acme Corp" },
-  { id: "team_2", name: "Personal" },
-  { id: "team_3", name: "Side Project" },
-];
+const ALL_TEAMS: AvailableTeam[] = [];
 
 const updateProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(100, "Name is too long"),

@@ -22,16 +22,7 @@ interface AuditLogEntry {
   createdAt: string;
 }
 
-const LOGS: AuditLogEntry[] = [
-  { id: "log_1", userId: "USR-001", action: "UPDATED", resource: "SECRET", metadata: { secretName: "DATABASE_URL", env: "Production", field: "value" }, target: "DATABASE_URL", user: "Yasas", role: "Admin", env: "production", time: "2m ago", createdAt: "2026-06-25T10:00:00Z" },
-  { id: "log_2", userId: "USR-002", action: "VIEWED", resource: "SECRET", metadata: { secretName: "OPENAI_API_KEY", env: "Staging" }, target: "OPENAI_API_KEY", user: "System", role: "Automation", env: "staging", time: "5m ago", createdAt: "2026-06-25T09:55:00Z" },
-  { id: "log_3", userId: "USR-001", action: "CREATED", resource: "SECRET", metadata: { secretName: "JWT_SECRET", env: "Production" }, target: "JWT_SECRET", user: "Yasas", role: "Admin", env: "production", time: "10m ago", createdAt: "2026-06-25T09:50:00Z" },
-  { id: "log_4", userId: "USR-003", action: "UPDATED", resource: "SECRET", metadata: { secretName: "STRIPE_API_KEY", env: "Production", field: "value" }, target: "STRIPE_API_KEY", user: "Alex", role: "Developer", env: "production", time: "18m ago", createdAt: "2026-06-25T09:42:00Z" },
-  { id: "log_5", userId: "USR-004", action: "DELETED", resource: "SECRET", metadata: { secretName: "REDIS_URL", env: "Development" }, target: "REDIS_URL", user: "Sam", role: "Developer", env: "development", time: "25m ago", createdAt: "2026-06-25T09:35:00Z" },
-  { id: "log_6", userId: "USR-001", action: "CREATED", resource: "SECRET", metadata: { secretName: "SENDGRID_API_KEY", env: "Staging" }, target: "SENDGRID_API_KEY", user: "Yasas", role: "Admin", env: "staging", time: "1h ago", createdAt: "2026-06-25T09:00:00Z" },
-  { id: "log_7", userId: "USR-003", action: "UPDATED", resource: "SECRET", metadata: { secretName: "AWS_ACCESS_KEY_ID", env: "Staging", field: "value" }, target: "AWS_ACCESS_KEY_ID", user: "Alex", role: "Developer", env: "staging", time: "2h ago", createdAt: "2026-06-25T08:00:00Z" },
-  { id: "log_8", userId: "USR-004", action: "UPDATED", resource: "SECRET", metadata: { secretName: "GITHUB_TOKEN", env: "Development", field: "value" }, target: "GITHUB_TOKEN", user: "Sam", role: "Developer", env: "development", time: "3h ago", createdAt: "2026-06-25T07:00:00Z" },
-];
+const LOGS: AuditLogEntry[] = [];
 
 const actionFilters = ["all", "CREATED", "UPDATED", "VIEWED", "DELETED"];
 

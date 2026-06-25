@@ -13,11 +13,7 @@ interface CreateProjectModalProps {
   onClose: () => void;
 }
 
-const TEAMS = [
-  { id: "team_1", name: "Acme Corp" },
-  { id: "team_2", name: "Personal" },
-  { id: "team_3", name: "Side Project" },
-];
+const TEAMS: { id: string; name: string }[] = [];
 
 const createProjectSchema = z.object({
   projectName: z.string().trim().min(2, "Project name must be at least 2 characters").max(100, "Project name is too long"),

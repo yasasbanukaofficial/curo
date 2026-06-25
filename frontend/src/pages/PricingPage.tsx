@@ -95,7 +95,6 @@ export default function PricingPage() {
     <div className="min-h-screen bg-[#fcfcfc] pt-24">
       <Navbar />
 
-      {/* Hero */}
       <section className="relative bg-[#fcfcfc]">
         <DotsLine className="h-10" />
         <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">
@@ -128,7 +127,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing Cards */}
       <section className="relative bg-[#fcfcfc]">
         <DotsLine className="h-10" />
         <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">
@@ -174,7 +172,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Features Grid */}
       <section className="relative bg-[#fcfcfc]">
         <DotsLine className="h-10" />
         <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">
@@ -218,7 +215,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="relative bg-[#fcfcfc] mb-16 lg:mb-24">
         <DotsLine className="h-10" />
         <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">

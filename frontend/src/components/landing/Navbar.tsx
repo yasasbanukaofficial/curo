@@ -40,10 +40,8 @@ export default function Navbar() {
             <CuroLogo />
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <NavLink href="https://github.com/yasasbanukaofficial/curo" target="_blank" rel="noopener noreferrer">
-              <GitHubIcon className="h-4 w-4" />
-              <span>Star</span>
-              <StarIcon className="h-3.5 w-3.5" />
+            <NavLink href="/pricing">
+              Pricing
             </NavLink>
             <NavLink href="/pricing">
               Pricing
@@ -69,11 +67,6 @@ export default function Navbar() {
       </div>
       {isOpen && (
         <div className="md:hidden border-b border-[#efefef] bg-[#fcfcfc] px-4 pt-2 pb-4 space-y-2">
-          <NavLink href="https://github.com/yasasbanukaofficial/curo" target="_blank" rel="noopener noreferrer" mobile onClick={() => setIsOpen(false)}>
-            <GitHubIcon className="h-5 w-5" />
-            <span>Star</span>
-            <StarIcon className="h-4 w-4" />
-          </NavLink>
           <NavLink href="/pricing" mobile onClick={() => setIsOpen(false)}>
             Pricing
           </NavLink>
