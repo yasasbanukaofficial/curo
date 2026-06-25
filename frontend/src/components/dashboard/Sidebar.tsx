@@ -13,6 +13,7 @@ import {
   UserCircle,
   ChevronDown,
   Check,
+  Sun,
 } from "lucide-react";
 
 const projects = ["Acme Production", "Acme Staging", "Main App"];
@@ -35,11 +36,6 @@ const navSections = [
       { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
     ],
   },
-];
-
-const bottomNav = [
-  { label: "Account", icon: UserCircle, path: "/dashboard/account" },
-  { label: "Settings", icon: Settings, path: "" },
 ];
 
 function ProjectSwitcher() {
@@ -92,8 +88,118 @@ function ProjectSwitcher() {
   );
 }
 
+const user = {
+  name: "Yasas Bandara",
+  email: "yasas@curo.dev",
+  tier: "Free",
+  initials: "YB",
+};
+
+interface UserDropdownProps {
+  onToggleSettings: (tab?: string) => void;
+}
+
+function UserCard({ onToggleSettings }: UserDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] transition-colors duration-200 text-left"
+      >
+        <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-xs font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+          {user.initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{user.name}</p>
+          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{user.email}</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {user.tier === "Free" ? (
+            <DashboardButton onClick={(e) => { e.stopPropagation(); navigate("/pricing"); }} className="h-6 px-2 text-[9px] font-semibold bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/20 rounded-md">
+              Upgrade
+            </DashboardButton>
+          ) : (
+            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-[#1D1D1F]/10 dark:bg-white/10 text-[#1D1D1F] dark:text-[#E5E5E5]">
+              {user.tier}
+            </span>
+          )}
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-3 z-50">
+          <div className="px-4 pb-3 mb-2 border-b border-black/[0.04] dark:border-[#222]">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-sm font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+                {user.initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{user.name}</p>
+                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{user.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#1D1D1F]/10 dark:bg-white/10 text-[#1D1D1F] dark:text-[#E5E5E5]">
+                {user.tier} plan
+              </span>
+              {user.tier === "Free" && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setOpen(false); navigate("/pricing"); }}
+                  className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/20 transition-colors duration-150"
+                >
+                  Upgrade
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="px-1.5 space-y-0.5">
+            <DashboardButton
+              onClick={() => { setOpen(false); onToggleSettings("account"); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+            >
+              <UserCircle className="w-4 h-4" />
+              Account
+            </DashboardButton>
+            <DashboardButton
+              onClick={() => { setOpen(false); onToggleSettings("general"); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </DashboardButton>
+            <DashboardButton
+              onClick={() => { setOpen(false); onToggleSettings("general"); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+            >
+              <Sun className="w-4 h-4" />
+              Theme
+            </DashboardButton>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface SidebarProps {
-  onToggleSettings: (open: boolean) => void;
+  onToggleSettings: (tab?: string) => void;
 }
 
 export default function Sidebar({ onToggleSettings }: SidebarProps) {
@@ -138,31 +244,8 @@ export default function Sidebar({ onToggleSettings }: SidebarProps) {
       </nav>
 
       <div className="px-3 pt-3 pb-5 border-t border-black/[0.04] dark:border-[#222]">
-        <nav className="space-y-0.5">
-          {bottomNav.map((item) => {
-            const Icon = item.icon;
-            const active = item.path ? location.pathname === item.path : false;
-            return (
-              <DashboardButton
-                key={item.label}
-                onClick={() => {
-                  if (item.path) navigate(item.path);
-                  else if (item.label === "Settings") onToggleSettings(true);
-                }}
-                className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
-                  active
-                    ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
-                    : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </DashboardButton>
-            );
-          })}
-        </nav>
+        <UserCard onToggleSettings={onToggleSettings} />
       </div>
-
     </aside>
   );
 }

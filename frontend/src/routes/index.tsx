@@ -8,6 +8,7 @@ import Environments from "../pages/dashboard/Environments";
 import Integrations from "../pages/dashboard/Integrations";
 import AuditLogs from "../pages/dashboard/AuditLogs";
 import Account from "../pages/dashboard/Account";
+import Settings from "../pages/dashboard/Settings";
 import Teams from "../pages/dashboard/Teams";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
@@ -28,6 +29,7 @@ export default function AppRoutes() {
         <Route path="audits" element={<AuditLogs />} />
         <Route path="teams" element={<Teams />} />
         <Route path="account" element={<Account />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />

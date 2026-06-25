@@ -23,9 +23,6 @@ export default function TopNav() {
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-[#FF3B30] rounded-full" />
         </DashboardButton>
 
-        <DashboardButton className="w-9 h-9 rounded-[10px] bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-semibold text-sm hover:shadow-sm">
-          YB
-        </DashboardButton>
       </div>
     </header>
   );
