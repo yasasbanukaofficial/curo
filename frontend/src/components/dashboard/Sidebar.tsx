@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Check,
   Sun,
+  LogOut,
 } from "lucide-react";
 
 const projects = ["Acme Production", "Acme Staging", "Main App"];
@@ -190,6 +191,16 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
             >
               <Sun className="w-4 h-4" />
               Theme
+            </DashboardButton>
+          </div>
+
+          <div className="mt-2 pt-2 border-t border-black/[0.04] dark:border-[#222] px-1.5">
+            <DashboardButton
+              onClick={() => { setOpen(false); /* TODO: replace with auth logout */ }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
             </DashboardButton>
           </div>
         </div>
