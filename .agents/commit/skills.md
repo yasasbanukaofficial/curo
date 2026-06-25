@@ -6,6 +6,7 @@ description: >
   grouping examples). Referencing "commit" in a prompt signals the
   agent to plan a commit strategy and present it to the user; if the
   user approves, the agent executes the commit.
+  Always provide the commit msg like example type(scope): msg and the files you going to commit to the user instead of nothing.
 ---
 
 # Commit Convention
