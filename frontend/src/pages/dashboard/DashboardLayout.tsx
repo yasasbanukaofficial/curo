@@ -6,6 +6,7 @@ import Sidebar from "../../components/dashboard/Sidebar";
 import MobileNav from "../../components/dashboard/MobileNav";
 import SettingsModal from "../../components/dashboard/SettingsModal";
 import type { SettingsTab } from "../../components/dashboard/SettingsModal";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 
 function DashboardInner() {
   const { theme } = useTheme();
@@ -13,10 +14,14 @@ function DashboardInner() {
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("general");
+  const [layoutReady, setLayoutReady] = useState(false);
 
   useEffect(() => {
     const isDesktop = window.innerWidth >= 1024;
-    if (!isDesktop) return;
+    if (!isDesktop) {
+      setLayoutReady(true);
+      return;
+    }
 
     if (location.pathname === "/dashboard/account") {
       setSettingsTab("account");
@@ -27,7 +32,17 @@ function DashboardInner() {
       setShowSettings(true);
       navigate("/dashboard", { replace: true });
     }
+
+    setLayoutReady(true);
   }, [location.pathname, navigate]);
+
+  if (!layoutReady) {
+    return (
+      <div className="h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex items-center justify-center">
+        <LoadingSpinner size={28} />
+      </div>
+    );
+  }
 
   return (
     <div className={`h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex flex-col transition-colors duration-200 ${theme}`}>

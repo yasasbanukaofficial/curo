@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import {
   X, Sun, Moon, Check, CreditCard, Settings as SettingsIcon, UserCircle,
-  User, Mail, Calendar, KeyRound, Trash2, AlertTriangle, Loader2,
+  User, Mail, Calendar, KeyRound, Trash2, AlertTriangle,
 } from "lucide-react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { GitHubIcon } from "../ui/Icons";
@@ -13,6 +13,7 @@ import FormField from "./FormField";
 import Modal from "./Modal";
 import AlertModal from "./AlertModal";
 import { useToast } from "./Toast";
+import LoadingSpinner from "./LoadingSpinner";
 import {
   settingsProfileSchema,
   changePasswordSchema,
@@ -344,7 +345,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                           disabled={profileFormik.isSubmitting}
                           className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {profileFormik.isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
+                          {profileFormik.isSubmitting ? <LoadingSpinner size={16} /> : <User className="w-4 h-4" />}
                           Save Changes
                         </DashboardButton>
                         <DashboardButton

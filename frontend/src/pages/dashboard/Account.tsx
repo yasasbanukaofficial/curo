@@ -8,11 +8,11 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
-  Loader2,
 } from "lucide-react";
 import { GitHubIcon } from "../../components/ui/Icons";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import SectionHeader from "../../components/dashboard/SectionHeader";
 import FormInput from "../../components/dashboard/FormInput";
 import FormField from "../../components/dashboard/FormField";
@@ -211,7 +211,7 @@ export default function Account() {
                       className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {profileFormik.isSubmitting ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <LoadingSpinner size={16} />
                       ) : (
                         <CheckCircle className="w-4 h-4" />
                       )}
