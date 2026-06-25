@@ -30,11 +30,11 @@ function DashboardInner() {
   }, [location.pathname, navigate]);
 
   return (
-    <div className={`h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex flex-col overflow-hidden transition-colors duration-200 ${theme}`}>
+    <div className={`h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex flex-col transition-colors duration-200 ${theme}`}>
       <TopNav />
 
-      <div className="flex flex-1 min-h-0">
-        <Sidebar onToggleSettings={(tab) => { setSettingsTab(tab); setShowSettings(true); }} />
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <Sidebar onToggleSettings={(tab) => { setSettingsTab((tab ?? "general") as SettingsTab); setShowSettings(true); }} />
         <main className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-16 lg:pb-0">
           <Outlet />
         </main>
