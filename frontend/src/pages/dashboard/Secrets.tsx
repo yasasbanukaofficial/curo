@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import { z } from "zod";
 import { Plus, KeyRound, MoreHorizontal, Edit3, Trash2, ShieldAlert } from "lucide-react";
@@ -82,6 +83,7 @@ const updateSecretSchema = z.object({
 
 export default function Secrets() {
   const toast = useToast();
+  const location = useLocation();
   const [secrets, setSecrets] = useState<Secret[]>(MOCK_SECRETS);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<EnvFilter>("all");
@@ -90,6 +92,13 @@ export default function Secrets() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editSecret, setEditSecret] = useState<Secret | null>(null);
   const [deleteSecret, setDeleteSecret] = useState<Secret | null>(null);
+
+  useEffect(() => {
+    if ((location.state as { openCreateSecret?: boolean })?.openCreateSecret) {
+      setShowCreateModal(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   useEffect(() => {
     if (!openDropdown) return;
