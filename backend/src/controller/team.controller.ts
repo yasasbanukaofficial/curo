@@ -3,7 +3,6 @@ import { sendResponse } from "../util";
 import { AuthRequest } from "../middlewares";
 import { teamService } from "../services";
 
-// ── Teams ──────────────────────────────────────────────
 
 export const getTeamById = async (req: AuthRequest, res: Response) => {
   const { teamId } = req.params as { teamId: string };
@@ -99,7 +98,6 @@ export const deleteTeam = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ── Members ────────────────────────────────────────────
 
 export const getTeamMembers = async (req: AuthRequest, res: Response) => {
   const { teamId } = req.params as { teamId: string };
@@ -203,7 +201,6 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ── Invites ────────────────────────────────────────────
 
 export const getTeamInvites = async (req: AuthRequest, res: Response) => {
   const { teamId } = req.params as { teamId: string };

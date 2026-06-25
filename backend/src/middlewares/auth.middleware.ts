@@ -32,7 +32,6 @@ export const authenticate = async (
         req.userEmail = decoded.email;
         return next();
       } catch {
-        // access token expired — fall through to refresh
       }
     }
 

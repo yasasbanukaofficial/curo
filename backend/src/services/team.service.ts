@@ -6,8 +6,8 @@ import { UserModel } from "../models/user.model";
 import crypto from "crypto";
 
 export const teamService = {
-  // ── Teams ──────────────────────────────────────────
 
+ 
   getTeamById: async (userId: string, teamId: string): Promise<ITeam | null> => {
     try {
       const membership = await TeamMemberModel.findOne({ teamId, userId, status: "active" });
@@ -115,8 +115,8 @@ export const teamService = {
     }
   },
 
-  // ── Members ────────────────────────────────────────
 
+ 
   getTeamMembers: async (userId: string, teamId: string): Promise<ITeamMember[]> => {
     try {
       const membership = await TeamMemberModel.findOne({ teamId, userId, status: "active" });
@@ -240,8 +240,8 @@ export const teamService = {
     }
   },
 
-  // ── Invites ────────────────────────────────────────
 
+ 
   getTeamInvites: async (userId: string, teamId: string): Promise<ITeamInvite[]> => {
     try {
       const membership = await TeamMemberModel.findOne({ teamId, userId, status: "active" });
