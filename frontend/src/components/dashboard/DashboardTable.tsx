@@ -31,11 +31,18 @@ export function Th({ children, className = "" }: ThProps) {
 interface TrProps {
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export function Tr({ children, className = "" }: TrProps) {
+export function Tr({ children, className = "", onClick }: TrProps) {
   return (
-    <tr className={`border-b border-black/[0.02] dark:border-[#222]/50 last:border-none hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200 ${className}`}>
+    <tr
+      className={`border-b border-black/[0.02] dark:border-[#222]/50 last:border-none hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200 ${onClick ? "cursor-pointer" : ""} ${className}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+    >
       {children}
     </tr>
   );
