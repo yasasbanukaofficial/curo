@@ -4,7 +4,7 @@ description: >
   Defines the conventional commit format and rules for this project
   (type, scope, description conventions, grouping strategy, and commit
   grouping examples). Referencing "commit" in a prompt signals the
-  agent to plan a commit strategy and present it to the user; if the
+  agent to plan a commit strategy and present it to the user - No commting until the user accepts; if the
   user approves, the agent executes the commit.
   Always provide the commit msg like example type(scope): msg and the files you going to commit to the user instead of nothing.
 ---
