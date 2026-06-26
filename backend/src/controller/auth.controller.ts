@@ -147,3 +147,54 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   const result = await authService.getCurrentUser(req.userId!);
   return sendResponse(res, result);
 };
+
+export const logoutUser = async (req: AuthRequest, res: Response) => {
+  const refreshToken = req.cookies?.refreshtoken;
+  const result = await authService.logoutUser(req.userId!, refreshToken);
+  res.clearCookie("access_token");
+  res.clearCookie("refreshtoken");
+  return sendResponse(res, result);
+};
+
+export const verifyEmailOTP = async (req: AuthRequest, res: Response) => {
+  const result = await authService.verifyEmailOTP(req.userId, req.body.otp, req.body.token);
+  if (result.success && result.data) {
+    setCookie(res, "access_token", result.data.accessToken);
+    setCookie(res, "refreshtoken", result.data.refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+  }
+  return sendResponse(res, result);
+};
+
+export const verifyEmailToken = async (req: Request, res: Response) => {
+  const result = await authService.verifyEmailToken(req.params.token);
+  if (result.success && result.data) {
+    setCookie(res, "access_token", result.data.accessToken);
+    setCookie(res, "refreshtoken", result.data.refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+    return redirect(res, `${FRONTEND_URL}/dashboard`);
+  }
+  return redirect(res, `${FRONTEND_URL}/verify-email?expired=1`);
+};
+
+export const resendVerification = async (req: AuthRequest, res: Response) => {
+  const result = await authService.resendVerification(req.userId!);
+  return sendResponse(res, result);
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const result = await authService.forgotPassword(req.body.email);
+  return sendResponse(res, result);
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const result = await authService.resetPassword(req.body.token, req.body.password);
+  return sendResponse(res, result);
+};
+
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  const result = await authService.changePassword(req.userId!, req.body.currentPassword, req.body.newPassword);
+  return sendResponse(res, result);
+};
