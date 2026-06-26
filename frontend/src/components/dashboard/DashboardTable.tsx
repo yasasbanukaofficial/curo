@@ -7,7 +7,7 @@ interface DashboardTableProps {
 
 export function DashboardTable({ children, className = "" }: DashboardTableProps) {
   return (
-    <div className={`bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl rounded-2xl border border-black/[0.04] dark:border-[#222] overflow-hidden transition-all duration-200 ${className}`}>
+    <div className={`bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl rounded-2xl border border-black/[0.04] dark:border-[#222] transition-all duration-200 ${className}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">{children}</table>
       </div>
