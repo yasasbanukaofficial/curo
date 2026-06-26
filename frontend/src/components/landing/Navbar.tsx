@@ -40,15 +40,17 @@ export default function Navbar() {
             <CuroLogo />
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <NavLink href="/pricing">
-              Pricing
-            </NavLink>
-            <NavLink href="/pricing">
-              Pricing
-            </NavLink>
             <NavLink href="#">
               <span>Docs</span>
               <ExternalLinkIcon className="h-3.5 w-3.5" />
+            </NavLink>
+            <NavLink href="/pricing">
+              Pricing
+            </NavLink>
+            <NavLink href="https://github.com/yasasbanukaofficial/curo" target="_blank" rel="noopener noreferrer">
+              <GitHubIcon className="h-4 w-4" />
+              <span>Star</span>
+              <StarIcon className="h-3.5 w-3.5" />
             </NavLink>
           </div>
           <div className="flex-1 flex items-center justify-end gap-4">
@@ -67,12 +69,17 @@ export default function Navbar() {
       </div>
       {isOpen && (
         <div className="md:hidden border-b border-[#efefef] bg-[#fcfcfc] px-4 pt-2 pb-4 space-y-2">
-          <NavLink href="/pricing" mobile onClick={() => setIsOpen(false)}>
-            Pricing
-          </NavLink>
           <NavLink href="#" mobile onClick={() => setIsOpen(false)}>
             <span>Docs</span>
             <ExternalLinkIcon className="h-4 w-4" />
+          </NavLink>
+          <NavLink href="/pricing" mobile onClick={() => setIsOpen(false)}>
+            Pricing
+          </NavLink>
+          <NavLink href="https://github.com/yasasbanukaofficial/curo" target="_blank" rel="noopener noreferrer" mobile onClick={() => setIsOpen(false)}>
+            <GitHubIcon className="h-5 w-5" />
+            <span>Star</span>
+            <StarIcon className="h-4 w-4" />
           </NavLink>
           <div className="pt-4 border-t border-[#efefef] flex flex-col gap-2">
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363]">Sign In</a>
