@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export type SettingsTab = "general" | "account" | "billing";
+
+export interface UserProfile {
+  _id: string;
+  name: string;
+  email: string;
+  provider: string[];
+  googleId?: string;
+  githubId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SettingsProfileValues {
   name: string;
   email: string;

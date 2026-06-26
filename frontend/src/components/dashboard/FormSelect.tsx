@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
+import type { SelectOption } from "../../types/select";
 import Select from "./Select";
-
-interface SelectOption {
-  label: string;
-  value: string;
-}
 
 interface FormSelectProps {
   label: string;

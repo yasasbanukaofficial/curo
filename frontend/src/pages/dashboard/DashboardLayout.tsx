@@ -5,8 +5,8 @@ import TopNav from "../../components/dashboard/TopNav";
 import Sidebar from "../../components/dashboard/Sidebar";
 import MobileNav from "../../components/dashboard/MobileNav";
 import SettingsModal from "../../components/dashboard/SettingsModal";
-import type { SettingsTab } from "../../components/dashboard/SettingsModal";
 import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
+import type { SettingsTab } from "../../types/settings";
 
 function DashboardInner() {
   const { theme } = useTheme();

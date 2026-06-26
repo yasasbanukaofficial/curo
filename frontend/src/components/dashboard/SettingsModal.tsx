@@ -22,25 +22,14 @@ import {
 import type {
   SettingsProfileValues,
   ChangePasswordValues,
+  SettingsTab,
+  UserProfile,
 } from "../../types/settings";
-
-export type SettingsTab = "general" | "account" | "billing";
 
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
   initialTab?: SettingsTab;
-}
-
-interface UserProfile {
-  _id: string;
-  name: string;
-  email: string;
-  provider: string[];
-  googleId?: string;
-  githubId?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 const MOCK_USER: UserProfile = {

@@ -5,7 +5,6 @@ import { z } from "zod";
 import { Plus, KeyRound, MoreHorizontal, Edit3, Trash2, ShieldAlert } from "lucide-react";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 import SearchInput from "../../components/dashboard/SearchInput";
-import FilterTabs from "../../components/dashboard/FilterTabs";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
@@ -15,36 +14,25 @@ import { EnvBadge } from "../../components/dashboard/Badges";
 import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
-
-interface Secret {
-  id: string;
-  secName: string;
-  secKey: string;
-  projectId: string;
-  userId: string;
-  environmentId: string;
-  updatedAt: string;
-  author: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-}
+import type { Secret } from "../../types/secret";
+import type { ProjectOption } from "../../types/project";
+import {
+  useGetSecretsQuery,
+  useAddSecretMutation,
+  useUpdateSecretMutation,
+  useRemoveSecretMutation,
+} from "../../features/secret/secretApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setSelectedSecret, selectSelectedSecret } from "../../features/secret/secretSlice";
 
 interface Environment {
   id: string;
   name: string;
 }
 
-const MOCK_SECRETS: Secret[] = [];
-
-const MOCK_PROJECTS: Project[] = [];
+const MOCK_PROJECTS: ProjectOption[] = [];
 
 const MOCK_ENVIRONMENTS: Environment[] = [];
-
-const envFilters = ["all", "production", "staging", "development"] as const;
-type EnvFilter = (typeof envFilters)[number];
 
 function getEnvName(envId: string): string {
   return MOCK_ENVIRONMENTS.find((e) => e.id === envId)?.name || "unknown";
@@ -65,12 +53,15 @@ const updateSecretSchema = z.object({
 });
 
 export default function Secrets() {
+  const dispatch = useAppDispatch();
+  const selectedSecret = useAppSelector(selectSelectedSecret);
   const toast = useToast();
   const location = useLocation();
-  const [secrets, setSecrets] = useState<Secret[]>(MOCK_SECRETS);
+  const { data: secrets = [], isLoading, isError } = useGetSecretsQuery();
+  const [addSecret] = useAddSecretMutation();
+  const [updateSecret] = useUpdateSecretMutation();
+  const [removeSecret] = useRemoveSecretMutation();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<EnvFilter>("all");
-  const isAdmin = false;
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editSecret, setEditSecret] = useState<Secret | null>(null);
@@ -92,49 +83,40 @@ export default function Secrets() {
 
   const filtered = secrets.filter((s) => {
     const q = search.toLowerCase();
-    const envName = getEnvName(s.environmentId).toLowerCase();
-    return s.secName.toLowerCase().includes(q) && (filter === "all" || envName === filter);
+    return s.secName.toLowerCase().includes(q);
   });
 
   const createFormik = useFormik({
     initialValues: { secName: "", secKey: "", projectId: "", environmentId: "" },
     validate: validateZod(createSecretSchema),
-    onSubmit: (values, { setSubmitting, resetForm }) => {
-      const newSecret: Secret = {
-        id: `sec_${Date.now()}`,
-        secName: values.secName,
-        secKey: values.secKey,
-        projectId: values.projectId,
-        userId: "",
-        environmentId: values.environmentId,
-        updatedAt: "Just now",
-        author: "You",
-      };
-      setSecrets((prev) => [...prev, newSecret]);
-      setSubmitting(false);
-      setShowCreateModal(false);
-      resetForm();
-      toast.success("Secret created", `${newSecret.secName} has been created.`);
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      try {
+        await addSecret(values).unwrap();
+        setSubmitting(false);
+        setShowCreateModal(false);
+        resetForm();
+        toast.success("Secret created", `${values.secName} has been created.`);
+      } catch {
+        setSubmitting(false);
+        toast.error("Failed to create secret", "Something went wrong. Please try again.");
+      }
     },
   });
 
   const editFormik = useFormik({
     initialValues: { secName: "", secKey: "", projectId: "", environmentId: "" },
     validate: validateZod(updateSecretSchema),
-    onSubmit: (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       if (!editSecret) return;
-      const updated: Secret = {
-        ...editSecret,
-        secName: values.secName,
-        secKey: values.secKey || editSecret.secKey,
-        projectId: values.projectId,
-        environmentId: values.environmentId,
-        updatedAt: "Just now",
-      };
-      setSecrets((prev) => prev.map((s) => s.id === editSecret.id ? updated : s));
-      setEditSecret(null);
-      setSubmitting(false);
-      toast.success("Secret saved", `${updated.secName} has been updated.`);
+      try {
+        await updateSecret({ id: editSecret._id, body: values }).unwrap();
+        setEditSecret(null);
+        setSubmitting(false);
+        toast.success("Secret saved", `${values.secName} has been updated.`);
+      } catch {
+        setSubmitting(false);
+        toast.error("Failed to update secret", "Something went wrong. Please try again.");
+      }
     },
   });
 
@@ -144,21 +126,25 @@ export default function Secrets() {
       secName: secret.secName,
       secKey: "",
       projectId: secret.projectId,
-      environmentId: secret.environmentId,
+      environmentId: secret.environmentId ?? "",
     });
     setOpenDropdown(null);
   }
 
-  function handleDeleteSecret() {
+  async function handleDeleteSecret() {
     if (!deleteSecret) return;
-    setSecrets((prev) => prev.filter((s) => s.id !== deleteSecret.id));
-    setDeleteSecret(null);
-    setOpenDropdown(null);
-    toast.success("Secret deleted", `${deleteSecret.secName} has been removed.`);
+    try {
+      await removeSecret(deleteSecret._id).unwrap();
+      setDeleteSecret(null);
+      setOpenDropdown(null);
+      toast.success("Secret deleted", `${deleteSecret.secName} has been removed.`);
+    } catch {
+      toast.error("Failed to delete secret", "Something went wrong. Please try again.");
+    }
   }
 
   const dropdownMenu = (secret: Secret) => {
-    if (openDropdown !== secret.id) return null;
+    if (openDropdown !== secret._id) return null;
     return (
       <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-20">
         <button
@@ -181,13 +167,29 @@ export default function Secrets() {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#8E8E93]">Loading secrets...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#FF3B30]">Something went wrong. Could not load secrets.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Secrets</h1>
           <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">
-            {filtered.length} secrets · {secrets.filter((s) => getEnvName(s.environmentId).toLowerCase() === "production").length} in production
+            {filtered.length} secrets
           </p>
         </div>
         <DashboardButton onClick={() => { setShowCreateModal(true); createFormik.resetForm(); }} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
@@ -198,9 +200,6 @@ export default function Secrets() {
 
       <div className="flex items-center gap-3 mb-5">
         <SearchInput value={search} onChange={setSearch} placeholder="Search secrets..." />
-        <div className="hidden sm:block">
-          <FilterTabs options={[...envFilters]} value={filter} onChange={(v) => setFilter(v as EnvFilter)} />
-        </div>
       </div>
 
       <div className="hidden sm:block">
@@ -216,7 +215,7 @@ export default function Secrets() {
           </thead>
           <tbody>
             {filtered.map((s) => (
-                <Tr key={s.id}>
+                <Tr key={s._id}>
                   <Td>
                     <div className="flex items-center gap-2.5">
                       <KeyRound className="w-4 h-4 text-[#8E8E93]" />
@@ -229,23 +228,21 @@ export default function Secrets() {
                       <span className="text-xs text-[#8E8E93] dark:text-[#666]">Value hidden</span>
                     </div>
                   </Td>
-                  <Td><EnvBadge label={getEnvName(s.environmentId)} /></Td>
+                  <Td><EnvBadge label={getEnvName(s.environmentId ?? "")} /></Td>
                   <Td className="hidden md:table-cell text-sm text-[#8E8E93] dark:text-[#666]">
                     <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{s.author}</span> · {s.updatedAt}
                   </Td>
                   <Td className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {isAdmin && (
-                        <div className="relative">
-                          <DashboardButton
-                            onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s.id ? null : s.id); }}
-                            className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                          >
-                            <MoreHorizontal className="w-3.5 h-3.5" />
-                          </DashboardButton>
-                          {dropdownMenu(s)}
-                        </div>
-                      )}
+                      <div className="relative">
+                        <DashboardButton
+                          onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s._id ? null : s._id); }}
+                          className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                        >
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </DashboardButton>
+                        {dropdownMenu(s)}
+                      </div>
                     </div>
                   </Td>
                 </Tr>
@@ -256,28 +253,26 @@ export default function Secrets() {
 
       <div className="sm:hidden space-y-3">
         {filtered.map((s) => (
-            <DashboardCard key={s.id}>
+            <DashboardCard key={s._id}>
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2.5">
                   <KeyRound className="w-4 h-4 text-[#8E8E93]" />
                   <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{s.secName}</span>
                 </div>
-                {isAdmin && (
-                  <div className="relative">
-                    <DashboardButton
-                      onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s.id ? null : s.id); }}
-                      className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                    >
-                      <MoreHorizontal className="w-3.5 h-3.5" />
-                    </DashboardButton>
-                    {openDropdown === s.id && (
-                      <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-20">
-                        <button type="button" onClick={() => openEditForm(s)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#222] transition-colors duration-150 text-left"><Edit3 className="w-3.5 h-3.5 text-[#8E8E93]" />Edit</button>
-                        <button type="button" onClick={() => { setDeleteSecret(s); setOpenDropdown(null); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#FF3B30] hover:bg-[#FF3B30]/5 transition-colors duration-150 text-left"><Trash2 className="w-3.5 h-3.5" />Delete</button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="relative">
+                  <DashboardButton
+                    onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s._id ? null : s._id); }}
+                    className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                  >
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </DashboardButton>
+                  {openDropdown === s._id && (
+                    <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-20">
+                      <button type="button" onClick={() => openEditForm(s)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#222] transition-colors duration-150 text-left"><Edit3 className="w-3.5 h-3.5 text-[#8E8E93]" />Edit</button>
+                      <button type="button" onClick={() => { setDeleteSecret(s); setOpenDropdown(null); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#FF3B30] hover:bg-[#FF3B30]/5 transition-colors duration-150 text-left"><Trash2 className="w-3.5 h-3.5" />Delete</button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="mb-3 flex items-center gap-2">
@@ -287,7 +282,7 @@ export default function Secrets() {
 
               <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
                 <div className="flex items-center gap-2">
-                  <EnvBadge label={getEnvName(s.environmentId)} />
+                  <EnvBadge label={getEnvName(s.environmentId ?? "")} />
                   <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{s.updatedAt}</span>
                 </div>
                 <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">by {s.author}</span>

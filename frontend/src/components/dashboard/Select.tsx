@@ -1,10 +1,6 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { ChevronDown, Check } from "lucide-react";
-
-interface SelectOption {
-  label: string;
-  value: string;
-}
+import type { SelectOption } from "../../types/select";
 
 interface SelectProps {
   value: string;

@@ -1,5 +1,5 @@
 export type { User } from "./user";
-export type { Project } from "./project";
+export type { Project, ProjectOption } from "./project";
 export type { Secret } from "./secret";
 export type { Environment } from "./environment";
 export type { Version } from "./version";
@@ -8,4 +8,5 @@ export type { Team, TeamPlan, SubscriptionStatus } from "./team";
 export type { TeamMember, TeamRole, MemberStatus } from "./teamMember";
 export type { TeamInvite } from "./teamInvite";
 export type { LoginFormValues, RegisterFormValues } from "./auth";
-export type { SettingsProfileValues, ChangePasswordValues } from "./settings";
+export type { SettingsProfileValues, ChangePasswordValues, SettingsTab, UserProfile } from "./settings";
+export type { SelectOption } from "./select";

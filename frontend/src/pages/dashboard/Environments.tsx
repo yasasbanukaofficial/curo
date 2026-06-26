@@ -22,6 +22,7 @@ import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
+import type { ProjectOption } from "../../types/project";
 
 interface Environment {
   id: string;
@@ -34,14 +35,9 @@ interface Environment {
   updatedAt: string;
 }
 
-interface Project {
-  id: string;
-  name: string;
-}
-
 const MOCK_ENVIRONMENTS: Environment[] = [];
 
-const MOCK_PROJECTS: Project[] = [];
+const MOCK_PROJECTS: ProjectOption[] = [];
 
 const createEnvironmentSchema = z.object({
   name: z.string().trim().min(1, "Environment name is required").max(50, "Name is too long"),

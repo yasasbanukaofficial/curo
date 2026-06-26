@@ -1,3 +1,8 @@
+export interface ProjectOption {
+  id: string;
+  name: string;
+}
+
 export interface Project {
   _id: string;
   projectName: string;

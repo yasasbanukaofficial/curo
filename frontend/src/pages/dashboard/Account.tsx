@@ -28,18 +28,8 @@ import {
 import type {
   SettingsProfileValues,
   ChangePasswordValues,
+  UserProfile,
 } from "../../types/settings";
-
-interface UserProfile {
-  _id: string;
-  name: string;
-  email: string;
-  provider: string[];
-  googleId?: string;
-  githubId?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const MOCK_USER: UserProfile = {
   _id: "",
