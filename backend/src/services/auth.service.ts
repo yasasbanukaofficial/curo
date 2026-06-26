@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { UserModel } from "../models";
 import { IUser } from "../types";
 import { tokenGen, verifyToken } from "../util/token";
@@ -9,6 +10,7 @@ import {
 } from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 import { hash, encrypt } from "../util";
+import { sendVerificationEmail } from "../util/email";
 
 export const authService = {
   createUser: async (user: IUser) => {
@@ -20,22 +22,29 @@ export const authService = {
       return {
         success: false,
         status: 409,
-        msg: "User already exists",
+        msg: "This email is already registered. Try logging in.",
       };
     }
 
     const hashedPass = await hash.gen(password);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(32).toString("hex");
     const newUser = await UserModel.create({
       name,
       email,
       password: hashedPass,
+      emailVerificationOTP: otp,
+      emailVerificationToken: token,
+      emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000),
     });
+
+    sendVerificationEmail(email, otp, token);
 
     return {
       success: true,
       status: 201,
       msg: "Successfully created an user",
-      data: { id: newUser._id, name, email },
+      data: { id: newUser._id, name, email, verificationToken: token },
     };
   },
   authenticateUser: async ({
@@ -50,7 +59,7 @@ export const authService = {
       return {
         success: false,
         status: 404,
-        msg: "User not found",
+        msg: "This email is not registered. Please sign up.",
       };
     }
     const passwordMatches = await hash.compare(password, existingUser.password);
@@ -58,7 +67,7 @@ export const authService = {
       return {
         success: false,
         status: 401,
-        msg: "Invalid credentials, please try again!",
+        msg: "Email and password don't match. Please try again.",
       };
     }
 
@@ -108,6 +117,7 @@ export const authService = {
         email,
         googleId,
         provider: ["google"],
+        emailVerified: true,
       });
     } else if (!user.googleId) {
       await user.updateOne({
@@ -164,6 +174,7 @@ export const authService = {
         email,
         githubId,
         provider: ["github"],
+        emailVerified: true,
       });
     } else if (!user.githubId) {
       await user.updateOne({
@@ -245,9 +256,178 @@ export const authService = {
         name: user.name,
         email: user.email,
         provider: user.provider,
+        emailVerified: user.emailVerified,
         createdAt: user.createdAt,
       },
     };
+  },
+
+  logoutUser: async (userId: string, refreshToken?: string) => {
+    if (refreshToken) {
+      await UserModel.findByIdAndUpdate(userId, {
+        $pull: { refreshTokens: refreshToken },
+      });
+    }
+    return { success: true, status: 200, msg: "Logged out successfully" };
+  },
+
+  verifyEmailOTP: async (userId: string | undefined, otp: string, token?: string) => {
+    let user;
+    if (userId) {
+      user = await UserModel.findById(userId);
+    } else if (token) {
+      user = await UserModel.findOne({ emailVerificationToken: token });
+    }
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    if (user.emailVerified) {
+      return { success: false, status: 400, msg: "Email already verified" };
+    }
+    if (!user.emailVerificationOTP || !user.emailVerificationExpires) {
+      return { success: false, status: 400, msg: "No verification code found" };
+    }
+    if (new Date() > user.emailVerificationExpires) {
+      return { success: false, status: 400, msg: "Verification code expired" };
+    }
+    if (user.emailVerificationOTP !== otp) {
+      return { success: false, status: 400, msg: "Invalid verification code" };
+    }
+    const accessToken = tokenGen.genAccessToken(user);
+    const refreshToken = tokenGen.genRefreshToken(user);
+    await UserModel.findByIdAndUpdate(user._id, {
+      emailVerified: true,
+      $push: { refreshTokens: refreshToken },
+      $unset: { emailVerificationOTP: "", emailVerificationExpires: "" },
+    });
+    return {
+      success: true,
+      status: 200,
+      msg: "Email verified successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        emailVerified: true,
+        provider: user.provider,
+        accessToken,
+        refreshToken,
+      },
+    };
+  },
+
+  verifyEmailToken: async (token: string) => {
+    const user = await UserModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      return { success: false, status: 400, msg: "Invalid or expired token" };
+    }
+    const accessToken = tokenGen.genAccessToken(user);
+    const refreshToken = tokenGen.genRefreshToken(user);
+    await UserModel.findByIdAndUpdate(user._id, {
+      emailVerified: true,
+      $push: { refreshTokens: refreshToken },
+      $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
+    });
+    return {
+      success: true,
+      status: 200,
+      msg: "Email verified successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        emailVerified: true,
+        provider: user.provider,
+        accessToken,
+        refreshToken,
+      },
+    };
+  },
+
+  resendVerification: async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    if (user.emailVerified) {
+      return { success: false, status: 400, msg: "Email already verified" };
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(32).toString("hex");
+    await UserModel.findByIdAndUpdate(userId, {
+      emailVerificationOTP: otp,
+      emailVerificationToken: token,
+      emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000),
+    });
+    sendVerificationEmail(user.email, otp, token);
+    return {
+      success: true,
+      status: 200,
+      msg: "Verification email sent",
+      data: { verificationToken: token },
+    };
+  },
+
+  forgotPassword: async (email: string) => {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(32).toString("hex");
+    await UserModel.findByIdAndUpdate(user._id, {
+      resetPasswordOTP: otp,
+      resetPasswordToken: token,
+      resetPasswordExpires: new Date(Date.now() + 10 * 60 * 1000),
+    });
+    return {
+      success: true,
+      status: 200,
+      msg: "Password reset email sent",
+    };
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    const user = await UserModel.findOne({
+      $or: [
+        { resetPasswordToken: token },
+        { resetPasswordOTP: token },
+      ],
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      return { success: false, status: 400, msg: "Invalid or expired token" };
+    }
+    const hashedPass = await hash.gen(newPassword);
+    await UserModel.findByIdAndUpdate(user._id, {
+      password: hashedPass,
+      $unset: { resetPasswordOTP: "", resetPasswordToken: "", resetPasswordExpires: "" },
+      $set: { refreshTokens: [] },
+    });
+    return { success: true, status: 200, msg: "Password reset successfully" };
+  },
+
+  changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    if (!user.password) {
+      return { success: false, status: 400, msg: "No password set. Use OAuth login." };
+    }
+    const passwordMatches = await hash.compare(currentPassword, user.password);
+    if (!passwordMatches) {
+      return { success: false, status: 401, msg: "Current password is incorrect" };
+    }
+    const hashedPass = await hash.gen(newPassword);
+    await UserModel.findByIdAndUpdate(userId, {
+      password: hashedPass,
+      $set: { refreshTokens: [] },
+    });
+    return { success: true, status: 200, msg: "Password changed successfully" };
   },
 };
 
