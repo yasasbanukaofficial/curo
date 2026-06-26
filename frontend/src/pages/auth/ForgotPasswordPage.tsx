@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import { z } from "zod";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
@@ -7,6 +8,8 @@ import { validateZod } from "../../types/auth";
 import { useForgotPasswordMutation } from "../../features/auth/authApi";
 import { useToast } from "../../components/dashboard/Toast";
 
+const COOLDOWN = 60;
+
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address").trim().toLowerCase(),
 });
@@ -14,6 +17,25 @@ const forgotPasswordSchema = z.object({
 export default function ForgotPasswordPage() {
   const [forgotPassword] = useForgotPasswordMutation();
   const toast = useToast();
+  const [countdown, setCountdown] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      intervalRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [countdown]);
 
   const formik = useFormik({
     initialValues: { email: "" },
@@ -22,22 +44,20 @@ export default function ForgotPasswordPage() {
       try {
         const result = await forgotPassword(values).unwrap();
         if (result.success) {
-          toast.success("Email sent", "Check your inbox for the reset link.");
+          toast.success("Email sent", result.msg || "Check your inbox.");
+          setCountdown(COOLDOWN);
         } else {
           toast.error("Failed", result.msg || "Something went wrong.");
         }
-      } catch (err: unknown) {
-        const e = err as { data?: { status?: number; msg?: string } } | undefined;
-        if (e?.data?.msg === "User not found") {
-          toast.error("User not registered", "This email is not registered. Try signing up.");
-        } else {
-          toast.error("Failed", "Something went wrong. Please try again.");
-        }
+      } catch (err: any) {
+        toast.error("Failed", err?.data?.msg || "Something went wrong. Please try again.");
       } finally {
         setSubmitting(false);
       }
     },
   });
+
+  const isDisabled = formik.isSubmitting || countdown > 0;
 
   return (
     <AuthFormLayout
@@ -63,9 +83,9 @@ export default function ForgotPasswordPage() {
           variant="primary"
           size="md"
           className="w-full"
-          disabled={formik.isSubmitting}
+          disabled={isDisabled}
         >
-          {formik.isSubmitting ? "Sending..." : "Send Reset Link"}
+          {formik.isSubmitting ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Send Reset Link"}
         </Button>
       </form>
     </AuthFormLayout>

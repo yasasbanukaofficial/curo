@@ -10,7 +10,7 @@ import {
 } from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 import { hash, encrypt } from "../util";
-import { sendVerificationEmail } from "../util/email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../util/email";
 
 export const authService = {
   createUser: async (user: IUser) => {
@@ -43,7 +43,7 @@ export const authService = {
     return {
       success: true,
       status: 201,
-      msg: "Successfully created an user",
+      msg: "Account created successfully! Please check your email to verify your account.",
       data: { id: newUser._id, name, email, verificationToken: token },
     };
   },
@@ -101,7 +101,7 @@ export const authService = {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      throw new Error("Invalid Google token payload");
+      throw new Error("Unable to sign in with Google. Please try again.");
     }
 
     const { sub: googleId, name, email } = payload;
@@ -153,14 +153,14 @@ export const authService = {
     const githubUser = await getGithubUserData(githubToken);
 
     if (!githubUser) {
-      throw new Error("The github authentication seem to have failed!");
+      throw new Error("Unable to sign in with GitHub. Please try again.");
     }
 
     const { id: githubId, name } = githubUser.data;
     const email = await getGithubEmail(githubToken);
 
     if (!email) {
-      throw new Error("No verified primary email found on GitHub");
+      throw new Error("No verified email address found on your GitHub account. Please make sure your email is public on GitHub.");
     }
 
     let user = await UserModel.findOne({
@@ -208,12 +208,12 @@ export const authService = {
 
     const user = await UserModel.findById(decoded.id);
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "Account not found. Please log in again." };
     }
 
     const tokenExists = user.refreshTokens.includes(refreshToken);
     if (!tokenExists) {
-      return { success: false, status: 401, msg: "Invalid refresh token" };
+      return { success: false, status: 401, msg: "Your session has expired. Please log in again." };
     }
 
     const newAccessToken = tokenGen.genAccessToken(user);
@@ -245,7 +245,7 @@ export const authService = {
       "-password -refreshTokens -googleRefreshToken -githubAccessToken",
     );
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "Account not found" };
     }
     return {
       success: true,
@@ -290,16 +290,16 @@ export const authService = {
       });
     }
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "Account not found" };
     }
     if (user.emailVerified) {
-      return { success: false, status: 400, msg: "Email already verified" };
+      return { success: false, status: 400, msg: "This email is already verified" };
     }
     if (!user.emailVerificationOTP || !user.emailVerificationExpires) {
-      return { success: false, status: 400, msg: "No verification code found" };
+      return { success: false, status: 400, msg: "No verification code was found. Please request a new one." };
     }
     if (new Date() > user.emailVerificationExpires) {
-      return { success: false, status: 400, msg: "Verification code expired" };
+      return { success: false, status: 400, msg: "This verification code has expired. Please request a new one." };
     }
     if (user.emailVerificationOTP !== otp) {
       return { success: false, status: 400, msg: "Invalid verification code" };
@@ -333,7 +333,7 @@ export const authService = {
       emailVerificationExpires: { $gt: new Date() },
     });
     if (!user) {
-      return { success: false, status: 400, msg: "Invalid or expired token" };
+      return { success: false, status: 400, msg: "This verification link has expired or is invalid. Please request a new one." };
     }
     const accessToken = tokenGen.genAccessToken(user);
     const refreshToken = tokenGen.genRefreshToken(user);
@@ -385,7 +385,7 @@ export const authService = {
   forgotPassword: async (email: string) => {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "This account doesn't exist. Try a different email." };
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const token = crypto.randomBytes(32).toString("hex");
@@ -394,10 +394,11 @@ export const authService = {
       resetPasswordToken: token,
       resetPasswordExpires: new Date(Date.now() + 10 * 60 * 1000),
     });
+    sendPasswordResetEmail(user.email, token);
     return {
       success: true,
       status: 200,
-      msg: "Password reset email sent",
+      msg: "Password reset email sent. Check your inbox.",
     };
   },
 
@@ -410,7 +411,10 @@ export const authService = {
       resetPasswordExpires: { $gt: new Date() },
     });
     if (!user) {
-      return { success: false, status: 400, msg: "Invalid or expired token" };
+      return { success: false, status: 400, msg: "This reset link has expired or is invalid. Please request a new one." };
+    }
+    if (user.password && hash.compare(newPassword, user.password)) {
+      return { success: false, status: 400, msg: "You can't reuse your old password. Try a new one or login." };
     }
     const hashedPass = await hash.gen(newPassword);
     await UserModel.findByIdAndUpdate(user._id, {
@@ -424,7 +428,7 @@ export const authService = {
   disconnectProvider: async (userId: string, provider: string) => {
     const user = await UserModel.findById(userId);
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "Account not found" };
     }
     const unset: Record<string, ""> = {};
     if (provider === "google") {
@@ -432,13 +436,14 @@ export const authService = {
     } else if (provider === "github") {
       unset.githubId = "";
     } else {
-      return { success: false, status: 400, msg: "Invalid provider" };
+      return { success: false, status: 400, msg: "Invalid provider. Use 'google' or 'github'." };
     }
     await UserModel.findByIdAndUpdate(userId, {
       $unset: unset,
       $pull: { provider },
     });
-    return { success: true, status: 200, msg: `Disconnected ${provider} account` };
+    const providerName = provider === "google" ? "Google" : "GitHub";
+    return { success: true, status: 200, msg: `${providerName} account disconnected successfully` };
   },
 
   linkGoogleAccount: async (code: string, userId: string) => {
@@ -474,7 +479,7 @@ export const authService = {
     const githubUser = await getGithubUserData(githubToken);
 
     if (!githubUser) {
-      throw new Error("The github authentication seem to have failed!");
+      throw new Error("Unable to sign in with GitHub. Please try again.");
     }
 
     const { id: githubId } = githubUser.data;
@@ -490,14 +495,14 @@ export const authService = {
   changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
     const user = await UserModel.findById(userId);
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "Account not found" };
     }
     if (!user.password) {
-      return { success: false, status: 400, msg: "No password set. Use OAuth login." };
+      return { success: false, status: 400, msg: "No password is set for this account. Please sign in with Google or GitHub." };
     }
     const passwordMatches = await hash.compare(currentPassword, user.password);
     if (!passwordMatches) {
-      return { success: false, status: 401, msg: "Current password is incorrect" };
+      return { success: false, status: 401, msg: "Current password is incorrect. Please try again." };
     }
     const hashedPass = await hash.gen(newPassword);
     await UserModel.findByIdAndUpdate(userId, {
