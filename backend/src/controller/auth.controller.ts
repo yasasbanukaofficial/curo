@@ -46,7 +46,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "Authorization code is missing or invalid | Google",
+        msg: "Unable to sign in with Google. Please try again.",
       });
     }
 
@@ -54,7 +54,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: "Invalid oauth state",
+        msg: "Something went wrong with Google sign in. Please try again.",
       });
     }
 
@@ -80,7 +80,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "OAuth failed",
+      message: "Unable to sign in with Google. Please try again.",
     });
   }
 };
@@ -107,7 +107,7 @@ export const handleGithubCallback = async (req: Request, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "Authorization code is missing or invalid | Github",
+        msg: "Unable to sign in with GitHub. Please try again.",
       });
     }
 
@@ -115,7 +115,7 @@ export const handleGithubCallback = async (req: Request, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: "Invalid oauth state",
+        msg: "Something went wrong with GitHub sign in. Please try again.",
       });
     }
 
@@ -141,7 +141,7 @@ export const handleGithubCallback = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "OAuth failed",
+      message: "Unable to sign in with GitHub. Please try again.",
     });
   }
 };

@@ -25,7 +25,7 @@ export const authenticate = async (
           return sendResponse(res, {
             success: false,
             status: 401,
-            msg: "User not found",
+            msg: "Your session has expired. Please log in again.",
           });
         }
         req.userId = decoded.id;
@@ -40,7 +40,7 @@ export const authenticate = async (
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: "Not authenticated",
+        msg: "Your session has expired. Please log in again.",
       });
     }
 
@@ -56,14 +56,14 @@ export const authenticate = async (
       return sendResponse(res, {
         success: false,
         status: 401,
-        msg: refreshError.message,
+        msg: "Your session has expired. Please log in again.",
       });
     }
   } catch (error) {
     return sendResponse(res, {
       success: false,
       status: 401,
-      msg: "Invalid or expired token",
+      msg: "Your session has expired. Please log in again.",
     });
   }
 };

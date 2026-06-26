@@ -8,11 +8,11 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
   const userId = req.userId!;
 
-  if (!projectId) {
+    if (!projectId) {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Project ID is required",
+      msg: "Please provide a project ID",
     });
   }
 
@@ -22,7 +22,7 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 404,
-        msg: "Project not found",
+        msg: "Project not found or you don't have access to it",
       });
     }
     return sendResponse(res, {
@@ -34,7 +34,7 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching project",
+      msg: "Something went wrong while loading the project. Please try again.",
     });
   }
 };
@@ -53,7 +53,7 @@ export const getAllProjects = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching projects",
+      msg: "Something went wrong while loading your projects. Please try again.",
     });
   }
 };
@@ -66,7 +66,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Request body is required",
+      msg: "Please provide the project details",
     });
   }
 
@@ -88,7 +88,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "projectName and description are required",
+        msg: "Project name and description are required",
       });
     }
 
@@ -111,7 +111,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while creating project",
+      msg: "Something went wrong while creating the project. Please try again.",
     });
   }
 };
@@ -138,7 +138,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     if (error.message === "PROJECT_NOT_FOUND") {
-      return sendResponse(res, { success: false, status: 404, msg: error.message });
+      return sendResponse(res, { success: false, status: 404, msg: "Project not found or you don't have access to it" });
     }
     if (error.code === 11000) {
       return sendResponse(res, {
@@ -147,7 +147,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
         msg: `A project named "${body?.projectName}" already exists`,
       });
     }
-    return sendResponse(res, { success: false, status: 500, msg: error.message });
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the project. Please try again." });
   }
 };
 
@@ -171,11 +171,9 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
       msg: "Project deleted successfully",
     });
   } catch (error: any) {
-    const status = error.message === "PROJECT_NOT_FOUND" ? 404 : 500;
-    return sendResponse(res, {
-      success: false,
-      status,
-      msg: error.message,
-    });
+    if (error.message === "PROJECT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Project not found or you don't have access to it" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the project. Please try again." });
   }
 };
