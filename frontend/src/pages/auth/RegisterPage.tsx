@@ -1,12 +1,19 @@
 import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { registerSchema, validateZod } from "../../types/auth";
-import { registerUser, loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import { loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import { useRegisterMutation } from "../../features/auth/authApi";
+import { useToast } from "../../components/dashboard/Toast";
 import type { RegisterFormValues } from "../../types/auth";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+  const [register] = useRegisterMutation();
+  const toast = useToast();
+
   const formik = useFormik<RegisterFormValues>({
     initialValues: {
       name: "",
@@ -15,11 +22,27 @@ export default function RegisterPage() {
       confirmPassword: "",
     },
     validate: validateZod(registerSchema),
-    onSubmit: (values, { setSubmitting, setFieldError }) => {
-      registerUser(values).catch(() => {
-        setFieldError("email", "An account with this email already exists");
+    onSubmit: async (values, { setSubmitting, setFieldError }) => {
+      try {
+        const result = await register({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+        }).unwrap();
+        if (result.success) {
+          toast.success("Account created", "Please verify your email to continue.");
+          const token = result.data?.verificationToken;
+          navigate(token ? `/verify-email?token=${token}` : "/login");
+        } else {
+          setFieldError("email", result.msg || "Registration failed");
+        }
+      } catch (err: any) {
+        const msg = err?.data?.msg || "Something went wrong. Please try again.";
+        setFieldError("email", msg);
+        toast.error("Registration failed", msg);
+      } finally {
         setSubmitting(false);
-      });
+      }
     },
   });
 

@@ -4,8 +4,11 @@ import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import store from './app/store.ts'
+import { setupInterceptors } from './api/axiosInstance.ts'
 import { ToastProvider } from './components/dashboard/Toast'
 import './index.css'
+
+setupInterceptors(store.dispatch)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,21 +1,42 @@
 import { useFormik } from "formik";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { loginSchema, validateZod } from "../../types/auth";
-import { loginUser, loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import { loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import { useLoginMutation } from "../../features/auth/authApi";
+import { useAppDispatch } from "../../app/hooks";
+import { setAuthenticated } from "../../features/auth/authSlice";
+import { useToast } from "../../components/dashboard/Toast";
 import type { LoginFormValues } from "../../types/auth";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [login] = useLoginMutation();
+  const toast = useToast();
+
   const formik = useFormik<LoginFormValues>({
     initialValues: { email: "", password: "" },
     validate: validateZod(loginSchema),
-    onSubmit: (values, { setSubmitting, setFieldError }) => {
-      loginUser(values).catch(() => {
-        setFieldError("email", "Invalid email or password");
+    onSubmit: async (values, { setSubmitting, setFieldError }) => {
+      try {
+        const result = await login(values).unwrap();
+        if (result.success && result.data) {
+          dispatch(setAuthenticated({ isEmailVerified: result.data.emailVerified }));
+          toast.success("Welcome back", "You have been signed in successfully.");
+          navigate("/dashboard");
+        } else {
+          setFieldError("email", result.msg || "Invalid email or password");
+        }
+      } catch (err: any) {
+        const msg = err?.data?.msg || "Something went wrong. Please try again.";
+        setFieldError("email", msg);
+        toast.error("Login failed", msg);
+      } finally {
         setSubmitting(false);
-      });
+      }
     },
   });
 

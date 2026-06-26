@@ -4,18 +4,33 @@ import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { validateZod } from "../../types/auth";
+import { useForgotPasswordMutation } from "../../features/auth/authApi";
+import { useToast } from "../../components/dashboard/Toast";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address").trim().toLowerCase(),
 });
 
 export default function ForgotPasswordPage() {
+  const [forgotPassword] = useForgotPasswordMutation();
+  const toast = useToast();
+
   const formik = useFormik({
     initialValues: { email: "" },
     validate: validateZod(forgotPasswordSchema),
-    onSubmit: (values, { setSubmitting }) => {
-      console.log("Forgot password for:", values.email);
-      setSubmitting(false);
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        const result = await forgotPassword(values).unwrap();
+        if (result.success) {
+          toast.success("Email sent", "Check your inbox for the reset link.");
+        } else {
+          toast.error("Failed", result.msg || "Something went wrong.");
+        }
+      } catch {
+        toast.error("Failed", "Something went wrong. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 

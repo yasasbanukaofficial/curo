@@ -1,54 +1,39 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
-import { createSlice } from "@reduxjs/toolkit";
-import type { User } from "../../types/user";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
-  user: User | null;
   isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
+  isEmailVerified: boolean;
 }
 
 const initialState: AuthState = {
-  user: null,
   isAuthenticated: false,
-  loading: false,
-  error: null,
+  isEmailVerified: false,
 };
 
 export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    loginStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    loginSuccess: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
+    setAuthenticated: (state, action: PayloadAction<{ isEmailVerified: boolean }>) => {
       state.isAuthenticated = true;
-      state.loading = false;
-      state.error = null;
+      state.isEmailVerified = action.payload.isEmailVerified;
     },
-    loginFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
+    setEmailVerified: (state) => {
+      state.isEmailVerified = true;
     },
     logout: (state) => {
-      state.user = null;
       state.isAuthenticated = false;
-      state.loading = false;
-      state.error = null;
-    },
-    setUser: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
-      state.isAuthenticated = true;
-    },
-    clearError: (state) => {
-      state.error = null;
+      state.isEmailVerified = false;
     },
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, setUser, clearError } = authSlice.actions;
+export const { setAuthenticated, setEmailVerified, logout } = authSlice.actions;
+
+export const selectIsAuthenticated = (state: { auth: AuthState }) =>
+  state.auth.isAuthenticated;
+
+export const selectIsEmailVerified = (state: { auth: AuthState }) =>
+  state.auth.isEmailVerified;
+
 export default authSlice.reducer;
