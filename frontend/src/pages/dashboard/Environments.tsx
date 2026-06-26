@@ -62,9 +62,9 @@ export default function Environments() {
         setShowCreateModal(false);
         resetForm();
         toast.success("Environment created", `${values.name} has been created.`);
-      } catch {
+      } catch (err: any) {
         setSubmitting(false);
-        toast.error("Failed to create environment", "Something went wrong. Please try again.");
+        toast.error("Failed to create environment", err?.data?.msg || "Something went wrong. Please try again.");
       }
     },
   });
@@ -78,9 +78,9 @@ export default function Environments() {
         await updateEnvironment({ id: selectedEnv._id, body: values }).unwrap();
         setSubmitting(false);
         toast.success("Environment saved", "Environment settings have been updated.");
-      } catch {
+      } catch (err: any) {
         setSubmitting(false);
-        toast.error("Failed to update environment", "Something went wrong. Please try again.");
+        toast.error("Failed to update environment", err?.data?.msg || "Something went wrong. Please try again.");
       }
     },
   });
@@ -97,8 +97,8 @@ export default function Environments() {
       dispatch(setSelectedEnvironment(null));
       setShowDeleteModal(false);
       toast.success("Environment deleted", `${selectedEnv.name} has been removed.`);
-    } catch {
-      toast.error("Failed to delete environment", "Something went wrong. Please try again.");
+    } catch (err: any) {
+      toast.error("Failed to delete environment", err?.data?.msg || "Something went wrong. Please try again.");
     }
   }
 

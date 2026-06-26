@@ -101,9 +101,9 @@ export default function Secrets() {
         setShowCreateModal(false);
         resetForm();
         toast.success("Secret created", `${values.secName} has been created.`);
-      } catch {
+      } catch (err: any) {
         setSubmitting(false);
-        toast.error("Failed to create secret", "Something went wrong. Please try again.");
+        toast.error("Failed to create secret", err?.data?.msg || "Something went wrong. Please try again.");
       }
     },
   });
@@ -118,9 +118,9 @@ export default function Secrets() {
         setEditSecret(null);
         setSubmitting(false);
         toast.success("Secret saved", `${values.secName} has been updated.`);
-      } catch {
+      } catch (err: any) {
         setSubmitting(false);
-        toast.error("Failed to update secret", "Something went wrong. Please try again.");
+        toast.error("Failed to update secret", err?.data?.msg || "Something went wrong. Please try again.");
       }
     },
   });
@@ -143,8 +143,8 @@ export default function Secrets() {
       setDeleteSecret(null);
       setDropdownTarget(null);
       toast.success("Secret deleted", `${deleteSecret.secName} has been removed.`);
-    } catch {
-      toast.error("Failed to delete secret", "Something went wrong. Please try again.");
+    } catch (err: any) {
+      toast.error("Failed to delete secret", err?.data?.msg || "Something went wrong. Please try again.");
     }
   }
 

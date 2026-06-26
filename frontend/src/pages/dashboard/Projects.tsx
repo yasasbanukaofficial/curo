@@ -86,9 +86,9 @@ export default function Projects() {
         await updateProject({ id: selectedProject._id, body: values }).unwrap();
         setSubmitting(false);
         toast.success("Project saved", "Project settings have been updated.");
-      } catch {
+      } catch (err: any) {
         setSubmitting(false);
-        toast.error("Failed to update project", "Something went wrong. Please try again.");
+        toast.error("Failed to update project", err?.data?.msg || "Something went wrong. Please try again.");
       }
     },
   });
@@ -106,14 +106,18 @@ export default function Projects() {
       dispatch(setSelectedProject(null));
       setShowDeleteModal(false);
       toast.success("Project deleted", `${selectedProject.projectName} has been removed.`);
-    } catch {
-      toast.error("Failed to delete project", "Something went wrong. Please try again.");
+    } catch (err: any) {
+      toast.error("Failed to delete project", err?.data?.msg || "Something went wrong. Please try again.");
     }
   }
 
   async function handleCreateProject(values: { projectName: string; description: string; team: string; projectLink?: string }) {
-    await addProject(values).unwrap();
-    toast.success("Project created", `${values.projectName} has been created.`);
+    try {
+      await addProject(values).unwrap();
+      toast.success("Project created", `${values.projectName} has been created.`);
+    } catch (err: any) {
+      toast.error("Failed to create project", err?.data?.msg || "Something went wrong. Please try again.");
+    }
   }
 
   function handleToggleSecret(secretId: string) {

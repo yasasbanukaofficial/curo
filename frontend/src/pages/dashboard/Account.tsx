@@ -103,8 +103,8 @@ export default function Account() {
     try {
       await doDisconnect({ provider: "google" }).unwrap();
       toast.success("Google disconnected", "Your Google account has been unlinked.");
-    } catch {
-      toast.error("Failed to disconnect", "Please try again later.");
+    } catch (err: any) {
+      toast.error("Failed to disconnect", err?.data?.msg || "Please try again later.");
     }
   }
   function handleConnectGithub() {
@@ -115,8 +115,8 @@ export default function Account() {
     try {
       await doDisconnect({ provider: "github" }).unwrap();
       toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
-    } catch {
-      toast.error("Failed to disconnect", "Please try again later.");
+    } catch (err: any) {
+      toast.error("Failed to disconnect", err?.data?.msg || "Please try again later.");
     }
   }
 

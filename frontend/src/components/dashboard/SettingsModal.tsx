@@ -201,7 +201,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <DashboardButton
                         onClick={async () => {
                           try { await doDisconnect({ provider: "github" }).unwrap(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
-                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                          catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
@@ -228,7 +228,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <DashboardButton
                         onClick={async () => {
                           try { await doDisconnect({ provider: "google" }).unwrap(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
-                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                          catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
@@ -399,7 +399,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <DashboardButton
                         onClick={async () => {
                           try { await doDisconnect({ provider: "github" }).unwrap(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
-                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                          catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
@@ -431,7 +431,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <DashboardButton
                         onClick={async () => {
                           try { await doDisconnect({ provider: "google" }).unwrap(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
-                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                          catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
