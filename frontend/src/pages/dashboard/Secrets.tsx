@@ -62,7 +62,7 @@ export default function Secrets() {
   const [updateSecret] = useUpdateSecretMutation();
   const [removeSecret] = useRemoveSecretMutation();
   const [search, setSearch] = useState("");
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [dropdownTarget, setDropdownTarget] = useState<{ id: string; anchor: DOMRect } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editSecret, setEditSecret] = useState<Secret | null>(null);
   const [deleteSecret, setDeleteSecret] = useState<Secret | null>(null);
@@ -75,11 +75,26 @@ export default function Secrets() {
   }, []);
 
   useEffect(() => {
-    if (!openDropdown) return;
-    const handleClick = () => setOpenDropdown(null);
+    if (!dropdownTarget) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-dropdown-menu]')) {
+        setDropdownTarget(null);
+      }
+    };
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [openDropdown]);
+  }, [dropdownTarget]);
+
+  function handleMoreClick(e: React.MouseEvent, secretId: string) {
+    e.stopPropagation();
+    const btn = e.currentTarget as HTMLElement;
+    if (dropdownTarget?.id === secretId) {
+      setDropdownTarget(null);
+    } else {
+      setDropdownTarget({ id: secretId, anchor: btn.getBoundingClientRect() });
+    }
+  }
 
   const filtered = secrets.filter((s) => {
     const q = search.toLowerCase();
@@ -128,7 +143,7 @@ export default function Secrets() {
       projectId: secret.projectId,
       environmentId: secret.environmentId ?? "",
     });
-    setOpenDropdown(null);
+    setDropdownTarget(null);
   }
 
   async function handleDeleteSecret() {
@@ -136,36 +151,22 @@ export default function Secrets() {
     try {
       await removeSecret(deleteSecret._id).unwrap();
       setDeleteSecret(null);
-      setOpenDropdown(null);
+      setDropdownTarget(null);
       toast.success("Secret deleted", `${deleteSecret.secName} has been removed.`);
     } catch {
       toast.error("Failed to delete secret", "Something went wrong. Please try again.");
     }
   }
 
-  const dropdownMenu = (secret: Secret) => {
-    if (openDropdown !== secret._id) return null;
-    return (
-      <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-20">
-        <button
-          type="button"
-          onClick={() => openEditForm(secret)}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#222] transition-colors duration-150 text-left"
-        >
-          <Edit3 className="w-3.5 h-3.5 text-[#8E8E93]" />
-          Edit
-        </button>
-        <button
-          type="button"
-          onClick={() => { setDeleteSecret(secret); setOpenDropdown(null); }}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#FF3B30] hover:bg-[#FF3B30]/5 transition-colors duration-150 text-left"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          Delete
-        </button>
-      </div>
-    );
-  };
+  function handleEditClick(secret: Secret) {
+    openEditForm(secret);
+    setDropdownTarget(null);
+  }
+
+  function handleDeleteClick(secret: Secret) {
+    setDeleteSecret(secret);
+    setDropdownTarget(null);
+  }
 
   if (isLoading) {
     return (
@@ -234,15 +235,12 @@ export default function Secrets() {
                   </Td>
                   <Td className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <div className="relative">
-                        <DashboardButton
-                          onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s._id ? null : s._id); }}
-                          className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                        >
-                          <MoreHorizontal className="w-3.5 h-3.5" />
-                        </DashboardButton>
-                        {dropdownMenu(s)}
-                      </div>
+                      <DashboardButton
+                        onClick={(e) => handleMoreClick(e, s._id)}
+                        className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                      >
+                        <MoreHorizontal className="w-3.5 h-3.5" />
+                      </DashboardButton>
                     </div>
                   </Td>
                 </Tr>
@@ -259,20 +257,12 @@ export default function Secrets() {
                   <KeyRound className="w-4 h-4 text-[#8E8E93]" />
                   <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{s.secName}</span>
                 </div>
-                <div className="relative">
-                  <DashboardButton
-                    onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === s._id ? null : s._id); }}
-                    className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                  >
-                    <MoreHorizontal className="w-3.5 h-3.5" />
-                  </DashboardButton>
-                  {openDropdown === s._id && (
-                    <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-20">
-                      <button type="button" onClick={() => openEditForm(s)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#222] transition-colors duration-150 text-left"><Edit3 className="w-3.5 h-3.5 text-[#8E8E93]" />Edit</button>
-                      <button type="button" onClick={() => { setDeleteSecret(s); setOpenDropdown(null); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#FF3B30] hover:bg-[#FF3B30]/5 transition-colors duration-150 text-left"><Trash2 className="w-3.5 h-3.5" />Delete</button>
-                    </div>
-                  )}
-                </div>
+                <DashboardButton
+                  onClick={(e) => handleMoreClick(e, s._id)}
+                  className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                >
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                </DashboardButton>
               </div>
 
               <div className="mb-3 flex items-center gap-2">
@@ -290,6 +280,35 @@ export default function Secrets() {
             </DashboardCard>
           ))}
       </div>
+
+      {dropdownTarget && (() => {
+        const secret = secrets.find((s) => s._id === dropdownTarget.id);
+        if (!secret) return null;
+        return (
+          <div
+            data-dropdown-menu
+            className="fixed w-36 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50"
+            style={{ top: dropdownTarget.anchor.bottom + 4, right: document.body.offsetWidth - dropdownTarget.anchor.right }}
+          >
+            <button
+              type="button"
+              onClick={() => handleEditClick(secret)}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#222] transition-colors duration-150 text-left"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-[#8E8E93]" />
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeleteClick(secret)}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#FF3B30] hover:bg-[#FF3B30]/5 transition-colors duration-150 text-left"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </button>
+          </div>
+        );
+      })()}
 
       <Modal
         open={showCreateModal}
