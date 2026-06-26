@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useFormik } from "formik";
 import {
   User,
@@ -28,19 +28,10 @@ import {
 import type {
   SettingsProfileValues,
   ChangePasswordValues,
-  UserProfile,
 } from "../../types/settings";
-
-const MOCK_USER: UserProfile = {
-  _id: "",
-  name: "",
-  email: "",
-  provider: [],
-  googleId: undefined,
-  githubId: undefined,
-  createdAt: "",
-  updatedAt: "",
-};
+import { useAppSelector, useAppDispatch } from "../../app/hooks";
+import { selectUser } from "../../features/auth/authSlice";
+import { useDisconnectOAuthMutation } from "../../features/auth/authApi";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -52,20 +43,21 @@ function formatDate(iso: string) {
 
 export default function Account() {
   const toast = useToast();
-  const [profile] = useState<UserProfile>(MOCK_USER);
+  const user = useAppSelector(selectUser);
+  const dispatch = useAppDispatch();
+  const [doDisconnect] = useDisconnectOAuthMutation();
   const [editMode, setEditMode] = useState(false);
-
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [connectedAccounts] = useState({
-    google: { connected: !!profile.googleId, email: "" },
-    github: { connected: !!profile.githubId, username: "" },
-  });
+  const connectedAccounts = useMemo(() => ({
+    google: { connected: user?.provider.includes("google") ?? false },
+    github: { connected: user?.provider.includes("github") ?? false },
+  }), [user?.provider]);
 
   const profileFormik = useFormik<SettingsProfileValues>({
-    initialValues: { name: profile.name, email: profile.email },
+    initialValues: { name: user?.name || "", email: user?.email || "" },
+    enableReinitialize: true,
     validate: validateZod(settingsProfileSchema),
     onSubmit: (_values, { setSubmitting }) => {
       setTimeout(() => {
@@ -91,7 +83,7 @@ export default function Account() {
 
   function handleCancelEdit() {
     setEditMode(false);
-    profileFormik.resetForm({ values: { name: profile.name, email: profile.email } });
+    profileFormik.resetForm({ values: { name: user?.name || "", email: user?.email || "" } });
   }
 
   function handleOpenPasswordModal() {
@@ -103,10 +95,30 @@ export default function Account() {
     setShowDeleteModal(false);
   }
 
-  function handleConnectGoogle() {}
-  function handleDisconnectGoogle() {}
-  function handleConnectGithub() {}
-  function handleDisconnectGithub() {}
+  function handleConnectGoogle() {
+    const API_URL = import.meta.env.VITE_API_URL;
+    window.location.href = `${API_URL}/auth/google/connect`;
+  }
+  async function handleDisconnectGoogle() {
+    try {
+      await doDisconnect({ provider: "google" }).unwrap();
+      toast.success("Google disconnected", "Your Google account has been unlinked.");
+    } catch {
+      toast.error("Failed to disconnect", "Please try again later.");
+    }
+  }
+  function handleConnectGithub() {
+    const API_URL = import.meta.env.VITE_API_URL;
+    window.location.href = `${API_URL}/auth/github/connect`;
+  }
+  async function handleDisconnectGithub() {
+    try {
+      await doDisconnect({ provider: "github" }).unwrap();
+      toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
+    } catch {
+      toast.error("Failed to disconnect", "Please try again later.");
+    }
+  }
 
   return (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
@@ -142,7 +154,7 @@ export default function Account() {
                 ) : (
                   <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
                     <User className="w-4 h-4 text-[#8E8E93]" />
-                    <span>{profile.name}</span>
+                    <span>{user?.name || ""}</span>
                   </div>
                 )}
               </div>
@@ -164,7 +176,7 @@ export default function Account() {
                 ) : (
                   <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
                     <Mail className="w-4 h-4 text-[#8E8E93]" />
-                    <span>{profile.email}</span>
+                    <span>{user?.email || ""}</span>
                   </div>
                 )}
               </div>
@@ -175,7 +187,7 @@ export default function Account() {
                 </label>
                 <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#8E8E93] dark:text-[#666]">
                   <Calendar className="w-4 h-4 text-[#8E8E93]" />
-                  <span>{formatDate(profile.createdAt)}</span>
+                  <span>{user?.createdAt ? formatDate(user.createdAt) : ""}</span>
                 </div>
               </div>
 
@@ -184,7 +196,7 @@ export default function Account() {
                   Providers
                 </label>
                 <div className="flex items-center gap-2 h-10 px-3">
-                  {profile.provider.map((p) => (
+                  {(user?.provider || []).map((p) => (
                     <ProviderBadge key={p} label={p} />
                   ))}
                 </div>
@@ -244,7 +256,7 @@ export default function Account() {
                     <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
                     <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
                       {connectedAccounts.github.connected
-                        ? `Connected as ${connectedAccounts.github.username}`
+                        ? "Connected"
                         : "Not connected"}
                     </p>
                   </div>
@@ -280,7 +292,7 @@ export default function Account() {
                     <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Google</p>
                     <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
                       {connectedAccounts.google.connected
-                        ? `Connected as ${connectedAccounts.google.email}`
+                        ? "Connected"
                         : "Not connected"}
                     </p>
                   </div>

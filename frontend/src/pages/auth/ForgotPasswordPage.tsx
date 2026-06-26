@@ -26,8 +26,13 @@ export default function ForgotPasswordPage() {
         } else {
           toast.error("Failed", result.msg || "Something went wrong.");
         }
-      } catch {
-        toast.error("Failed", "Something went wrong. Please try again.");
+      } catch (err: unknown) {
+        const e = err as { data?: { status?: number; msg?: string } } | undefined;
+        if (e?.data?.msg === "User not found") {
+          toast.error("User not registered", "This email is not registered. Try signing up.");
+        } else {
+          toast.error("Failed", "Something went wrong. Please try again.");
+        }
       } finally {
         setSubmitting(false);
       }

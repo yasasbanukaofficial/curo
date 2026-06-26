@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import {
@@ -23,25 +23,16 @@ import type {
   SettingsProfileValues,
   ChangePasswordValues,
   SettingsTab,
-  UserProfile,
 } from "../../types/settings";
+import { useAppSelector, useAppDispatch } from "../../app/hooks";
+import { selectUser } from "../../features/auth/authSlice";
+import { useDisconnectOAuthMutation } from "../../features/auth/authApi";
 
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
   initialTab?: SettingsTab;
 }
-
-const MOCK_USER: UserProfile = {
-  _id: "",
-  name: "",
-  email: "",
-  provider: [],
-  googleId: undefined,
-  githubId: undefined,
-  createdAt: "",
-  updatedAt: "",
-};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -55,23 +46,26 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const navigate = useNavigate();
   const toast = useToast();
   const { theme, toggle } = useTheme();
+  const user = useAppSelector(selectUser);
+  const dispatch = useAppDispatch();
+  const [doDisconnect] = useDisconnectOAuthMutation();
   const [tab, setTab] = useState<SettingsTab>(initialTab);
 
   useEffect(() => {
     if (open) setTab(initialTab);
   }, [open, initialTab]);
-  const [profile] = useState<UserProfile>(MOCK_USER);
   const [editMode, setEditMode] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [connectedAccounts] = useState({
-    google: { connected: !!profile.googleId, email: "" },
-    github: { connected: !!profile.githubId, username: "" },
-  });
+  const connectedAccounts = useMemo(() => ({
+    google: { connected: user?.provider.includes("google") ?? false },
+    github: { connected: user?.provider.includes("github") ?? false },
+  }), [user?.provider]);
 
   const profileFormik = useFormik<SettingsProfileValues>({
-    initialValues: { name: profile.name, email: profile.email },
+    initialValues: { name: user?.name || "", email: user?.email || "" },
+    enableReinitialize: true,
     validate: validateZod(settingsProfileSchema),
     onSubmit: (_values, { setSubmitting }) => {
       setTimeout(() => {
@@ -97,7 +91,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
 
   function handleCancelEdit() {
     setEditMode(false);
-    profileFormik.resetForm({ values: { name: profile.name, email: profile.email } });
+    profileFormik.resetForm({ values: { name: user?.name || "", email: user?.email || "" } });
   }
 
   function handleOpenPasswordModal() {
@@ -198,10 +192,25 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Connected</p>
+                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
+                          {connectedAccounts.github.connected ? "Connected" : "Not connected"}
+                        </p>
                       </div>
                     </div>
-                    <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20">Disconnect</DashboardButton>
+                    {connectedAccounts.github.connected ? (
+                      <DashboardButton
+                        onClick={async () => {
+                          try { await doDisconnect({ provider: "github" }).unwrap(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
+                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                        }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
+                      >Disconnect</DashboardButton>
+                    ) : (
+                      <DashboardButton
+                        onClick={() => { const u = import.meta.env.VITE_API_URL; window.location.href = `${u}/auth/github/connect`; }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                      >Connect</DashboardButton>
+                    )}
                   </div>
                   <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
                     <div className="flex items-center gap-3">
@@ -210,10 +219,25 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       </div>
                       <div>
                         <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Google</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Not connected</p>
+                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
+                          {connectedAccounts.google.connected ? "Connected" : "Not connected"}
+                        </p>
                       </div>
                     </div>
-                    <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]">Connect</DashboardButton>
+                    {connectedAccounts.google.connected ? (
+                      <DashboardButton
+                        onClick={async () => {
+                          try { await doDisconnect({ provider: "google" }).unwrap(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
+                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                        }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
+                      >Disconnect</DashboardButton>
+                    ) : (
+                      <DashboardButton
+                        onClick={() => { const u = import.meta.env.VITE_API_URL; window.location.href = `${u}/auth/google/connect`; }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                      >Connect</DashboardButton>
+                    )}
                   </div>
                 </div>
               </div>
@@ -282,7 +306,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     ) : (
                       <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
                         <User className="w-4 h-4 text-[#8E8E93]" />
-                        <span>{profile.name}</span>
+                        <span>{user?.name || ""}</span>
                       </div>
                     )}
                   </div>
@@ -302,7 +326,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     ) : (
                       <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
                         <Mail className="w-4 h-4 text-[#8E8E93]" />
-                        <span>{profile.email}</span>
+                        <span>{user?.email || ""}</span>
                       </div>
                     )}
                   </div>
@@ -311,14 +335,14 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Member Since</label>
                     <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#8E8E93] dark:text-[#666]">
                       <Calendar className="w-4 h-4 text-[#8E8E93]" />
-                      <span>{formatDate(profile.createdAt)}</span>
+                      <span>{user?.createdAt ? formatDate(user.createdAt) : ""}</span>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Providers</label>
                     <div className="flex items-center gap-2 h-10 px-3">
-                      {profile.provider.map((p) => (
+                      {(user?.provider || []).map((p) => (
                         <span key={p} className="text-[10px] font-medium px-2 py-0.5 rounded-md capitalize bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]">{p}</span>
                       ))}
                     </div>
@@ -367,14 +391,23 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <div>
                         <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
                         <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
-                          {connectedAccounts.github.connected ? `Connected as ${connectedAccounts.github.username}` : "Not connected"}
+                          {connectedAccounts.github.connected ? "Connected" : "Not connected"}
                         </p>
                       </div>
                     </div>
                     {connectedAccounts.github.connected ? (
-                      <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20">Disconnect</DashboardButton>
+                      <DashboardButton
+                        onClick={async () => {
+                          try { await doDisconnect({ provider: "github" }).unwrap(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
+                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                        }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
+                      >Disconnect</DashboardButton>
                     ) : (
-                      <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]">Connect</DashboardButton>
+                      <DashboardButton
+                        onClick={() => { const u = import.meta.env.VITE_API_URL; window.location.href = `${u}/auth/github/connect`; }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                      >Connect</DashboardButton>
                     )}
                   </div>
                   <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
@@ -390,14 +423,23 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <div>
                         <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Google</p>
                         <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
-                          {connectedAccounts.google.connected ? `Connected as ${connectedAccounts.google.email}` : "Not connected"}
+                          {connectedAccounts.google.connected ? "Connected" : "Not connected"}
                         </p>
                       </div>
                     </div>
                     {connectedAccounts.google.connected ? (
-                      <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20">Disconnect</DashboardButton>
+                      <DashboardButton
+                        onClick={async () => {
+                          try { await doDisconnect({ provider: "google" }).unwrap(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
+                          catch { toast.error("Failed to disconnect", "Please try again."); }
+                        }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
+                      >Disconnect</DashboardButton>
                     ) : (
-                      <DashboardButton className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]">Connect</DashboardButton>
+                      <DashboardButton
+                        onClick={() => { const u = import.meta.env.VITE_API_URL; window.location.href = `${u}/auth/google/connect`; }}
+                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                      >Connect</DashboardButton>
                     )}
                   </div>
                 </div>

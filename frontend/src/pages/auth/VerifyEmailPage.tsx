@@ -67,8 +67,17 @@ export default function VerifyEmailPage() {
     }
     try {
       const result = await verifyOtp({ otp: code, token: token || undefined }).unwrap();
-      if (result.success) {
-        dispatch(setAuthenticated({ isEmailVerified: true }));
+      if (result.success && result.data) {
+        dispatch(setAuthenticated({
+          user: {
+            id: result.data.id || "",
+            name: result.data.name || "",
+            email: result.data.email || "",
+            provider: result.data.provider || [],
+            emailVerified: true,
+            createdAt: "",
+          },
+        }));
         toast.success("Email verified", "Welcome to Curo!");
         navigate("/dashboard", { replace: true });
       } else {

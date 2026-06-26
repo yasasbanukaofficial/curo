@@ -24,7 +24,16 @@ export default function LoginPage() {
       try {
         const result = await login(values).unwrap();
         if (result.success && result.data) {
-          dispatch(setAuthenticated({ isEmailVerified: result.data.emailVerified }));
+          dispatch(setAuthenticated({
+            user: {
+              id: result.data.id || "",
+              name: result.data.name || "",
+              email: result.data.email || "",
+              provider: [],
+              emailVerified: false,
+              createdAt: "",
+            },
+          }));
           toast.success("Welcome back", "You have been signed in successfully.");
           navigate("/dashboard");
         } else {

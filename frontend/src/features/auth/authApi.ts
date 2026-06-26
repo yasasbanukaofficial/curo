@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { axiosBaseQuery } from "../../lib/axiosBaseQuery";
+import { axiosBaseQuery } from "../../api/axiosBaseQuery";
 import type { User } from "../../types/user";
 
 interface AuthResponse {
@@ -70,6 +70,9 @@ export const authApi = createApi({
     logout: builder.mutation<AuthResponse, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
     }),
+    disconnectOAuth: builder.mutation<AuthResponse, { provider: string }>({
+      query: (body) => ({ url: "/auth/disconnect-oauth", method: "POST", body }),
+    }),
   }),
 });
 
@@ -83,4 +86,5 @@ export const {
   useResetPasswordMutation,
   useChangePasswordMutation,
   useLogoutMutation,
+  useDisconnectOAuthMutation,
 } = authApi;

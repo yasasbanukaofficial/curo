@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { useLogoutMutation } from "../../features/auth/authApi";
-import { logout as logoutAction } from "../../features/auth/authSlice";
+import { logout as logoutAction, selectUser } from "../../features/auth/authSlice";
 import DashboardButton from "./DashboardButton";
 import AlertModal from "./AlertModal";
 import {
@@ -107,13 +107,6 @@ function ProjectSwitcher() {
   );
 }
 
-const user = {
-  name: "",
-  email: "",
-  tier: "",
-  initials: "",
-};
-
 interface UserDropdownProps {
   onToggleSettings: (tab?: string) => void;
 }
@@ -125,6 +118,16 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [doLogout] = useLogoutMutation();
+  const user = useAppSelector(selectUser);
+  const initials = useMemo(() => {
+    if (!user?.name) return "?";
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  }, [user?.name]);
 
   async function handleLogout() {
     await doLogout();
@@ -150,22 +153,11 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] transition-colors duration-200 text-left"
       >
         <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-xs font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
-          {user.initials}
+          {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{user.name}</p>
-          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{user.email}</p>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {user.tier === "Free" ? (
-            <DashboardButton onClick={(e) => { e.stopPropagation(); navigate("/pricing"); }} className="h-6 px-2 text-[9px] font-semibold bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/20 rounded-md">
-              Upgrade
-            </DashboardButton>
-          ) : (
-            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-[#1D1D1F]/10 dark:bg-white/10 text-[#1D1D1F] dark:text-[#E5E5E5]">
-              {user.tier}
-            </span>
-          )}
+          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{user?.name || ""}</p>
+          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{user?.email || ""}</p>
         </div>
       </button>
 
@@ -174,25 +166,18 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
           <div className="px-4 pb-3 mb-2 border-b border-black/[0.04] dark:border-[#222]">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-9 h-9 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-sm font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
-                {user.initials}
+                {initials}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{user.name}</p>
-                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{user.email}</p>
+                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{user?.name || ""}</p>
+                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{user?.email || ""}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#1D1D1F]/10 dark:bg-white/10 text-[#1D1D1F] dark:text-[#E5E5E5]">
-                {user.tier} plan
-              </span>
-              {user.tier === "Free" && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setOpen(false); navigate("/pricing"); }}
-                  className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/20 transition-colors duration-150"
-                >
-                  Upgrade
-                </button>
+              {user?.emailVerified && (
+                <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#30D158]/10 text-[#30D158]">
+                  Verified
+                </span>
               )}
             </div>
           </div>

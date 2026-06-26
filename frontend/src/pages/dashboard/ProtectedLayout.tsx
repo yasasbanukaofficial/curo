@@ -10,8 +10,8 @@ export default function ProtectedLayout() {
   const { data, isLoading, isError } = useVerifySessionQuery();
 
   useEffect(() => {
-    if (data) {
-      dispatch(setAuthenticated({ isEmailVerified: data.data.emailVerified }));
+    if (data?.data) {
+      dispatch(setAuthenticated({ user: data.data as any }));
     }
   }, [data, dispatch]);
 

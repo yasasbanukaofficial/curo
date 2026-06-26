@@ -12,7 +12,7 @@ export default function GuestLayout() {
 
   useEffect(() => {
     if (data) {
-      dispatch(setAuthenticated({ isEmailVerified: data.data.emailVerified }));
+      dispatch(setAuthenticated({ user: data.data as any }));
     }
   }, [data, dispatch]);
 
