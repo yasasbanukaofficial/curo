@@ -277,6 +277,16 @@ export const authService = {
       user = await UserModel.findById(userId);
     } else if (token) {
       user = await UserModel.findOne({ emailVerificationToken: token });
+      if (!user) {
+        console.warn(`[verifyEmailOTP] Token lookup failed — token present but no user found`);
+      }
+    }
+    if (!user && otp) {
+      console.warn(`[verifyEmailOTP] Falling back to OTP lookup for otp=${otp}`);
+      user = await UserModel.findOne({
+        emailVerificationOTP: otp,
+        emailVerificationExpires: { $gt: new Date() },
+      });
     }
     if (!user) {
       return { success: false, status: 404, msg: "User not found" };
@@ -298,7 +308,7 @@ export const authService = {
     await UserModel.findByIdAndUpdate(user._id, {
       emailVerified: true,
       $push: { refreshTokens: refreshToken },
-      $unset: { emailVerificationOTP: "", emailVerificationExpires: "" },
+      $unset: { emailVerificationOTP: "", emailVerificationToken: "", emailVerificationExpires: "" },
     });
     return {
       success: true,
@@ -329,7 +339,7 @@ export const authService = {
     await UserModel.findByIdAndUpdate(user._id, {
       emailVerified: true,
       $push: { refreshTokens: refreshToken },
-      $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
+      $unset: { emailVerificationOTP: "", emailVerificationToken: "", emailVerificationExpires: "" },
     });
     return {
       success: true,
