@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, loginWithGoogle, handleGoogleCallback, loginWithGithub, handleGithubCallback, refreshToken, getCurrentUser, logoutUser, verifyEmailOTP, verifyEmailToken, resendVerification, forgotPassword, resetPassword, changePassword } from "../controller";
+import { registerUser, loginUser, initiateGoogleAuth, handleGoogleCallback, initiateGithubAuth, handleGithubCallback, refreshToken, getCurrentUser, logoutUser, verifyEmailOTP, verifyEmailToken, resendVerification, forgotPassword, resetPassword, changePassword, disconnectOAuth } from "../controller";
 import { authenticate, validate } from "../middlewares";
 import { loginSchema, refreshTokenSchema, registerSchema, verifyOtpSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validators";
 
@@ -16,9 +16,12 @@ router.post("/verify-email/resend", authenticate, resendVerification);
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
 router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
 router.put("/change-password", authenticate, validate(changePasswordSchema), changePassword);
-router.get("/google", loginWithGoogle);
+router.post("/disconnect-oauth", authenticate, disconnectOAuth);
+router.get("/google", initiateGoogleAuth);
+router.get("/google/connect", initiateGoogleAuth);
 router.get("/google/callback", handleGoogleCallback);
-router.get("/github", loginWithGithub);
+router.get("/github", initiateGithubAuth);
+router.get("/github/connect", initiateGithubAuth);
 router.get("/github/callback", handleGithubCallback);
 
 export default router;

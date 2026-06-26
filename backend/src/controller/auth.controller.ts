@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { IUser } from "../types";
 import { authService } from "../services";
-import { redirect, sendResponse, setCookie } from "../util";
+import { redirect, sendResponse, setCookie, verifyToken } from "../util";
 import { oauth2Client, GOOGLE_SCOPES } from "../integrations";
 import { FRONTEND_URL, GITHUB_OAUTH_CLIENT_ID } from "../config/env";
 import { AuthRequest } from "../middlewares/auth.middleware";
@@ -25,8 +25,9 @@ export const loginUser = async (req: Request<{}, {}, IUser>, res: Response) => {
   return sendResponse(res, result);
 };
 
-export const loginWithGoogle = (req: Request, res: Response) => {
-  const state = crypto.randomUUID();
+export const initiateGoogleAuth = (req: Request, res: Response) => {
+  const isConnect = req.path.includes("connect");
+  const state = isConnect ? `connect_${crypto.randomUUID()}` : crypto.randomUUID();
   setCookie(res, "oauth_state", state);
   const authUri = oauth2Client.generateAuthUrl({
     access_type: "offline",
@@ -57,6 +58,18 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       });
     }
 
+    const isConnect = typeof state === "string" && state.startsWith("connect_");
+
+    if (isConnect) {
+      const accessToken = req.cookies?.access_token;
+      if (!accessToken) {
+        return redirect(res, `${FRONTEND_URL}/dashboard`);
+      }
+      const decoded = verifyToken(accessToken);
+      await authService.linkGoogleAccount(code, decoded.id);
+      return redirect(res, `${FRONTEND_URL}/dashboard`);
+    }
+
     const resp = await authService.handleGoogleOAuth(code);
     setCookie(res, "access_token", resp.accessToken);
     setCookie(res, "refreshtoken", resp.refreshToken, {
@@ -72,8 +85,9 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
   }
 };
 
-export const loginWithGithub = (req: Request, res: Response) => {
-  const state = crypto.randomUUID();
+export const initiateGithubAuth = (req: Request, res: Response) => {
+  const isConnect = req.path.includes("connect");
+  const state = isConnect ? `connect_${crypto.randomUUID()}` : crypto.randomUUID();
   setCookie(res, "github_oauth_state", state);
 
   const url = "https://github.com/login/oauth/authorize";
@@ -103,6 +117,18 @@ export const handleGithubCallback = async (req: Request, res: Response) => {
         status: 401,
         msg: "Invalid oauth state",
       });
+    }
+
+    const isConnect = typeof state === "string" && state.startsWith("connect_");
+
+    if (isConnect) {
+      const accessToken = req.cookies?.access_token;
+      if (!accessToken) {
+        return redirect(res, `${FRONTEND_URL}/dashboard`);
+      }
+      const decoded = verifyToken(accessToken);
+      await authService.linkGithubAccount(code, decoded.id);
+      return redirect(res, `${FRONTEND_URL}/dashboard`);
     }
 
     const resp = await authService.handleGithubOAuth(code);
@@ -181,6 +207,12 @@ export const verifyEmailToken = async (req: Request, res: Response) => {
 
 export const resendVerification = async (req: AuthRequest, res: Response) => {
   const result = await authService.resendVerification(req.userId!);
+  return sendResponse(res, result);
+};
+
+export const disconnectOAuth = async (req: AuthRequest, res: Response) => {
+  const { provider } = req.body;
+  const result = await authService.disconnectProvider(req.userId!, provider);
   return sendResponse(res, result);
 };
 

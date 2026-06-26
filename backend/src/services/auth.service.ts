@@ -62,12 +62,11 @@ export const authService = {
         msg: "This email is not registered. Please sign up.",
       };
     }
-    const passwordMatches = await hash.compare(password, existingUser.password);
-    if (!passwordMatches) {
+    if (!existingUser.password || !hash.compare(password, existingUser.password)) {
       return {
         success: false,
         status: 401,
-        msg: "Email and password don't match. Please try again.",
+        msg: "Email and password don't match.",
       };
     }
 
@@ -256,6 +255,8 @@ export const authService = {
         name: user.name,
         email: user.email,
         provider: user.provider,
+        googleId: user.googleId,
+        githubId: user.githubId,
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
       },
@@ -418,6 +419,72 @@ export const authService = {
       $set: { refreshTokens: [] },
     });
     return { success: true, status: 200, msg: "Password reset successfully" };
+  },
+
+  disconnectProvider: async (userId: string, provider: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    const unset: Record<string, ""> = {};
+    if (provider === "google") {
+      unset.googleId = "";
+    } else if (provider === "github") {
+      unset.githubId = "";
+    } else {
+      return { success: false, status: 400, msg: "Invalid provider" };
+    }
+    await UserModel.findByIdAndUpdate(userId, {
+      $unset: unset,
+      $pull: { provider },
+    });
+    return { success: true, status: 200, msg: `Disconnected ${provider} account` };
+  },
+
+  linkGoogleAccount: async (code: string, userId: string) => {
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    const ticket = await oauth2Client.verifyIdToken({
+      idToken: tokens.id_token as string,
+      audience: GOOGLE_OAUTH_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) throw new Error("Invalid Google token payload");
+
+    const { sub: googleId } = payload;
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $set: { googleId },
+      $addToSet: { provider: "google" },
+    });
+
+    if (tokens.refresh_token) {
+      await UserModel.findByIdAndUpdate(userId, {
+        $set: { googleRefreshToken: encrypt.gen(tokens.refresh_token) },
+      });
+    }
+
+    return { success: true };
+  },
+
+  linkGithubAccount: async (code: string, userId: string) => {
+    const githubToken = await getGithubAccessToken(code);
+    const githubUser = await getGithubUserData(githubToken);
+
+    if (!githubUser) {
+      throw new Error("The github authentication seem to have failed!");
+    }
+
+    const { id: githubId } = githubUser.data;
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $set: { githubId, githubAccessToken: encrypt.gen(githubToken) },
+      $addToSet: { provider: "github" },
+    });
+
+    return { success: true };
   },
 
   changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
