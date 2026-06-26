@@ -11,6 +11,7 @@ import { validateZod } from "../../types/settings";
 interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
+  onSubmit?: (values: { projectName: string; description: string; team: string; projectLink?: string }) => Promise<void>;
 }
 
 const TEAMS: { id: string; name: string }[] = [];
@@ -26,12 +27,14 @@ const createProjectSchema = z.object({
     .or(z.literal("")),
 });
 
-export default function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
+export default function CreateProjectModal({ open, onClose, onSubmit }: CreateProjectModalProps) {
   const formik = useFormik({
     initialValues: { projectName: "", description: "", team: "", projectLink: "" },
     validate: validateZod(createProjectSchema),
-    onSubmit: (values, { setSubmitting, resetForm }) => {
-      console.log("Project created:", values);
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      if (onSubmit) {
+        await onSubmit(values);
+      }
       setSubmitting(false);
       resetForm();
       onClose();

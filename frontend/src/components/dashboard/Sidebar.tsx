@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../../app/hooks";
+import { useLogoutMutation } from "../../features/auth/authApi";
+import { logout as logoutAction } from "../../features/auth/authSlice";
 import DashboardButton from "./DashboardButton";
 import AlertModal from "./AlertModal";
-import { logoutUser } from "../../lib/auth";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -121,9 +123,12 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [doLogout] = useLogoutMutation();
 
   async function handleLogout() {
-    await logoutUser();
+    await doLogout();
+    dispatch(logoutAction());
     navigate("/");
   }
 
