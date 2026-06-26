@@ -111,7 +111,7 @@ export default function Projects() {
     }
   }
 
-  async function handleCreateProject(values: { projectName: string; description: string; team: string; projectLink?: string }) {
+  async function handleCreateProject(values: { projectName: string; description: string; projectLink?: string }) {
     try {
       await addProject(values).unwrap();
       toast.success("Project created", `${values.projectName} has been created.`);
