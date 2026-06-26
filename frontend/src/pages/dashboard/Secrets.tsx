@@ -15,7 +15,6 @@ import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/Dashboard
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
 import type { Secret } from "../../types/secret";
-import type { ProjectOption } from "../../types/project";
 import {
   useGetSecretsQuery,
   useAddSecretMutation,
@@ -25,17 +24,8 @@ import {
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedSecret, selectSelectedSecret } from "../../features/secret/secretSlice";
 
-interface Environment {
-  id: string;
-  name: string;
-}
-
-const MOCK_PROJECTS: ProjectOption[] = [];
-
-const MOCK_ENVIRONMENTS: Environment[] = [];
-
-function getEnvName(envId: string): string {
-  return MOCK_ENVIRONMENTS.find((e) => e.id === envId)?.name || "unknown";
+function getEnvName(_envId: string): string {
+  return "unknown";
 }
 
 const createSecretSchema = z.object({
@@ -356,7 +346,7 @@ export default function Secrets() {
               name="projectId"
               value={createFormik.values.projectId}
               onChange={(v) => createFormik.setFieldValue("projectId", v)}
-              options={MOCK_PROJECTS.map((p) => ({ label: p.name, value: p.id }))}
+              options={[]}
               placeholder="Select a project"
               error={createFormik.touched.projectId ? createFormik.errors.projectId : undefined}
               touched={!!createFormik.touched.projectId}
@@ -367,7 +357,7 @@ export default function Secrets() {
               name="environmentId"
               value={createFormik.values.environmentId}
               onChange={(v) => createFormik.setFieldValue("environmentId", v)}
-              options={MOCK_ENVIRONMENTS.map((e) => ({ label: e.name, value: e.id }))}
+              options={[]}
               placeholder="Select an environment (optional)"
               error={createFormik.touched.environmentId ? createFormik.errors.environmentId : undefined}
               touched={!!createFormik.touched.environmentId}
@@ -421,7 +411,7 @@ export default function Secrets() {
               name="projectId"
               value={editFormik.values.projectId}
               onChange={(v) => editFormik.setFieldValue("projectId", v)}
-              options={MOCK_PROJECTS.map((p) => ({ label: p.name, value: p.id }))}
+              options={[]}
               placeholder="Select a project"
               error={editFormik.touched.projectId ? editFormik.errors.projectId : undefined}
               touched={!!editFormik.touched.projectId}
@@ -432,7 +422,7 @@ export default function Secrets() {
               name="environmentId"
               value={editFormik.values.environmentId}
               onChange={(v) => editFormik.setFieldValue("environmentId", v)}
-              options={MOCK_ENVIRONMENTS.map((e) => ({ label: e.name, value: e.id }))}
+              options={[]}
               placeholder="Select an environment (optional)"
               error={editFormik.touched.environmentId ? editFormik.errors.environmentId : undefined}
               touched={!!editFormik.touched.environmentId}

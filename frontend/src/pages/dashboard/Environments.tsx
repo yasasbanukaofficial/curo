@@ -21,7 +21,6 @@ import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
-import type { ProjectOption } from "../../types/project";
 import type { Environment } from "../../types/environment";
 import {
   useGetEnvironmentsQuery,
@@ -31,8 +30,6 @@ import {
 } from "../../features/environment/environmentApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedEnvironment, selectSelectedEnvironment } from "../../features/environment/environmentSlice";
-
-const MOCK_PROJECTS: ProjectOption[] = [];
 
 const createEnvironmentSchema = z.object({
   name: z.string().trim().min(1, "Environment name is required").max(50, "Name is too long"),
@@ -185,13 +182,13 @@ export default function Environments() {
                     touched={!!settingsFormik.touched.name}
                     required
                   />
-                  <FormSelect
-                    label="Project"
-                    name="projectId"
-                    value={settingsFormik.values.projectId}
-                    onChange={(v) => settingsFormik.setFieldValue("projectId", v)}
-                    options={MOCK_PROJECTS.map((p) => ({ label: p.name, value: p.id }))}
-                    placeholder="Select a project"
+              <FormSelect
+                label="Project"
+                name="projectId"
+                value={settingsFormik.values.projectId}
+                onChange={(v) => settingsFormik.setFieldValue("projectId", v)}
+                options={[]}
+                placeholder="Select a project"
                     error={settingsFormik.touched.projectId ? settingsFormik.errors.projectId : undefined}
                     touched={!!settingsFormik.touched.projectId}
                     required
@@ -341,7 +338,7 @@ export default function Environments() {
               name="projectId"
               value={createFormik.values.projectId}
               onChange={(v) => createFormik.setFieldValue("projectId", v)}
-              options={MOCK_PROJECTS.map((p) => ({ label: p.name, value: p.id }))}
+              options={[]}
               placeholder="Select a project"
               error={createFormik.touched.projectId ? createFormik.errors.projectId : undefined}
               touched={!!createFormik.touched.projectId}

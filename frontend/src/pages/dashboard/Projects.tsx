@@ -37,29 +37,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedProject, selectSelectedProject } from "../../features/project/projectSlice";
 
-interface AvailableSecret {
-  id: string;
-  name: string;
-  env: string;
-}
-
-interface AvailableEnvironment {
-  id: string;
-  name: string;
-}
-
-interface AvailableTeam {
-  id: string;
-  name: string;
-}
-
 type DetailTab = "overview" | "secrets" | "environments" | "teams" | "settings";
-
-const ALL_SECRETS: AvailableSecret[] = [];
-
-const ALL_ENVIRONMENTS: AvailableEnvironment[] = [];
-
-const ALL_TEAMS: AvailableTeam[] = [];
 
 const updateProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(100, "Name is too long"),
@@ -289,32 +267,7 @@ export default function Projects() {
               <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search secrets..." className="max-w-[260px]" />
             </div>
             <div className="space-y-1">
-              {ALL_SECRETS.filter((s) =>
-                s.name.toLowerCase().includes(projectSearch.toLowerCase())
-              ).map((sec) => {
-                const assigned = selectedProject.secrets?.includes(sec.id);
-                return (
-                  <div key={sec.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <KeyRound className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{sec.name}</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{sec.env}</p>
-                      </div>
-                    </div>
-                    <DashboardButton
-                      onClick={() => handleToggleSecret(sec.id)}
-                      className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
-                        assigned
-                          ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
-                      }`}
-                    >
-                      {assigned ? "Remove" : "Assign"}
-                    </DashboardButton>
-                  </div>
-                );
-              })}
+              {[]}
             </div>
           </DashboardCard>
         )}
@@ -323,27 +276,7 @@ export default function Projects() {
           <DashboardCard>
             <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-5">Assigned Environments</h3>
             <div className="space-y-1">
-              {ALL_ENVIRONMENTS.map((env) => {
-                const assigned = selectedProject.environments?.includes(env.id);
-                return (
-                  <div key={env.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Layers3 className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
-                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{env.name}</p>
-                    </div>
-                    <DashboardButton
-                      onClick={() => handleToggleEnvironment(env.id)}
-                      className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
-                        assigned
-                          ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
-                      }`}
-                    >
-                      {assigned ? "Remove" : "Assign"}
-                    </DashboardButton>
-                  </div>
-                );
-              })}
+              {[]}
             </div>
           </DashboardCard>
         )}
@@ -352,27 +285,7 @@ export default function Projects() {
           <DashboardCard>
             <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-5">Assigned Teams</h3>
             <div className="space-y-1">
-              {ALL_TEAMS.map((team) => {
-                const assigned = selectedProject.teams?.includes(team.id);
-                return (
-                  <div key={team.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Users className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
-                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{team.name}</p>
-                    </div>
-                    <DashboardButton
-                      onClick={() => handleToggleTeam(team.id)}
-                      className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
-                        assigned
-                          ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
-                      }`}
-                    >
-                      {assigned ? "Remove" : "Assign"}
-                    </DashboardButton>
-                  </div>
-                );
-              })}
+              {[]}
             </div>
           </DashboardCard>
         )}

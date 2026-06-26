@@ -52,15 +52,6 @@ interface TeamInvite {
   expiresAt: string;
 }
 
-interface TeamProject {
-  id: string;
-  name: string;
-  description: string;
-  secretCount: number;
-  environmentCount: number;
-  assigned: boolean;
-}
-
 interface Team {
   id: string;
   name: string;
@@ -77,10 +68,6 @@ interface Team {
   projects: string[];
   createdAt: string;
 }
-
-const MOCK_TEAMS: Team[] = [];
-
-const ALL_PROJECTS: TeamProject[] = [];
 
 interface NewTeamMemberInvite {
   email: string;
@@ -177,7 +164,7 @@ function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => vo
 
 export default function Teams() {
   const toast = useToast();
-  const [teams, setTeams] = useState<Team[]>(MOCK_TEAMS);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -478,33 +465,7 @@ export default function Teams() {
               <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
             </div>
             <div className="space-y-1">
-              {ALL_PROJECTS.filter((proj) =>
-                proj.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
-                proj.description.toLowerCase().includes(projectSearch.toLowerCase())
-              ).map((proj) => {
-                const assigned = selectedTeam.projects.includes(proj.id);
-                return (
-                  <div key={proj.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <FolderKanban className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{proj.name}</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{proj.description} · {proj.secretCount} secrets · {proj.environmentCount} envs</p>
-                      </div>
-                    </div>
-                    <DashboardButton
-                      onClick={() => handleToggleProject(proj.id)}
-                      className={`h-8 px-3 text-xs font-medium rounded-[10px] ${
-                        assigned
-                          ? "bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20"
-                          : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
-                      }`}
-                    >
-                      {assigned ? "Remove" : "Assign"}
-                    </DashboardButton>
-                  </div>
-                );
-              })}
+              {[]}
             </div>
           </DashboardCard>
         )}

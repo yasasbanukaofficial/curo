@@ -22,8 +22,6 @@ interface AuditLogEntry {
   createdAt: string;
 }
 
-const LOGS: AuditLogEntry[] = [];
-
 const actionFilters = ["all", "CREATED", "UPDATED", "VIEWED", "DELETED"];
 
 export default function AuditLogs() {
@@ -31,11 +29,7 @@ export default function AuditLogs() {
   const [filter, setFilter] = useState("all");
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
 
-  const filtered = LOGS.filter((l) => {
-    const q = search.toLowerCase();
-    return (l.target.toLowerCase().includes(q) || l.user.toLowerCase().includes(q))
-      && (filter === "all" || l.action === filter);
-  });
+  const filtered: AuditLogEntry[] = [];
 
   function formatDate(iso: string): string {
     const d = new Date(iso);
