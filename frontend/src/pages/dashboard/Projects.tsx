@@ -27,22 +27,15 @@ import FormTextarea from "../../components/dashboard/FormTextarea";
 import AlertModal from "../../components/dashboard/AlertModal";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  projectLink?: string;
-  secretCount: number;
-  environmentCount: number;
-  teamCount: number;
-  memberCount: number;
-  updatedAt: string;
-  createdAt: string;
-  secrets: string[];
-  environments: string[];
-  teams: string[];
-}
+import type { Project } from "../../types/project";
+import {
+  useGetProjectsQuery,
+  useAddProjectMutation,
+  useUpdateProjectMutation,
+  useRemoveProjectMutation,
+} from "../../features/project/projectApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setSelectedProject, selectSelectedProject } from "../../features/project/projectSlice";
 
 interface AvailableSecret {
   id: string;
@@ -62,8 +55,6 @@ interface AvailableTeam {
 
 type DetailTab = "overview" | "secrets" | "environments" | "teams" | "settings";
 
-const MOCK_PROJECTS: Project[] = [];
-
 const ALL_SECRETS: AvailableSecret[] = [];
 
 const ALL_ENVIRONMENTS: AvailableEnvironment[] = [];
@@ -81,11 +72,15 @@ const updateProjectSchema = z.object({
 });
 
 export default function Projects() {
+  const dispatch = useAppDispatch();
+  const selectedProject = useAppSelector(selectSelectedProject);
   const toast = useToast();
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
+  const { data: projects = [], isLoading, isError } = useGetProjectsQuery();
+  const [addProject] = useAddProjectMutation();
+  const [updateProject] = useUpdateProjectMutation();
+  const [removeProject] = useRemoveProjectMutation();
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
@@ -100,72 +95,77 @@ export default function Projects() {
   }, [location.state, location.pathname, navigate]);
 
   const filtered = projects.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.projectName.toLowerCase().includes(search.toLowerCase()) ||
     p.description.toLowerCase().includes(search.toLowerCase())
   );
 
   const settingsFormik = useFormik({
     initialValues: { name: "", description: "", projectLink: "" },
     validate: validateZod(updateProjectSchema),
-    onSubmit: (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       if (!selectedProject) return;
-      const updated: Project = {
-        ...selectedProject,
-        name: values.name,
-        description: values.description,
-        projectLink: values.projectLink || undefined,
-      };
-      setProjects((prev) => prev.map((p) => p.id === selectedProject.id ? updated : p));
-      setSelectedProject(updated);
-      setSubmitting(false);
-      toast.success("Project saved", "Project settings have been updated.");
+      try {
+        await updateProject({ id: selectedProject._id, body: values }).unwrap();
+        setSubmitting(false);
+        toast.success("Project saved", "Project settings have been updated.");
+      } catch {
+        setSubmitting(false);
+        toast.error("Failed to update project", "Something went wrong. Please try again.");
+      }
     },
   });
 
   function openSettingsForm() {
     if (!selectedProject) return;
-    settingsFormik.setValues({ name: selectedProject.name, description: selectedProject.description, projectLink: selectedProject.projectLink || "" });
+    settingsFormik.setValues({ name: selectedProject.projectName, description: selectedProject.description, projectLink: selectedProject.projectLink || "" });
     setDetailTab("settings");
   }
 
-  function handleDeleteProject() {
+  async function handleDeleteProject() {
     if (!selectedProject) return;
-    setProjects((prev) => prev.filter((p) => p.id !== selectedProject.id));
-    setSelectedProject(null);
-    setShowDeleteModal(false);
+    try {
+      await removeProject(selectedProject._id).unwrap();
+      dispatch(setSelectedProject(null));
+      setShowDeleteModal(false);
+      toast.success("Project deleted", `${selectedProject.projectName} has been removed.`);
+    } catch {
+      toast.error("Failed to delete project", "Something went wrong. Please try again.");
+    }
+  }
+
+  async function handleCreateProject(values: { projectName: string; description: string; team: string; projectLink?: string }) {
+    await addProject(values).unwrap();
+    toast.success("Project created", `${values.projectName} has been created.`);
   }
 
   function handleToggleSecret(secretId: string) {
     if (!selectedProject) return;
-    const has = selectedProject.secrets.includes(secretId);
+    const has = selectedProject.secrets?.includes(secretId);
     const updatedSecrets = has
       ? selectedProject.secrets.filter((id) => id !== secretId)
-      : [...selectedProject.secrets, secretId];
+      : [...(selectedProject.secrets || []), secretId];
     const updated = { ...selectedProject, secrets: updatedSecrets, secretCount: updatedSecrets.length };
-    setProjects((prev) => prev.map((p) => p.id === selectedProject.id ? updated : p));
-    setSelectedProject(updated);
+    dispatch(setSelectedProject(updated));
   }
 
   function handleToggleEnvironment(envId: string) {
     if (!selectedProject) return;
-    const has = selectedProject.environments.includes(envId);
+    const has = selectedProject.environments?.includes(envId);
     const updatedEnvs = has
       ? selectedProject.environments.filter((id) => id !== envId)
-      : [...selectedProject.environments, envId];
+      : [...(selectedProject.environments || []), envId];
     const updated = { ...selectedProject, environments: updatedEnvs, environmentCount: updatedEnvs.length };
-    setProjects((prev) => prev.map((p) => p.id === selectedProject.id ? updated : p));
-    setSelectedProject(updated);
+    dispatch(setSelectedProject(updated));
   }
 
   function handleToggleTeam(teamId: string) {
     if (!selectedProject) return;
-    const has = selectedProject.teams.includes(teamId);
+    const has = selectedProject.teams?.includes(teamId);
     const updatedTeams = has
       ? selectedProject.teams.filter((id) => id !== teamId)
-      : [...selectedProject.teams, teamId];
+      : [...(selectedProject.teams || []), teamId];
     const updated = { ...selectedProject, teams: updatedTeams, teamCount: updatedTeams.length };
-    setProjects((prev) => prev.map((p) => p.id === selectedProject.id ? updated : p));
-    setSelectedProject(updated);
+    dispatch(setSelectedProject(updated));
   }
 
   const detailTabs = [
@@ -176,14 +176,30 @@ export default function Projects() {
     { label: "Settings", value: "settings" as DetailTab },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#8E8E93]">Loading projects...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#FF3B30]">Something went wrong. Could not load projects.</p>
+      </div>
+    );
+  }
+
   const projectDetail = selectedProject ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { setSelectedProject(null); setDetailTab("overview"); settingsFormik.resetForm(); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={() => { dispatch(setSelectedProject(null)); setDetailTab("overview"); settingsFormik.resetForm(); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <ArrowLeft className="w-5 h-5" />
         </DashboardButton>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.name}</h1>
+          <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.projectName}</h1>
           <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{selectedProject.description}</p>
         </div>
       </div>
@@ -211,7 +227,7 @@ export default function Projects() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Name</p>
-                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.name}</p>
+                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.projectName}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Created</p>
@@ -276,7 +292,7 @@ export default function Projects() {
               {ALL_SECRETS.filter((s) =>
                 s.name.toLowerCase().includes(projectSearch.toLowerCase())
               ).map((sec) => {
-                const assigned = selectedProject.secrets.includes(sec.id);
+                const assigned = selectedProject.secrets?.includes(sec.id);
                 return (
                   <div key={sec.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                     <div className="flex items-center gap-3 min-w-0">
@@ -308,7 +324,7 @@ export default function Projects() {
             <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-5">Assigned Environments</h3>
             <div className="space-y-1">
               {ALL_ENVIRONMENTS.map((env) => {
-                const assigned = selectedProject.environments.includes(env.id);
+                const assigned = selectedProject.environments?.includes(env.id);
                 return (
                   <div key={env.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                     <div className="flex items-center gap-3 min-w-0">
@@ -337,7 +353,7 @@ export default function Projects() {
             <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-5">Assigned Teams</h3>
             <div className="space-y-1">
               {ALL_TEAMS.map((team) => {
-                const assigned = selectedProject.teams.includes(team.id);
+                const assigned = selectedProject.teams?.includes(team.id);
                 return (
                   <div key={team.id} className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                     <div className="flex items-center gap-3 min-w-0">
@@ -459,14 +475,14 @@ export default function Projects() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((p) => (
-              <DashboardCard key={p.id} hover padding="md" className="cursor-pointer" onClick={() => { setSelectedProject(p); setDetailTab("overview"); }}>
+              <DashboardCard key={p._id} hover padding="md" className="cursor-pointer" onClick={() => { dispatch(setSelectedProject(p)); setDetailTab("overview"); }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center">
                       <FolderKanban className="w-5 h-5 text-[#8E8E93]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{p.name}</h3>
+                      <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{p.projectName}</h3>
                       <p className="text-xs text-[#8E8E93] dark:text-[#666]">{p.description}</p>
                     </div>
                   </div>
@@ -498,7 +514,7 @@ export default function Projects() {
 
                 <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
                   <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Updated {p.updatedAt}</span>
-                  <DashboardButton onClick={(e) => { e.stopPropagation(); setSelectedProject(p); setDetailTab("overview"); }} className="text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] hover:text-[#636363] dark:hover:text-[#999] gap-1">
+                  <DashboardButton onClick={(e) => { e.stopPropagation(); dispatch(setSelectedProject(p)); setDetailTab("overview"); }} className="text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] hover:text-[#636363] dark:hover:text-[#999] gap-1">
                     Open <FolderKanban className="w-3 h-3" />
                   </DashboardButton>
                 </div>
@@ -508,7 +524,11 @@ export default function Projects() {
         </>
       )}
 
-      <CreateProjectModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <CreateProjectModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 }

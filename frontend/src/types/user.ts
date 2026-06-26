@@ -9,6 +9,7 @@ export interface User {
   googleRefreshToken?: string;
   githubAccessToken?: string;
   provider: string[];
+  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
 }

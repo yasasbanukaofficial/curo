@@ -11,7 +11,6 @@ import {
   Save,
   Trash2,
   AlertTriangle,
-  CheckCircle as CheckCircleIcon,
   ExternalLink,
 } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
@@ -23,19 +22,15 @@ import AlertModal from "../../components/dashboard/AlertModal";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
 import type { ProjectOption } from "../../types/project";
-
-interface Environment {
-  id: string;
-  name: string;
-  projectId: string;
-  userId: string;
-  secretCount: number;
-  projectName: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const MOCK_ENVIRONMENTS: Environment[] = [];
+import type { Environment } from "../../types/environment";
+import {
+  useGetEnvironmentsQuery,
+  useAddEnvironmentMutation,
+  useUpdateEnvironmentMutation,
+  useRemoveEnvironmentMutation,
+} from "../../features/environment/environmentApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setSelectedEnvironment, selectSelectedEnvironment } from "../../features/environment/environmentSlice";
 
 const MOCK_PROJECTS: ProjectOption[] = [];
 
@@ -50,49 +45,46 @@ const updateEnvironmentSchema = z.object({
 });
 
 export default function Environments() {
+  const dispatch = useAppDispatch();
+  const selectedEnv = useAppSelector(selectSelectedEnvironment);
   const toast = useToast();
-  const [environments, setEnvironments] = useState<Environment[]>(MOCK_ENVIRONMENTS);
-  const [selectedEnv, setSelectedEnv] = useState<Environment | null>(null);
+  const { data: environments = [], isLoading, isError } = useGetEnvironmentsQuery();
+  const [addEnvironment] = useAddEnvironmentMutation();
+  const [updateEnvironment] = useUpdateEnvironmentMutation();
+  const [removeEnvironment] = useRemoveEnvironmentMutation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const createFormik = useFormik({
     initialValues: { name: "", projectId: "" },
     validate: validateZod(createEnvironmentSchema),
-    onSubmit: (values, { setSubmitting, resetForm }) => {
-      const newEnv: Environment = {
-        id: `env_${Date.now()}`,
-        name: values.name,
-        projectId: values.projectId,
-        userId: "",
-        secretCount: 0,
-        projectName: MOCK_PROJECTS.find((p) => p.id === values.projectId)?.name || "",
-        createdAt: new Date().toISOString().split("T")[0],
-        updatedAt: "Just now",
-      };
-      setEnvironments((prev) => [...prev, newEnv]);
-      setSubmitting(false);
-      setShowCreateModal(false);
-      resetForm();
-      toast.success("Environment created", `${newEnv.name} has been created.`);
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      try {
+        await addEnvironment(values).unwrap();
+        setSubmitting(false);
+        setShowCreateModal(false);
+        resetForm();
+        toast.success("Environment created", `${values.name} has been created.`);
+      } catch {
+        setSubmitting(false);
+        toast.error("Failed to create environment", "Something went wrong. Please try again.");
+      }
     },
   });
 
   const settingsFormik = useFormik({
     initialValues: { name: "", projectId: "" },
     validate: validateZod(updateEnvironmentSchema),
-    onSubmit: (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       if (!selectedEnv) return;
-      const updated: Environment = {
-        ...selectedEnv,
-        name: values.name,
-        projectId: values.projectId,
-        projectName: MOCK_PROJECTS.find((p) => p.id === values.projectId)?.name || "",
-      };
-      setEnvironments((prev) => prev.map((e) => e.id === selectedEnv.id ? updated : e));
-      setSelectedEnv(updated);
-      setSubmitting(false);
-      toast.success("Environment saved", "Environment settings have been updated.");
+      try {
+        await updateEnvironment({ id: selectedEnv._id, body: values }).unwrap();
+        setSubmitting(false);
+        toast.success("Environment saved", "Environment settings have been updated.");
+      } catch {
+        setSubmitting(false);
+        toast.error("Failed to update environment", "Something went wrong. Please try again.");
+      }
     },
   });
 
@@ -101,19 +93,39 @@ export default function Environments() {
     settingsFormik.setValues({ name: selectedEnv.name, projectId: selectedEnv.projectId });
   }
 
-  function handleDeleteEnvironment() {
+  async function handleDeleteEnvironment() {
     if (!selectedEnv) return;
-    setEnvironments((prev) => prev.filter((e) => e.id !== selectedEnv.id));
-    setSelectedEnv(null);
-    setShowDeleteModal(false);
-    toast.success("Environment deleted", `${selectedEnv.name} has been removed.`);
+    try {
+      await removeEnvironment(selectedEnv._id).unwrap();
+      dispatch(setSelectedEnvironment(null));
+      setShowDeleteModal(false);
+      toast.success("Environment deleted", `${selectedEnv.name} has been removed.`);
+    } catch {
+      toast.error("Failed to delete environment", "Something went wrong. Please try again.");
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#8E8E93]">Loading environments...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#FF3B30]">Something went wrong. Could not load environments.</p>
+      </div>
+    );
   }
 
   if (selectedEnv) {
     return (
       <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
         <div className="flex items-center gap-3 mb-5">
-          <DashboardButton onClick={() => { setSelectedEnv(null); settingsFormik.resetForm(); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+          <DashboardButton onClick={() => { dispatch(setSelectedEnvironment(null)); settingsFormik.resetForm(); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
             <ArrowLeft className="w-5 h-5" />
           </DashboardButton>
           <div className="flex items-center gap-3 flex-1">
@@ -187,7 +199,7 @@ export default function Environments() {
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
                   <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
-                    {settingsFormik.isSubmitting ? <CheckCircleIcon className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {settingsFormik.isSubmitting ? <span className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
                 </div>
@@ -262,7 +274,7 @@ export default function Environments() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {environments.map((env) => (
-          <DashboardCard key={env.id} hover padding="lg" className="cursor-pointer" onClick={() => { setSelectedEnv(env); settingsFormik.resetForm(); }}>
+          <DashboardCard key={env._id} hover padding="lg" className="cursor-pointer" onClick={() => { dispatch(setSelectedEnvironment(env)); settingsFormik.resetForm(); }}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-[#30D158]" />
@@ -293,7 +305,7 @@ export default function Environments() {
 
             <div className="flex items-center justify-between pt-4 border-t border-black/[0.04] dark:border-[#222]">
               <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Updated {env.updatedAt}</span>
-              <DashboardButton onClick={(e) => { e.stopPropagation(); setSelectedEnv(env); }} className="text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] hover:text-[#636363] dark:hover:text-[#999]">
+              <DashboardButton onClick={(e) => { e.stopPropagation(); dispatch(setSelectedEnvironment(env)); }} className="text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] hover:text-[#636363] dark:hover:text-[#999]">
                 Open
               </DashboardButton>
             </div>
