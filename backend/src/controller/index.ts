@@ -4,3 +4,4 @@ export * from "./project.controller";
 export * from "./environment.controller";
 export * from "./version.controller";
 export * from "./audit.controller";
+export * from "./team.controller";

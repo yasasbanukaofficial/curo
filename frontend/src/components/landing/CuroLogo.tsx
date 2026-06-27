@@ -6,7 +6,7 @@ interface CuroLogoProps {
 
 const textSize = { sm: "text-lg", md: "text-xl" };
 
-export default function CuroLogo({ color = "text-[#191919]", size = "md", className = "" }: CuroLogoProps) {
+export default function CuroLogo({ color = "text-[#191919] dark:text-[#E5E5E5]", size = "md", className = "" }: CuroLogoProps) {
   return (
     <a href="/" className={`flex items-center gap-2 ${textSize[size]} font-bold tracking-tight ${color} font-display ${className}`}>
       <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

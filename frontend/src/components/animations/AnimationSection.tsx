@@ -177,13 +177,11 @@ export default function AnimationSection() {
               <div className="bg-[#F5F5F7] px-6 py-4 border-b border-[#E5E5EA] flex justify-between items-center">
                 <div className="flex items-center gap-2 font-medium text-sm text-[#1D1D1F]">Secrets</div>
                 <div className="env-selector flex gap-1">
-                  {['Development', 'Staging', 'Production'].map((env, i) => (
-                    <span key={i} className={`px-3 py-1 rounded-full text-xs font-medium ${i === 1 ? 'bg-[#1D1D1F] text-white' : 'bg-white text-[#6E6E73] border border-[#E5E5EA]'}`}>{env}</span>
-                  ))}
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#1D1D1F] text-white">Production</span>
                 </div>
               </div>
               <div className="p-6 space-y-4 font-mono text-sm">
-                {[['DATABASE_URL', 'postgres://prod-db.curo.internal:5432'], ['OPENAI_API_KEY', 'sk-proj-••••••••••••'], ['JWT_SECRET', '••••••••••••••••']].map(([key, value], i) => (
+                {[['DATABASE_URL', 'postgres://prod-db.internal:5432'], ['OPENAI_API_KEY', 'sk-proj-••••••••••••'], ['JWT_SECRET', '••••••••••••••••']].map(([key, value], i) => (
                   <div key={i} className="secret-manage-row flex justify-between items-center">
                     <div className="flex flex-col">
                       <span className="text-xs text-[#1D1D1F] font-medium">{key}</span>
@@ -246,11 +244,9 @@ export default function AnimationSection() {
               </div>
             </div>
             <div className="absolute -bottom-4 flex gap-3">
-              {['Development', 'Staging', 'Production'].map((env, i) => (
-                <div key={i} className="env-flow-badge px-3 py-1.5 bg-white rounded-full border border-[#E5E5EA] text-xs text-[#1D1D1F] font-sans font-medium shadow-sm">
-                  {env}
-                </div>
-              ))}
+              <div className="env-flow-badge px-3 py-1.5 bg-white rounded-full border border-[#E5E5EA] text-xs text-[#1D1D1F] font-sans font-medium shadow-sm">
+                Production
+              </div>
             </div>
           </div>
 

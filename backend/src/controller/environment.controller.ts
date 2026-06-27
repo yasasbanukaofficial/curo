@@ -12,7 +12,7 @@ export const getEnvironmentById = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Environment ID is required",
+      msg: "Please provide an environment ID",
     });
   }
 
@@ -22,7 +22,7 @@ export const getEnvironmentById = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 404,
-        msg: "Environment not found",
+        msg: "Environment not found or you don't have access to it",
       });
     }
     return sendResponse(res, {
@@ -34,7 +34,7 @@ export const getEnvironmentById = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching environment",
+      msg: "Something went wrong while loading the environment. Please try again.",
     });
   }
 };
@@ -53,7 +53,7 @@ export const getAllEnvironments = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching environments",
+      msg: "Something went wrong while loading environments. Please try again.",
     });
   }
 };
@@ -66,7 +66,7 @@ export const createEnvironment = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Request body is required",
+      msg: "Please provide the environment details",
     });
   }
 
@@ -88,7 +88,7 @@ export const createEnvironment = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "name and projectId are required",
+        msg: "Environment name and project are required",
       });
     }
 
@@ -103,7 +103,7 @@ export const createEnvironment = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while creating environment",
+      msg: "Something went wrong while creating the environment. Please try again.",
     });
   }
 };
@@ -130,7 +130,7 @@ export const updateEnvironment = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     if (error.message === "ENVIRONMENT_NOT_FOUND") {
-      return sendResponse(res, { success: false, status: 404, msg: error.message });
+      return sendResponse(res, { success: false, status: 404, msg: "Environment not found or you don't have access to it" });
     }
     if (error.code === 11000) {
       return sendResponse(res, {
@@ -139,7 +139,7 @@ export const updateEnvironment = async (req: AuthRequest, res: Response) => {
         msg: `An environment named "${body?.name}" already exists in this project`,
       });
     }
-    return sendResponse(res, { success: false, status: 500, msg: error.message });
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the environment. Please try again." });
   }
 };
 
@@ -163,11 +163,9 @@ export const deleteEnvironment = async (req: AuthRequest, res: Response) => {
       msg: "Environment deleted successfully",
     });
   } catch (error: any) {
-    const status = error.message === "ENVIRONMENT_NOT_FOUND" ? 404 : 500;
-    return sendResponse(res, {
-      success: false,
-      status,
-      msg: error.message,
-    });
+    if (error.message === "ENVIRONMENT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Environment not found or you don't have access to it" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the environment. Please try again." });
   }
 };

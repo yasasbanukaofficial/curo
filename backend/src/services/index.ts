@@ -4,3 +4,4 @@ export * from "./project.service";
 export * from "./environment.service";
 export * from "./version.service";
 export * from "./audit.service";
+export * from "./team.service";

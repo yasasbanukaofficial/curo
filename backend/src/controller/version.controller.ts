@@ -11,7 +11,7 @@ export const getAllVersions = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Secret ID is required",
+      msg: "Please provide a secret ID",
     });
   }
 
@@ -26,7 +26,7 @@ export const getAllVersions = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching versions",
+      msg: "Something went wrong while loading version history. Please try again.",
     });
   }
 };
@@ -39,7 +39,7 @@ export const createVersion = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "secretId and secKey are required",
+      msg: "Secret ID and secret key are required",
     });
   }
 
@@ -57,7 +57,7 @@ export const createVersion = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while creating version",
+      msg: "Something went wrong while creating the version. Please try again.",
     });
   }
 };

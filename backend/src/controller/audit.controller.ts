@@ -17,7 +17,7 @@ export const getAllAudits = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching audit logs",
+      msg: "Something went wrong while loading audit logs. Please try again.",
     });
   }
 };

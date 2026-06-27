@@ -3,6 +3,7 @@ export const {
   MONGODB_URL,
   API_VER,
   FRONTEND_URL,
+  BASE_URL,
   NODE_ENV,
   JWT_SECRET,
   JWT_ACCESS_EXPIRY,
@@ -16,11 +17,13 @@ export const {
   GITHUB_APP_PEM,
   GITHUB_APP_ID_VALUE,
   ENCRYPTION_KEY,
+  RESEND_API_KEY,
 } = process.env as {
   PORT: string | undefined;
   MONGODB_URL: string | undefined;
   API_VER: string | undefined;
   FRONTEND_URL: string | undefined;
+  BASE_URL: string | undefined;
   NODE_ENV: string | undefined;
   JWT_SECRET: string | undefined;
   JWT_ACCESS_EXPIRY: string | undefined;
@@ -34,4 +37,5 @@ export const {
   GITHUB_APP_PEM: string | undefined;
   GITHUB_APP_ID_VALUE: string | undefined;
   ENCRYPTION_KEY: string | undefined;
+  RESEND_API_KEY: string | undefined;
 };

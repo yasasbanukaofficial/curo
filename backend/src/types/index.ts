@@ -4,3 +4,6 @@ export * from "./project";
 export * from "./environment";
 export * from "./version";
 export * from "./audit";
+export * from "./team";
+export * from "./teamMember";
+export * from "./teamInvite";

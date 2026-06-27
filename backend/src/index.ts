@@ -4,15 +4,29 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { AuthRouter, SecretRouter, ProjectRouter, EnvironmentRouter, VersionRouter, AuditRouter } from "./routes/index";
+import { AuthRouter, SecretRouter, ProjectRouter, EnvironmentRouter, VersionRouter, AuditRouter, TeamRouter } from "./routes/index";
 import cookieParser from "cookie-parser";
 import { FRONTEND_URL, PORT, MONGODB_URL, API_VER } from "./config/env";
 
 const app = express();
+
+const allowedOrigins = FRONTEND_URL?.split(",").map((s) => s.trim()).filter(Boolean) || [];
+
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS] Blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
   }),
 );
 app.use(express.json());
@@ -26,6 +40,7 @@ app.use(`/api/${API_VER}/projects`, ProjectRouter);
 app.use(`/api/${API_VER}/environments`, EnvironmentRouter);
 app.use(`/api/${API_VER}/versions`, VersionRouter);
 app.use(`/api/${API_VER}/audits`, AuditRouter);
+app.use(`/api/${API_VER}/teams`, TeamRouter);
 
 app.get("/", (req, res) => {
   res.send(

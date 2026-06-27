@@ -1,114 +1,287 @@
-import { useTheme } from "../../contexts/ThemeContext";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { useLogoutMutation } from "../../features/auth/authApi";
+import { logout as logoutAction, selectUser } from "../../features/auth/authSlice";
+import DashboardButton from "./DashboardButton";
+import AlertModal from "./AlertModal";
+import {
+  LayoutDashboard,
+  FolderKanban,
+  Users,
+  KeyRound,
+  Layers3,
+  PlugZap,
+  ScrollText,
+  History,
+  Settings,
+  UserCircle,
+  ChevronDown,
+  Check,
+  Sun,
+  LogOut,
+  Plus,
+} from "lucide-react";
 
-const navItems = [
-  { label: "Overview", icon: "grid", active: true },
-  { label: "Documents", icon: "file", active: false },
-  { label: "Brand Voice", icon: "sparkle", active: false },
-  { label: "Terminology", icon: "table", active: false },
-  { label: "Outputs", icon: "external", active: false },
-  { label: "Settings", icon: "gear", active: false },
+const projects: string[] = [];
+
+const navSections = [
+  {
+    label: "Workspace",
+    items: [
+      { label: "Overview", icon: LayoutDashboard, path: "/dashboard/overview" },
+      { label: "Teams", icon: Users, path: "/dashboard/teams" },
+      { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
+      { label: "Environments", icon: Layers3, path: "/dashboard/environments" },
+      { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
+      { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
+      { label: "Version History", icon: History, path: "/dashboard/versions" },
+    ],
+  },
 ];
 
-function NavIcon({ type }: { type: string }) {
-  if (type === "grid") return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-    </svg>
-  );
-  if (type === "file") return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-    </svg>
-  );
-  if (type === "sparkle") return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5z" /><circle cx="19" cy="19" r="2" /><circle cx="5" cy="19" r="2" />
-    </svg>
-  );
-  if (type === "table") return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="3" x2="9" y2="21" />
-    </svg>
-  );
-  if (type === "external") return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
-  );
-  if (type === "gear") return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
-  return null;
-}
+function ProjectSwitcher() {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(projects[0] ?? "");
+  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
-export default function Sidebar() {
-  const { theme, toggle } = useTheme();
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (projects.length === 0) {
+    return (
+      <DashboardButton
+        onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
+        className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] bg-white hover:bg-[#F5F5F7] rounded-xl border border-black/20 justify-start"
+      >
+        <Plus className="w-4 h-4" />
+        Create new project
+      </DashboardButton>
+    );
+  }
 
   return (
-    <aside className="w-[220px] bg-white dark:bg-[#1A1A1A] border-r border-[#EFEFEF] dark:border-[#2A2A2A] flex flex-col flex-shrink-0">
-      <div className="px-4 pt-4 pb-3">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search anything"
-            className="w-full h-9 pl-4 pr-10 text-sm bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-lg border-none outline-none text-[#1A1A1A] dark:text-[#E5E5E5] placeholder-[#888] dark:placeholder-[#666]"
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#888] dark:text-[#666] font-medium">⌘F</span>
+    <div ref={ref} className="relative">
+      <DashboardButton
+        onClick={() => setOpen(!open)}
+        className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] justify-between"
+      >
+        <span className="truncate">{selected}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </DashboardButton>
+
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 transition-colors duration-200">
+          {projects.map((p) => (
+            <DashboardButton
+              key={p}
+              onClick={() => {
+                setSelected(p);
+                setOpen(false);
+              }}
+              className={`w-full h-9 px-3 text-sm rounded-lg justify-start ${
+                p === selected
+                  ? "bg-[#F5F5F7] dark:bg-[#333] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
+                  : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+              }`}
+            >
+              <span className="flex-1 text-left">{p}</span>
+              {p === selected && <Check className="w-3.5 h-3.5 text-[#1D1D1F] dark:text-[#E5E5E5]" />}
+            </DashboardButton>
+          ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+interface UserDropdownProps {
+  onToggleSettings: (tab?: string) => void;
+}
+
+function UserCard({ onToggleSettings }: UserDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [doLogout] = useLogoutMutation();
+  const user = useAppSelector(selectUser);
+  const initials = useMemo(() => {
+    if (!user?.name) return "?";
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  }, [user?.name]);
+
+  async function handleLogout() {
+    await doLogout();
+    dispatch(logoutAction());
+    navigate("/");
+  }
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] transition-colors duration-200 text-left"
+      >
+        <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-xs font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{user?.name || ""}</p>
+          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{user?.email || ""}</p>
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-3 z-50">
+          <div className="px-4 pb-3 mb-2 border-b border-black/[0.04] dark:border-[#222]">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-sm font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{user?.name || ""}</p>
+                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{user?.email || ""}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {user?.emailVerified && (
+                <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#30D158]/10 text-[#30D158]">
+                  Verified
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="px-1.5 space-y-0.5">
+            <DashboardButton
+              onClick={() => { setOpen(false); onToggleSettings("account"); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+            >
+              <UserCircle className="w-4 h-4" />
+              Account
+            </DashboardButton>
+            <DashboardButton
+              onClick={() => { setOpen(false); onToggleSettings("general"); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </DashboardButton>
+            <DashboardButton
+              onClick={() => { setOpen(false); onToggleSettings("general"); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+            >
+              <Sun className="w-4 h-4" />
+              Theme
+            </DashboardButton>
+          </div>
+
+          <div className="mt-2 pt-2 border-t border-black/[0.04] dark:border-[#222] px-1.5">
+            <DashboardButton
+              onClick={() => { setOpen(false); setShowLogoutModal(true); }}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
+            </DashboardButton>
+          </div>
+        </div>
+      )}
+
+      <AlertModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        variant="warning"
+        title="Log out"
+        message="Are you sure you want to log out? You will need to sign in again to access your account."
+        buttons={[
+          { label: "Cancel", onClick: () => setShowLogoutModal(false), variant: "secondary" },
+          { label: "Log out", onClick: () => { setShowLogoutModal(false); handleLogout(); }, variant: "destructive" },
+        ]}
+      />
+    </div>
+  );
+}
+
+interface SidebarProps {
+  onToggleSettings: (tab?: string) => void;
+}
+
+export default function Sidebar({ onToggleSettings }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  return (
+    <aside className="hidden lg:flex w-[280px] bg-white dark:bg-[#111] border-r border-black/[0.04] dark:border-[#222] flex-col flex-shrink-0 transition-colors duration-200">
+      <div className="px-5 pt-5 pb-4">
+        <ProjectSwitcher />
       </div>
 
-      <div className="px-4 mb-2">
-        <p className="text-[10px] font-medium text-[#888] dark:text-[#666] tracking-[0.08em] uppercase">Main Menu</p>
-      </div>
-
-      <nav className="flex-1 px-3 space-y-0.5">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            className={`flex items-center gap-3 w-full h-9 px-3 text-sm rounded-lg transition-colors ${
-              item.active
-                ? "bg-[#F3F3F3] dark:bg-[#333] text-[#1A1A1A] dark:text-[#E5E5E5] font-medium"
-                : "text-[#888] dark:text-[#666] hover:text-[#1A1A1A] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F5] dark:hover:bg-[#2A2A2A]"
-            }`}
-          >
-            <NavIcon type={item.icon} />
-            <span>{item.label}</span>
-          </button>
+      <nav className="flex-1 px-3 overflow-y-auto space-y-5">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            <p className="px-2 mb-1.5 text-[10px] font-medium text-[#8E8E93] dark:text-[#666] tracking-[0.08em] uppercase">
+              {section.label}
+            </p>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = location.pathname === item.path
+                  || (item.path === "/dashboard/overview" && location.pathname === "/dashboard");
+                return (
+                  <DashboardButton
+                    key={item.label}
+                    onClick={() => navigate(item.path)}
+                    className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
+                      active
+                        ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
+                        : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </DashboardButton>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </nav>
 
-      <div className="px-4 pb-4 mt-auto border-t border-[#EFEFEF] dark:border-[#2A2A2A] pt-4">
-        <p className="text-[10px] font-medium text-[#888] dark:text-[#666] tracking-[0.08em] uppercase mb-3">Mode</p>
-        <div className="flex items-center bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-lg p-0.5">
-          <button
-            onClick={theme === "dark" ? toggle : undefined}
-            className={`flex-1 h-10 flex items-center justify-center gap-1.5 text-sm rounded-md font-medium transition-colors ${
-              theme === "light"
-                ? "bg-white dark:bg-[#333] shadow-sm text-[#1A1A1A] dark:text-[#E5E5E5]"
-                : "text-[#888] dark:text-[#666] hover:text-[#1A1A1A] dark:hover:text-[#E5E5E5]"
-            }`}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-            </svg>
-            Light
-          </button>
-          <button
-            onClick={theme === "light" ? toggle : undefined}
-            className={`flex-1 h-10 flex items-center justify-center gap-1.5 text-sm rounded-md font-medium transition-colors ${
-              theme === "dark"
-                ? "bg-white dark:bg-[#333] shadow-sm text-[#1A1A1A] dark:text-[#E5E5E5]"
-                : "text-[#888] dark:text-[#666] hover:text-[#1A1A1A] dark:hover:text-[#E5E5E5]"
-            }`}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-            Dark
-          </button>
-        </div>
+      <div className="px-3 pt-3 pb-5 border-t border-black/[0.04] dark:border-[#222]">
+        <UserCard onToggleSettings={onToggleSettings} />
       </div>
     </aside>
   );
