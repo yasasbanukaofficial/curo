@@ -13,6 +13,7 @@ import AuditLogs from "../pages/dashboard/AuditLogs";
 import Account from "../pages/dashboard/Account";
 import Settings from "../pages/dashboard/Settings";
 import Teams from "../pages/dashboard/Teams";
+import Versioning from "../pages/dashboard/Versioning";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
@@ -36,6 +37,7 @@ export default function AppRoutes() {
             <Route path="integrations" element={<Integrations />} />
             <Route path="audits" element={<AuditLogs />} />
             <Route path="teams" element={<Teams />} />
+            <Route path="versions" element={<Versioning />} />
             <Route path="account" element={<Account />} />
             <Route path="settings" element={<Settings />} />
           </Route>
