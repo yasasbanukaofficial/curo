@@ -34,6 +34,21 @@ export const getAllTeams = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const checkEmails = async (req: AuthRequest, res: Response) => {
+  const { emails } = req.body;
+
+  if (!emails || !Array.isArray(emails) || emails.length === 0) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide an array of emails" });
+  }
+
+  try {
+    const result = await teamService.checkEmails(emails);
+    return sendResponse(res, { success: true, status: 200, data: result });
+  } catch (error) {
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while checking emails. Please try again." });
+  }
+};
+
 export const createTeam = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
   const body = req.body;
@@ -275,6 +290,27 @@ export const revokeInvite = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, { success: false, status: 404, msg: "Invitation not found" });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while revoking the invitation. Please try again." });
+  }
+};
+
+export const acceptInviteFlow = async (req: AuthRequest, res: Response) => {
+  const { token } = req.params as { token: string };
+
+  if (!token) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide an invitation token" });
+  }
+
+  try {
+    const result = await teamService.acceptInviteFlow(token);
+    return sendResponse(res, { success: true, status: 200, data: result });
+  } catch (error: any) {
+    if (error.message === "INVITE_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Invitation not found or is invalid" });
+    }
+    if (error.message === "INVITE_EXPIRED") {
+      return sendResponse(res, { success: false, status: 410, msg: "This invitation has expired" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong. Please try again." });
   }
 };
 

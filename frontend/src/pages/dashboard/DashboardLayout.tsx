@@ -17,6 +17,8 @@ function DashboardInner() {
   const [layoutReady, setLayoutReady] = useState(false);
 
   useEffect(() => {
+    sessionStorage.removeItem("inviteToken");
+
     const isDesktop = window.innerWidth >= 1024;
     if (!isDesktop) {
       setLayoutReady(true);

@@ -4,10 +4,32 @@ import { ITeamMember, TeamRole } from "../types/teamMember";
 import { ITeamInvite } from "../types/teamInvite";
 import { UserModel } from "../models/user.model";
 import crypto from "crypto";
+import { sendTeamInviteEmail } from "../util/email";
 
 export const teamService = {
 
  
+  checkEmails: async (emailList: string[]): Promise<{ registered: string[]; unregistered: string[] }> => {
+    try {
+      const registered: string[] = [];
+      const unregistered: string[] = [];
+
+      for (const email of emailList) {
+        const user = await UserModel.findOne({ email: email.toLowerCase().trim() });
+        if (user) {
+          registered.push(email);
+        } else {
+          unregistered.push(email);
+        }
+      }
+
+      return { registered, unregistered };
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
+
   getTeamById: async (userId: string, teamId: string): Promise<ITeam | null> => {
     try {
       const membership = await TeamMemberModel.findOne({ teamId, userId, status: "active" });
@@ -34,8 +56,11 @@ export const teamService = {
     }
   },
 
-  createTeam: async (userId: string, data: Partial<ITeam>): Promise<boolean> => {
-    const { name, slug } = data;
+  createTeam: async (
+    userId: string,
+    data: Partial<ITeam> & { emails?: { email: string; role?: string }[] }
+  ): Promise<boolean> => {
+    const { name, slug, emails } = data;
     if (!name || !slug) {
       throw new Error("INVALID_PAYLOAD");
     }
@@ -50,6 +75,44 @@ export const teamService = {
         status: "active",
         joinedAt: new Date(),
       });
+
+      if (emails && emails.length > 0) {
+        const inviter = await UserModel.findById(userId).select("name");
+        const inviterName = inviter?.name || "Someone";
+
+        for (const entry of emails) {
+          const existingUser = await UserModel.findOne({ email: entry.email });
+
+          if (existingUser) {
+            const existingMember = await TeamMemberModel.findOne({
+              teamId: team._id,
+              userId: existingUser._id,
+            });
+            if (!existingMember) {
+              await TeamMemberModel.create({
+                teamId: team._id,
+                userId: existingUser._id,
+                role: (entry.role as TeamRole) || "developer",
+                status: "invited",
+              });
+            }
+          } else {
+            const token = crypto.randomBytes(32).toString("hex");
+            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+            await TeamInviteModel.create({
+              teamId: team._id,
+              email: entry.email,
+              role: (entry.role as TeamRole) || "developer",
+              token,
+              expiresAt,
+              invitedToSignup: true,
+            });
+
+            sendTeamInviteEmail(entry.email, name, inviterName, token, expiresAt);
+          }
+        }
+      }
 
       return true;
     } catch (dbError: any) {
@@ -274,8 +337,11 @@ export const teamService = {
       });
       if (!membership) throw new Error("TEAM_NOT_FOUND");
 
-      const existingMember = await TeamMemberModel.findOne({ teamId, userId });
-      if (existingMember) throw new Error("ALREADY_MEMBER");
+      const invitedUser = await UserModel.findOne({ email });
+      if (invitedUser) {
+        const existingMember = await TeamMemberModel.findOne({ teamId, userId: invitedUser._id });
+        if (existingMember) throw new Error("ALREADY_MEMBER");
+      }
 
       const existingInvite = await TeamInviteModel.findOne({ teamId, email });
       if (existingInvite) throw new Error("ALREADY_INVITED");
@@ -290,6 +356,13 @@ export const teamService = {
         token,
         expiresAt,
       });
+
+      const team = await TeamModel.findById(teamId);
+      const inviter = await UserModel.findById(userId).select("name");
+      const inviterName = inviter?.name || "Someone";
+      if (team) {
+        sendTeamInviteEmail(email, team.name, inviterName, token, expiresAt);
+      }
 
       return true;
     } catch (error) {
@@ -320,6 +393,39 @@ export const teamService = {
       if (!deleted) throw new Error("INVITE_NOT_FOUND");
 
       return true;
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw error;
+    }
+  },
+
+  acceptInviteFlow: async (token: string): Promise<{ redirect: string }> => {
+    try {
+      const invite = await TeamInviteModel.findOne({ token });
+      if (!invite) throw new Error("INVITE_NOT_FOUND");
+      if (invite.expiresAt < new Date()) throw new Error("INVITE_EXPIRED");
+
+      const user = await UserModel.findOne({ email: invite.email });
+
+      if (user) {
+        const existingMembership = await TeamMemberModel.findOne({
+          teamId: invite.teamId,
+          userId: user._id,
+        });
+        if (!existingMembership) {
+          await TeamMemberModel.create({
+            teamId: invite.teamId,
+            userId: user._id,
+            role: invite.role,
+            status: "active",
+            joinedAt: new Date(),
+          });
+        }
+        await TeamInviteModel.findByIdAndDelete(invite._id);
+        return { redirect: "/dashboard" };
+      }
+
+      return { redirect: `/register?invite=${token}` };
     } catch (error) {
       console.error("DB Error:", error);
       throw error;

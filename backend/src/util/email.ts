@@ -55,6 +55,54 @@ export async function sendVerificationEmail(
   }
 }
 
+export async function sendTeamInviteEmail(
+  to: string,
+  teamName: string,
+  inviterName: string,
+  token: string,
+  expiresAt: Date,
+) {
+  const resend = getResend();
+  if (!resend) return;
+
+  if (!FRONTEND_URL) {
+    console.warn("Missing FRONTEND_URL — team invite link will be broken in emails.");
+    return;
+  }
+
+  const frontend = FRONTEND_URL.replace(/\/+$/, "");
+  const link = `${frontend}/invite/accept/${token}`;
+
+  const expiresFormatted = expiresAt.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Curo <onboarding@resend.dev>",
+      to,
+      subject: `You're invited to join ${teamName} on Curo`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+          <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #191919;">You're invited!</h1>
+          <p style="font-size: 14px; color: #636363; margin-bottom: 24px;">${inviterName} has invited you to join <strong>${teamName}</strong> on Curo.</p>
+          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #191919; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Accept Invite</a>
+          <p style="font-size: 12px; color: #A3A3A3; text-align: center;">This invite expires on ${expiresFormatted}. If you don't have an account, you'll be asked to create one.</p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Resend error:", error);
+    }
+    return data;
+  } catch (err) {
+    console.error("Failed to send team invite email:", err);
+  }
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   token: string,

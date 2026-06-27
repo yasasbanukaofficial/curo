@@ -29,6 +29,12 @@ export const initiateGoogleAuth = (req: Request, res: Response) => {
   const isConnect = req.path.includes("connect");
   const state = isConnect ? `connect_${crypto.randomUUID()}` : crypto.randomUUID();
   setCookie(res, "oauth_state", state);
+
+  const inviteToken = req.query.inviteToken as string | undefined;
+  if (inviteToken) {
+    setCookie(res, "invite_token", inviteToken, { maxAge: 1000 * 60 * 10 });
+  }
+
   const authUri = oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: GOOGLE_SCOPES,
@@ -76,6 +82,12 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
+    const inviteToken = req.cookies?.invite_token;
+    if (inviteToken) {
+      res.clearCookie("invite_token", { path: "/" });
+      await authService.joinViaInvite(inviteToken, resp.email, resp.id);
+    }
+
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
     console.error(error);
@@ -89,6 +101,11 @@ export const initiateGithubAuth = (req: Request, res: Response) => {
   const isConnect = req.path.includes("connect");
   const state = isConnect ? `connect_${crypto.randomUUID()}` : crypto.randomUUID();
   setCookie(res, "github_oauth_state", state);
+
+  const inviteToken = req.query.inviteToken as string | undefined;
+  if (inviteToken) {
+    setCookie(res, "invite_token", inviteToken, { maxAge: 1000 * 60 * 10 });
+  }
 
   const url = "https://github.com/login/oauth/authorize";
   const params = new URLSearchParams([
@@ -136,6 +153,12 @@ export const handleGithubCallback = async (req: Request, res: Response) => {
     setCookie(res, "refreshtoken", resp.refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
+
+    const inviteToken = req.cookies?.invite_token;
+    if (inviteToken) {
+      res.clearCookie("invite_token", { path: "/" });
+      await authService.joinViaInvite(inviteToken, resp.email, resp.id);
+    }
 
     return redirect(res, `${FRONTEND_URL}/dashboard`);
   } catch (error) {
@@ -198,7 +221,7 @@ export const logoutUser = async (req: AuthRequest, res: Response) => {
 };
 
 export const verifyEmailOTP = async (req: AuthRequest, res: Response) => {
-  const result = await authService.verifyEmailOTP(req.userId, req.body.otp, req.body.token);
+  const result = await authService.verifyEmailOTP(req.userId, req.body.otp, req.body.token, req.body.inviteToken);
   if (result.success && result.data) {
     setCookie(res, "access_token", result.data.accessToken);
     setCookie(res, "refreshtoken", result.data.refreshToken, {

@@ -23,6 +23,7 @@ interface RegisterRequest {
 interface VerifyOtpRequest {
   otp: string;
   token?: string;
+  inviteToken?: string;
 }
 
 interface ForgotPasswordRequest {

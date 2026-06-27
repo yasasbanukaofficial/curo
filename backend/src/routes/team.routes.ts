@@ -3,6 +3,7 @@ import { authenticate, validate } from "../middlewares";
 import {
   getAllTeams,
   getTeamById,
+  checkEmails,
   createTeam,
   updateTeam,
   deleteTeam,
@@ -13,6 +14,7 @@ import {
   getTeamInvites,
   inviteMember,
   revokeInvite,
+  acceptInviteFlow,
   acceptInvite,
 } from "../controller";
 import {
@@ -27,6 +29,7 @@ const router = Router();
 
 router.get("/all", authenticate, getAllTeams);
 router.get("/get/:teamId", authenticate, getTeamById);
+router.post("/check-emails", authenticate, checkEmails);
 router.post("/create", authenticate, validate(createTeamSchema), createTeam);
 router.put("/update/:teamId", authenticate, validate(updateTeamSchema), updateTeam);
 router.delete("/delete/:teamId", authenticate, deleteTeam);
@@ -39,6 +42,7 @@ router.delete("/get/:teamId/members/:memberId", authenticate, removeTeamMember);
 router.get("/get/:teamId/invites", authenticate, getTeamInvites);
 router.post("/get/:teamId/invites", authenticate, validate(inviteMemberSchema), inviteMember);
 router.delete("/get/:teamId/invites/:inviteId", authenticate, revokeInvite);
+router.get("/invite/accept/:token", acceptInviteFlow);
 router.post("/invites/accept/:token", authenticate, acceptInvite);
 
 export default router;

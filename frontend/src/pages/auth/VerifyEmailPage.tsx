@@ -14,6 +14,7 @@ export default function VerifyEmailPage() {
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const inviteToken = sessionStorage.getItem("inviteToken");
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
   const toast = useToast();
 
@@ -66,7 +67,11 @@ export default function VerifyEmailPage() {
       return;
     }
     try {
-      const result = await verifyOtp({ otp: code, token: token || undefined }).unwrap();
+      const result = await verifyOtp({
+        otp: code,
+        token: token || undefined,
+        inviteToken: inviteToken || undefined,
+      }).unwrap();
       if (result.success && result.data) {
         dispatch(setAuthenticated({
           user: {
