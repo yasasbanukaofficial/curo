@@ -21,6 +21,10 @@ export const _projectSchema = new Schema<IProject>({
     type: Schema.Types.ObjectId,
     required: [true, "User ID is required"],
   },
+  teams: {
+    type: [{ type: Schema.Types.ObjectId, ref: "Team" }],
+    default: [],
+  },
 });
 
 export const ProjectModel = model<IProject>("Project", _projectSchema);

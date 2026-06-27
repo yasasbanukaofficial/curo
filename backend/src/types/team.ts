@@ -13,6 +13,7 @@ export interface ITeam {
   subscriptionStatus: SubscriptionStatus;
   enforce2fa: boolean;
   allowedDomains: string[];
+  projects?: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }

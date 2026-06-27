@@ -49,6 +49,10 @@ const _teamSchema = new Schema<ITeam>(
       type: [String],
       default: [],
     },
+    projects: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Project" }],
+      default: [],
+    },
   },
   { timestamps: true },
 );

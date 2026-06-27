@@ -71,16 +71,17 @@ export const createProject = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const isCreated = await projectService.createProject(
+    const created = await projectService.createProject(
       userId,
       body as IProject,
     );
 
-    if (isCreated) {
+    if (created) {
       return sendResponse(res, {
         success: true,
         status: 201,
         msg: "Project created successfully",
+        data: created,
       });
     }
   } catch (error: any) {
@@ -148,6 +149,64 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
       });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the project. Please try again." });
+  }
+};
+
+export const addTeamToProject = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params as { projectId: string };
+  const { teamId } = req.body as { teamId: string };
+  const userId = req.userId!;
+
+  if (!projectId || !teamId) {
+    return sendResponse(res, {
+      success: false,
+      status: 400,
+      msg: "Project ID and Team ID are required",
+    });
+  }
+
+  try {
+    await projectService.addTeamToProject(userId, projectId, teamId);
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      msg: "Team assigned to project successfully",
+    });
+  } catch (error: any) {
+    if (error.message === "PROJECT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Project not found or you don't have access to it" });
+    }
+    if (error.message === "TEAM_ALREADY_ASSIGNED") {
+      return sendResponse(res, { success: false, status: 400, msg: "Team is already assigned to this project" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong. Please try again." });
+  }
+};
+
+export const removeTeamFromProject = async (req: AuthRequest, res: Response) => {
+  const { projectId, teamId } = req.params as { projectId: string; teamId: string };
+  const userId = req.userId!;
+
+  if (!projectId || !teamId) {
+    return sendResponse(res, {
+      success: false,
+      status: 400,
+      msg: "Project ID and Team ID are required",
+    });
+  }
+
+  try {
+    await projectService.removeTeamFromProject(userId, projectId, teamId);
+    return sendResponse(res, {
+      success: true,
+      status: 200,
+      msg: "Team removed from project successfully",
+    });
+  } catch (error: any) {
+    if (error.message === "PROJECT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Project not found or you don't have access to it" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong. Please try again." });
   }
 };
 

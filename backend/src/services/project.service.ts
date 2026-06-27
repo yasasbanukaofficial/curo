@@ -1,4 +1,5 @@
 import { ProjectModel } from "../models/project.model";
+import { TeamModel } from "../models/team.model";
 import { IProject } from "../types/project";
 
 function isValidUrl(url: string): boolean {
@@ -24,6 +25,7 @@ export const projectService = {
         description: projectDoc.description,
         projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
+        teams: projectDoc.teams,
       };
     } catch (error) {
       console.error("DB Error:", error);
@@ -42,6 +44,7 @@ export const projectService = {
         description: projectDoc.description,
         projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
+        teams: projectDoc.teams,
       }));
       return allProjects;
     } catch (error) {
@@ -49,7 +52,7 @@ export const projectService = {
       throw new Error("DATABASE_ERROR");
     }
   },
-  createProject: async (userId: string, data: IProject): Promise<boolean> => {
+  createProject: async (userId: string, data: IProject): Promise<any> => {
     const { projectName, description, projectLink } = data;
     if (!projectName || !description) {
       throw new Error("INVALID_PAYLOAD");
@@ -60,14 +63,14 @@ export const projectService = {
     }
 
     try {
-      await ProjectModel.create({
+      const project = await ProjectModel.create({
         projectName,
         description,
         projectLink: projectLink || undefined,
         userId,
       });
 
-      return true;
+      return project.toObject();
     } catch (dbError: any) {
       if (dbError.code === 11000) {
         throw new Error("DUPLICATE_PROJECT");
@@ -115,11 +118,66 @@ export const projectService = {
     projectId: string,
   ): Promise<boolean> => {
     try {
-      const deleted = await ProjectModel.findByIdAndDelete({
-        _id: projectId,
-        userId,
-      });
+      const project = await ProjectModel.findOne({ _id: projectId, userId });
+      if (!project) throw new Error("PROJECT_NOT_FOUND");
+
+      await TeamModel.updateMany(
+        { _id: { $in: project.teams || [] } },
+        { $pull: { projects: project._id } },
+      );
+
+      const deleted = await ProjectModel.findByIdAndDelete(project._id);
       if (!deleted) throw new Error("PROJECT_NOT_FOUND");
+      return true;
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw error;
+    }
+  },
+  addTeamToProject: async (
+    userId: string,
+    projectId: string,
+    teamId: string,
+  ): Promise<boolean> => {
+    try {
+      const project = await ProjectModel.findOne({ _id: projectId, userId });
+      if (!project) throw new Error("PROJECT_NOT_FOUND");
+
+      if (project.teams?.some((id) => id.toString() === teamId)) {
+        throw new Error("TEAM_ALREADY_ASSIGNED");
+      }
+
+      await ProjectModel.findByIdAndUpdate(projectId, {
+        $push: { teams: teamId },
+      });
+
+      await TeamModel.findByIdAndUpdate(teamId, {
+        $push: { projects: projectId },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw error;
+    }
+  },
+  removeTeamFromProject: async (
+    userId: string,
+    projectId: string,
+    teamId: string,
+  ): Promise<boolean> => {
+    try {
+      const project = await ProjectModel.findOne({ _id: projectId, userId });
+      if (!project) throw new Error("PROJECT_NOT_FOUND");
+
+      await ProjectModel.findByIdAndUpdate(projectId, {
+        $pull: { teams: teamId },
+      });
+
+      await TeamModel.findByIdAndUpdate(teamId, {
+        $pull: { projects: projectId },
+      });
+
       return true;
     } catch (error) {
       console.error("DB Error:", error);
