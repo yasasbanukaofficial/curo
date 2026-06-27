@@ -7,29 +7,21 @@ import DashboardCard from "../../components/dashboard/DashboardCard";
 import Modal from "../../components/dashboard/Modal";
 import { ActionBadge, EnvBadge } from "../../components/dashboard/Badges";
 import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
-
-interface AuditLogEntry {
-  id: string;
-  userId: string;
-  action: string;
-  resource: string;
-  metadata: Record<string, string>;
-  target: string;
-  user: string;
-  role: string;
-  env: string;
-  time: string;
-  createdAt: string;
-}
+import { useGetAuditsQuery } from "../../features/audit/auditApi";
 
 const actionFilters = ["all", "CREATED", "UPDATED", "VIEWED", "DELETED"];
 
 export default function AuditLogs() {
+  const { data: audits = [], isLoading, isError } = useGetAuditsQuery();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null);
+  const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
-  const filtered: AuditLogEntry[] = [];
+  const filtered = audits.filter((l) => {
+    const q = search.toLowerCase();
+    return (l.target?.toLowerCase().includes(q) || l.user?.toLowerCase().includes(q))
+      && (filter === "all" || l.action === filter);
+  });
 
   function formatDate(iso: string): string {
     const d = new Date(iso);
@@ -41,6 +33,22 @@ export default function AuditLogs() {
       minute: "2-digit",
       second: "2-digit",
     });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#8E8E93]">Loading audit logs...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#FF3B30]">Something went wrong. Could not load audit logs.</p>
+      </div>
+    );
   }
 
   return (
@@ -78,13 +86,13 @@ export default function AuditLogs() {
           </thead>
           <tbody>
             {filtered.map((l) => (
-              <Tr key={l.id} onClick={() => setSelectedLog(l)}>
+              <Tr key={l._id} onClick={() => setSelectedLog(l)}>
                 <Td><ActionBadge label={l.action.toLowerCase()} /></Td>
                 <Td><span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{l.target}</span></Td>
                 <Td>
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-[9px] font-semibold text-[#8E8E93]">
-                      {l.user.charAt(0)}
+                      {l.user?.charAt(0) || "?"}
                     </div>
                     <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{l.user}</span>
                     <span className="text-[10px] text-[#8E8E93]">({l.role})</span>
@@ -100,7 +108,7 @@ export default function AuditLogs() {
 
       <div className="sm:hidden space-y-3">
         {filtered.map((l) => (
-          <DashboardCard key={l.id} hover className="cursor-pointer" onClick={() => setSelectedLog(l)}>
+          <DashboardCard key={l._id} hover className="cursor-pointer" onClick={() => setSelectedLog(l)}>
             <div className="flex items-start justify-between mb-3">
               <ActionBadge label={l.action.toLowerCase()} />
               <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{l.time}</span>
@@ -109,7 +117,7 @@ export default function AuditLogs() {
             <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-[9px] font-semibold text-[#8E8E93]">
-                  {l.user.charAt(0)}
+                  {l.user?.charAt(0) || "?"}
                 </div>
                 <span className="text-xs text-[#1D1D1F] dark:text-[#E5E5E5]">{l.user}</span>
                 <span className="text-[10px] text-[#8E8E93]">({l.role})</span>
@@ -178,12 +186,12 @@ export default function AuditLogs() {
             <div>
               <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-2">Metadata</p>
               <div className="bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl p-3.5">
-                {Object.keys(selectedLog.metadata).length > 0 ? (
+                {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 ? (
                   <div className="space-y-2">
                     {Object.entries(selectedLog.metadata).map(([key, value]) => (
                       <div key={key} className="flex items-center gap-3">
                         <span className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] min-w-[90px]">{key}</span>
-                        <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{value}</span>
+                        <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{value as string}</span>
                       </div>
                     ))}
                   </div>
