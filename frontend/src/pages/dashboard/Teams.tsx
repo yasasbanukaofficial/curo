@@ -30,81 +30,19 @@ import FilterTabs from "../../components/dashboard/FilterTabs";
 import SearchInput from "../../components/dashboard/SearchInput";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
+import {
+  useGetTeamsQuery,
+  useAddTeamMutation,
+  useUpdateTeamMutation,
+  useRemoveTeamMutation,
+} from "../../features/team/teamApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { setSelectedTeam, selectSelectedTeam } from "../../features/team/teamSlice";
 
 type TeamRole = "owner" | "admin" | "developer" | "viewer";
 type TeamPlan = "starter" | "team" | "enterprise";
 type MemberStatus = "active" | "invited" | "suspended";
 type DetailTab = "overview" | "settings" | "projects";
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: TeamRole;
-  status: MemberStatus;
-  joinedAt: string;
-}
-
-interface TeamInvite {
-  id: string;
-  email: string;
-  role: TeamRole;
-  expiresAt: string;
-}
-
-interface Team {
-  id: string;
-  name: string;
-  slug: string;
-  plan: TeamPlan;
-  avatarUrl?: string;
-  billingEmail?: string;
-  subscriptionStatus: string;
-  enforce2fa: boolean;
-  allowedDomains: string[];
-  memberCount: number;
-  members: TeamMember[];
-  invites: TeamInvite[];
-  projects: string[];
-  createdAt: string;
-}
-
-interface NewTeamMemberInvite {
-  email: string;
-  role: TeamRole;
-}
-
-const emailSchema = z.string().email("Invalid email address").trim().toLowerCase();
-
-const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-
-const createTeamSchema = z.object({
-  name: z.string().trim().min(1, "Team name is required").max(100, "Name must be at most 100 characters"),
-  slug: z.string().trim().min(1, "Slug is required").max(100, "Slug must be at most 100 characters"),
-  billingEmail: z.string().email("Invalid billing email").optional().or(z.literal("")),
-  allowedDomains: z
-    .string()
-    .optional()
-    .refine(
-      (val) => {
-        if (!val) return true;
-        const domains = val.split(",").map((d) => d.trim()).filter(Boolean);
-        if (domains.length === 0) return true;
-        return domains.every((d) => domainPattern.test(d));
-      },
-      { message: "One or more domains are invalid (e.g. example.com)" },
-    ),
-});
-
-const updateTeamSchema = z.object({
-  name: z.string().trim().min(1, "Team name is required").max(100, "Name must be at most 100 characters"),
-  slug: z.string().trim().min(1, "Slug is required").max(100, "Slug must be at most 100 characters"),
-  billingEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-});
-
-const inviteMemberSchema = z.object({
-  email: z.string().email("Invalid email address").trim().toLowerCase(),
-});
 
 const roleStyles: Record<TeamRole, string> = {
   owner: "bg-[#FF9F0A]/10 text-[#FF9F0A]",
@@ -131,7 +69,7 @@ function PlanBadge({ plan }: { plan: TeamPlan }) {
   );
 }
 
-function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => void; onDelete: () => void }) {
+function TeamCard({ team, onSelect, onDelete }: { team: { _id: string; name: string; slug: string; plan: TeamPlan; memberCount: number; projects: string[]; createdAt: string }; onSelect: () => void; onDelete: () => void }) {
   return (
     <DashboardCard hover padding="md" className="cursor-pointer" onClick={onSelect}>
       <div className="flex items-start justify-between mb-4">
@@ -151,7 +89,7 @@ function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => vo
           <Users className="w-3.5 h-3.5" />{team.memberCount} {team.memberCount === 1 ? "member" : "members"}
         </span>
         <span className="flex items-center gap-1.5 text-xs text-[#8E8E93] dark:text-[#666]">
-          <FolderKanban className="w-3.5 h-3.5" />{team.projects.length} projects
+          <FolderKanban className="w-3.5 h-3.5" />{(team.projects ?? []).length} projects
         </span>
       </div>
       <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
@@ -162,17 +100,57 @@ function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => vo
   );
 }
 
+const createTeamSchema = z.object({
+  name: z.string().trim().min(1, "Team name is required").max(100, "Name must be at most 100 characters"),
+  slug: z.string().trim().min(1, "Slug is required").max(100, "Slug must be at most 100 characters"),
+  billingEmail: z.string().email("Invalid billing email").optional().or(z.literal("")),
+  allowedDomains: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val) return true;
+        const domains = val.split(",").map((d) => d.trim()).filter(Boolean);
+        if (domains.length === 0) return true;
+        return domains.every((d) => /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(d));
+      },
+      { message: "One or more domains are invalid (e.g. example.com)" },
+    ),
+});
+
+const updateTeamSchema = z.object({
+  name: z.string().trim().min(1, "Team name is required").max(100, "Name must be at most 100 characters"),
+  slug: z.string().trim().min(1, "Slug is required").max(100, "Slug must be at most 100 characters"),
+  billingEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+});
+
+const inviteMemberSchema = z.object({
+  email: z.string().email("Invalid email address").trim().toLowerCase(),
+});
+
+const emailSchema = z.string().email("Invalid email address").trim().toLowerCase();
+
+const detailTabs = [
+  { label: "Overview", value: "overview" as DetailTab },
+  { label: "Projects", value: "projects" as DetailTab },
+  { label: "Settings", value: "settings" as DetailTab },
+];
+
 export default function Teams() {
+  const dispatch = useAppDispatch();
+  const selectedTeam = useAppSelector(selectSelectedTeam);
   const toast = useToast();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const { data: teams = [], isLoading, isError } = useGetTeamsQuery();
+  const [addTeam] = useAddTeamMutation();
+  const [updateTeam] = useUpdateTeamMutation();
+  const [removeTeam] = useRemoveTeamMutation();
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPlan, setCreatePlan] = useState<TeamPlan>("starter");
   const [createMemberEmail, setCreateMemberEmail] = useState("");
   const [createMemberRole, setCreateMemberRole] = useState<TeamRole>("developer");
   const [createMemberError, setCreateMemberError] = useState("");
-  const [createMembers, setCreateMembers] = useState<NewTeamMemberInvite[]>([]);
+  const [createMembers, setCreateMembers] = useState<{ email: string; role: TeamRole }[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteRole, setInviteRole] = useState<TeamRole>("developer");
   const [showDeleteTeamModal, setShowDeleteTeamModal] = useState(false);
@@ -185,45 +163,27 @@ export default function Teams() {
   const createFormik = useFormik({
     initialValues: { name: "", slug: "", billingEmail: "", allowedDomains: "" },
     validate: validateZod(createTeamSchema),
-    onSubmit: (values, { setSubmitting, resetForm }) => {
-      const newTeam: Team = {
-        id: `team_${Date.now()}`,
-        name: values.name,
-        slug: values.slug,
-        plan: createPlan,
-        billingEmail: values.billingEmail || undefined,
-        subscriptionStatus: "active",
-        enforce2fa: false,
-        allowedDomains: values.allowedDomains ? values.allowedDomains.split(",").map((d) => d.trim()).filter(Boolean) : [],
-        memberCount: 1 + createMembers.length,
-        createdAt: new Date().toISOString().split("T")[0],
-        projects: [],
-        members: [
-          { id: "m_owner", name: "", email: "", role: "owner", status: "active", joinedAt: "Just now" },
-          ...createMembers.map((m, i) => ({
-            id: `m_new_${i}`,
-            name: m.email.split("@")[0],
-            email: m.email,
-            role: m.role,
-            status: "invited" as MemberStatus,
-            joinedAt: "Just now",
-          })),
-        ],
-        invites: createMembers.map((m, i) => ({
-          id: `inv_new_${i}`,
-          email: m.email,
-          role: m.role,
-          expiresAt: "30 days",
-        })),
-      };
-      setTeams((prev) => [...prev, newTeam]);
-      setSubmitting(false);
-      setShowCreateModal(false);
-      resetForm();
-      setCreatePlan("starter");
-      setCreateMembers([]);
-      setCreateMemberEmail("");
-      setCreateMemberRole("developer");
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      try {
+        await addTeam({
+          name: values.name,
+          slug: values.slug,
+          billingEmail: values.billingEmail || undefined,
+          allowedDomains: values.allowedDomains ? values.allowedDomains.split(",").map((d) => d.trim()).filter(Boolean) : [],
+          plan: createPlan,
+        }).unwrap();
+        setSubmitting(false);
+        setShowCreateModal(false);
+        resetForm();
+        setCreatePlan("starter");
+        setCreateMembers([]);
+        setCreateMemberEmail("");
+        setCreateMemberRole("developer");
+        toast.success("Team created", `${values.name} has been created.`);
+      } catch (err: any) {
+        setSubmitting(false);
+        toast.error("Failed to create team", err?.data?.msg || "Something went wrong. Please try again.");
+      }
     },
   });
 
@@ -232,9 +192,9 @@ export default function Teams() {
     validate: validateZod(inviteMemberSchema),
     onSubmit: (values, { setSubmitting, resetForm }) => {
       if (!selectedTeam) return;
-      const newInvite: TeamInvite = { id: `inv_${Date.now()}`, email: values.email, role: inviteRole, expiresAt: "30 days" };
-      setTeams((prev) => prev.map((t) => t.id === selectedTeam.id ? { ...t, invites: [...t.invites, newInvite] } : t));
-      setSelectedTeam((prev) => prev ? { ...prev, invites: [...prev.invites, newInvite] } : null);
+      const newInvite = { id: `inv_${Date.now()}`, email: values.email, role: inviteRole, expiresAt: "30 days" };
+      const updated = { ...selectedTeam, invites: [...(selectedTeam.invites || []), newInvite] };
+      dispatch(setSelectedTeam(updated));
       setSubmitting(false);
       setShowInviteModal(false);
       resetForm();
@@ -245,19 +205,19 @@ export default function Teams() {
   const settingsFormik = useFormik({
     initialValues: { name: "", slug: "", billingEmail: "" },
     validate: validateZod(updateTeamSchema),
-    onSubmit: (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       if (!selectedTeam) return;
-      const updated: Team = {
-        ...selectedTeam,
-        name: values.name,
-        slug: values.slug,
-        billingEmail: values.billingEmail || undefined,
-        enforce2fa: enforce2fa,
-      };
-      setTeams((prev) => prev.map((t) => t.id === selectedTeam.id ? updated : t));
-      setSelectedTeam(updated);
-      setSubmitting(false);
-      toast.success("Settings saved", "Team settings have been updated successfully.");
+      try {
+        await updateTeam({
+          id: selectedTeam._id,
+          body: { name: values.name, slug: values.slug, billingEmail: values.billingEmail || undefined, enforce2fa },
+        }).unwrap();
+        setSubmitting(false);
+        toast.success("Settings saved", "Team settings have been updated successfully.");
+      } catch (err: any) {
+        setSubmitting(false);
+        toast.error("Failed to update team", err?.data?.msg || "Something went wrong. Please try again.");
+      }
     },
   });
 
@@ -268,13 +228,18 @@ export default function Teams() {
     setDetailTab("settings");
   }
 
-  function handleDeleteTeamConfirm() {
+  async function handleDeleteTeamConfirm() {
     if (!deleteTeamId) return;
-    setTeams((prev) => prev.filter((t) => t.id !== deleteTeamId));
-    setSelectedTeam(null);
-    setDeleteTeamId(null);
-    setShowDeleteTeamModal(false);
-    setDetailTab("overview");
+    try {
+      await removeTeam(deleteTeamId).unwrap();
+      dispatch(setSelectedTeam(null));
+      setDeleteTeamId(null);
+      setShowDeleteTeamModal(false);
+      setDetailTab("overview");
+      toast.success("Team deleted", "The team has been removed.");
+    } catch (err: any) {
+      toast.error("Failed to delete team", err?.data?.msg || "Something went wrong. Please try again.");
+    }
   }
 
   function handleRemoveMember(memberId: string) {
@@ -283,9 +248,8 @@ export default function Teams() {
 
   function confirmRemoveMember() {
     if (!selectedTeam || !confirmMemberRemove) return;
-    const updated = { ...selectedTeam, members: selectedTeam.members.filter((m) => m.id !== confirmMemberRemove), memberCount: selectedTeam.memberCount - 1 };
-    setTeams((prev) => prev.map((t) => t.id === selectedTeam.id ? updated : t));
-    setSelectedTeam(updated);
+    const updated = { ...selectedTeam, members: (selectedTeam.members ?? []).filter((m) => m._id !== confirmMemberRemove), memberCount: selectedTeam.memberCount - 1 };
+    dispatch(setSelectedTeam(updated));
     setConfirmMemberRemove(null);
     toast.success("Member removed", "Team member has been removed successfully.");
   }
@@ -296,41 +260,49 @@ export default function Teams() {
 
   function confirmRevokeInvite() {
     if (!selectedTeam || !confirmInviteRevoke) return;
-    const updated = { ...selectedTeam, invites: selectedTeam.invites.filter((i) => i.id !== confirmInviteRevoke) };
-    setTeams((prev) => prev.map((t) => t.id === selectedTeam.id ? updated : t));
-    setSelectedTeam(updated);
+    const updated = { ...selectedTeam, invites: (selectedTeam.invites ?? []).filter((i) => i._id !== confirmInviteRevoke) };
+    dispatch(setSelectedTeam(updated));
     setConfirmInviteRevoke(null);
     toast.success("Invite revoked", "The invitation has been revoked.");
   }
 
   function handleToggleProject(projectId: string) {
     if (!selectedTeam) return;
-    const hasProject = selectedTeam.projects.includes(projectId);
+    const hasProject = (selectedTeam.projects ?? []).includes(projectId);
     const updatedProjects = hasProject
-      ? selectedTeam.projects.filter((id) => id !== projectId)
-      : [...selectedTeam.projects, projectId];
+      ? (selectedTeam.projects ?? []).filter((id) => id !== projectId)
+      : [...(selectedTeam.projects ?? []), projectId];
     const updated = { ...selectedTeam, projects: updatedProjects };
-    setTeams((prev) => prev.map((t) => t.id === selectedTeam.id ? updated : t));
-    setSelectedTeam(updated);
+    dispatch(setSelectedTeam(updated));
   }
 
-  const detailTabs = [
-    { label: "Overview", value: "overview" as DetailTab },
-    { label: "Projects", value: "projects" as DetailTab },
-    { label: "Settings", value: "settings" as DetailTab },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#8E8E93]">Loading teams...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <p className="text-[#FF3B30]">Something went wrong. Could not load teams.</p>
+      </div>
+    );
+  }
 
   const teamDetail = selectedTeam ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { setSelectedTeam(null); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={() => { dispatch(setSelectedTeam(null)); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <ArrowLeft className="w-5 h-5" />
         </DashboardButton>
         <div className="flex-1">
           <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.name}</h1>
           <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{selectedTeam.slug} · {selectedTeam.plan} plan</p>
         </div>
-        <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam.id); setShowDeleteTeamModal(true); }} className="h-9 px-4 text-sm font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-[10px] hover:bg-[#FF3B30]/20">
+        <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="h-9 px-4 text-sm font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-[10px] hover:bg-[#FF3B30]/20">
           <Trash2 className="w-4 h-4" />Delete Team
         </DashboardButton>
       </div>
@@ -358,44 +330,44 @@ export default function Teams() {
                 </div>
                 <div className="mt-5 pt-5 border-t border-black/[0.04] dark:border-[#222]">
                   <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-2">Allowed Domains</p>
-                  {selectedTeam.allowedDomains.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">{selectedTeam.allowedDomains.map((d) => (<span key={d} className="text-[11px] font-medium text-[#007AFF] bg-[#007AFF]/10 px-2 py-0.5 rounded-md">{d}</span>))}</div>
+                  {(selectedTeam.allowedDomains ?? []).length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">{(selectedTeam.allowedDomains ?? []).map((d) => (<span key={d} className="text-[11px] font-medium text-[#007AFF] bg-[#007AFF]/10 px-2 py-0.5 rounded-md">{d}</span>))}</div>
                   ) : <p className="text-sm text-[#8E8E93] dark:text-[#666]">No domains restricted</p>}
                 </div>
               </DashboardCard>
 
               <DashboardCard>
                 <div className="flex items-center justify-between mb-5">
-                  <SectionHeader title="Members" description={`${selectedTeam.members.length} members in this team.`} />
+                  <SectionHeader title="Members" description={`${(selectedTeam.members ?? []).length} members in this team.`} />
                   <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
                     <UserPlus className="w-3.5 h-3.5" />Invite
                   </DashboardButton>
                 </div>
                 <div className="space-y-1">
-                  {selectedTeam.members.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                  {(selectedTeam.members ?? []).map((m: any) => (
+                    <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{m.name.charAt(0)}</div>
+                        <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{m.name?.charAt(0) || "?"}</div>
                         <div className="min-w-0"><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{m.name}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{m.email}</p></div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <RoleBadge role={m.role} />
                         <span className="text-[11px] text-[#8E8E93] dark:text-[#666] hidden sm:inline">{m.joinedAt}</span>
-                        {m.role !== "owner" && <DashboardButton onClick={() => handleRemoveMember(m.id)} className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"><X className="w-3.5 h-3.5" /></DashboardButton>}
+                        {m.role !== "owner" && <DashboardButton onClick={() => handleRemoveMember(m._id)} className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"><X className="w-3.5 h-3.5" /></DashboardButton>}
                       </div>
                     </div>
                   ))}
                 </div>
               </DashboardCard>
 
-              {selectedTeam.invites.length > 0 && (
+              {selectedTeam.invites && selectedTeam.invites.length > 0 && (
                 <DashboardCard>
                   <SectionHeader title="Pending Invites" description={`${selectedTeam.invites.length} pending invitation${selectedTeam.invites.length > 1 ? "s" : ""}.`} />
                   <div className="space-y-1">
-                    {selectedTeam.invites.map((inv) => (
-                      <div key={inv.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                    {selectedTeam.invites.map((inv: any) => (
+                      <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                         <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#8E8E93]" /><div><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{inv.email}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Expires {inv.expiresAt}</p></div></div>
-                        <div className="flex items-center gap-2"><RoleBadge role={inv.role} /><DashboardButton onClick={() => handleRevokeInvite(inv.id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton></div>
+                        <div className="flex items-center gap-2"><RoleBadge role={inv.role} /><DashboardButton onClick={() => handleRevokeInvite(inv._id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton></div>
                       </div>
                     ))}
                   </div>
@@ -415,7 +387,7 @@ export default function Teams() {
               <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
                 <SectionHeader title="Danger Zone" />
                 <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4"><AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Team</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Permanently delete this team and all its data.</p></div></div>
-                <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam.id); setShowDeleteTeamModal(true); }} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Team</DashboardButton>
+                <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Team</DashboardButton>
               </DashboardCard>
             </div>
           </div>
@@ -441,7 +413,7 @@ export default function Teams() {
                   <div>
                     <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Allowed Domains</label>
                     <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mb-2">Domains comma separated (e.g. acme.com, example.com)</p>
-                    <FormInput value={selectedTeam.allowedDomains.join(", ")} onChange={() => {}} placeholder="acme.com, example.com" />
+                    <FormInput value={(selectedTeam.allowedDomains ?? []).join(", ")} onChange={() => {}} placeholder="acme.com, example.com" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
@@ -449,7 +421,6 @@ export default function Teams() {
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
-
                 </div>
               </form>
             </DashboardCard>
@@ -460,7 +431,7 @@ export default function Teams() {
           <DashboardCard>
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
-                <SectionHeader title="Projects" description={`${selectedTeam.projects.length} projects assigned to this team.`} />
+                <SectionHeader title="Projects" description={`${(selectedTeam.projects ?? []).length} projects assigned to this team.`} />
               </div>
               <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
             </div>
@@ -501,11 +472,20 @@ export default function Teams() {
             </div>
             <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"><Plus className="w-4 h-4" />Create Team</DashboardButton>
           </div>
+          {teams.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Users className="w-12 h-12 text-[#8E8E93] mb-4" />
+              <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No teams yet</h3>
+              <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">Create a team to collaborate with others.</p>
+              <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"><Plus className="w-4 h-4" />Create Team</DashboardButton>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {teams.map((team) => (
-              <TeamCard key={team.id} team={team} onSelect={() => { setSelectedTeam(team); setDetailTab("overview"); settingsFormik.resetForm(); }} onDelete={() => { setDeleteTeamId(team.id); setShowDeleteTeamModal(true); }} />
+              <TeamCard key={team._id} team={team} onSelect={() => { dispatch(setSelectedTeam(team)); setDetailTab("overview"); settingsFormik.resetForm(); }} onDelete={() => { setDeleteTeamId(team._id); setShowDeleteTeamModal(true); }} />
             ))}
           </div>
+          )}
         </>
       )}
 
