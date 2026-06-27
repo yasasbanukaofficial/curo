@@ -11,7 +11,6 @@ import {
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
 import { hash, encrypt } from "../util";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../util/email";
-import { TeamMemberModel, TeamInviteModel } from "../models";
 
 export const authService = {
   createUser: async (user: IUser) => {
@@ -263,6 +262,8 @@ export const authService = {
         googleId: user.googleId,
         githubId: user.githubId,
         emailVerified: user.emailVerified,
+        onboardingComplete: user.onboardingComplete,
+        onboardingSkipped: user.onboardingSkipped,
         createdAt: user.createdAt,
       },
     };
@@ -277,7 +278,7 @@ export const authService = {
     return { success: true, status: 200, msg: "Logged out successfully" };
   },
 
-  verifyEmailOTP: async (userId: string | undefined, otp: string, token?: string, inviteToken?: string) => {
+  verifyEmailOTP: async (userId: string | undefined, otp: string, token?: string) => {
     let user;
     if (userId) {
       user = await UserModel.findById(userId);
@@ -316,10 +317,6 @@ export const authService = {
       $push: { refreshTokens: refreshToken },
       $unset: { emailVerificationOTP: "", emailVerificationToken: "", emailVerificationExpires: "" },
     });
-
-    if (inviteToken) {
-      await authService.joinViaInvite(inviteToken, user.email, user._id.toString());
-    }
 
     return {
       success: true,
@@ -522,18 +519,12 @@ export const authService = {
     return { success: true, status: 200, msg: "Password changed successfully" };
   },
 
-  joinViaInvite: async (inviteToken: string, email: string, userId: string) => {
-    const invite = await TeamInviteModel.findOne({ token: inviteToken });
-    if (invite && invite.email === email && invite.expiresAt > new Date()) {
-      await TeamMemberModel.create({
-        teamId: invite.teamId,
-        userId,
-        role: invite.role,
-        status: "active",
-        joinedAt: new Date(),
-      });
-      await TeamInviteModel.findByIdAndDelete(invite._id);
-    }
+  markOnboardingComplete: async (userId: string, skipped?: boolean) => {
+    const update = skipped
+      ? { onboardingSkipped: true }
+      : { onboardingComplete: true };
+    await UserModel.findByIdAndUpdate(userId, update);
+    return { success: true, status: 200, msg: "Onboarding completed" };
   },
 };
 

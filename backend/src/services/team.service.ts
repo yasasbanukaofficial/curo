@@ -399,6 +399,24 @@ export const teamService = {
     }
   },
 
+  getInviteDetailsByToken: async (token: string): Promise<{ teamName: string; teamAvatar?: string; memberCount: number; role: string }> => {
+    const invite = await TeamInviteModel.findOne({ token });
+    if (!invite) throw new Error("INVITE_NOT_FOUND");
+    if (invite.expiresAt < new Date()) throw new Error("INVITE_EXPIRED");
+
+    const team = await TeamModel.findById(invite.teamId);
+    if (!team) throw new Error("TEAM_NOT_FOUND");
+
+    const memberCount = await TeamMemberModel.countDocuments({ teamId: invite.teamId });
+
+    return {
+      teamName: team.name,
+      teamAvatar: team.avatarUrl,
+      memberCount,
+      role: invite.role,
+    };
+  },
+
   acceptInviteFlow: async (token: string): Promise<{ redirect: string }> => {
     try {
       const invite = await TeamInviteModel.findOne({ token });

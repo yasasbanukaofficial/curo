@@ -16,6 +16,8 @@ import {
   revokeInvite,
   acceptInviteFlow,
   acceptInvite,
+  getInviteDetails,
+  acceptInviteExplicit,
 } from "../controller";
 import {
   createTeamSchema,
@@ -44,5 +46,7 @@ router.post("/get/:teamId/invites", authenticate, validate(inviteMemberSchema), 
 router.delete("/get/:teamId/invites/:inviteId", authenticate, revokeInvite);
 router.get("/invite/accept/:token", acceptInviteFlow);
 router.post("/invites/accept/:token", authenticate, acceptInvite);
+router.get("/invite/:token", getInviteDetails);
+router.post("/invite/accept", authenticate, acceptInviteExplicit);
 
 export default router;
