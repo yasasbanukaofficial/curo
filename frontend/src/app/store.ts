@@ -10,6 +10,9 @@ import { secretApi } from "../features/secret/secretApi";
 import { projectApi } from "../features/project/projectApi";
 import { environmentApi } from "../features/environment/environmentApi";
 import { authApi } from "../features/auth/authApi";
+import { teamApi } from "../features/team/teamApi";
+import { auditApi } from "../features/audit/auditApi";
+import { versionApi } from "../features/version/versionApi";
 
 const store = configureStore({
   reducer: {
@@ -24,6 +27,9 @@ const store = configureStore({
     [projectApi.reducerPath]: projectApi.reducer,
     [environmentApi.reducerPath]: environmentApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
+    [teamApi.reducerPath]: teamApi.reducer,
+    [auditApi.reducerPath]: auditApi.reducer,
+    [versionApi.reducerPath]: versionApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -31,6 +37,9 @@ const store = configureStore({
       projectApi.middleware,
       environmentApi.middleware,
       authApi.middleware,
+      teamApi.middleware,
+      auditApi.middleware,
+      versionApi.middleware,
     ),
 });
 

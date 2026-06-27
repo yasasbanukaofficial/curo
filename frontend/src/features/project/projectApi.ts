@@ -1,12 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../api/baseQuery";
 import type { Project } from "../../types/project";
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 export const projectApi = createApi({
   reducerPath: "projectApi",
-  baseQuery: fetchBaseQuery({ baseUrl: API_URL, credentials: "include" }),
-  tagTypes: ["Project"],
+  baseQuery: baseQueryWithReauth,
+  tagTypes: ["Project", "Team"],
   endpoints: (builder) => ({
     getProjects: builder.query<Project[], void>({
       query: () => "/projects/all",
@@ -19,6 +18,7 @@ export const projectApi = createApi({
         method: "POST",
         body,
       }),
+      transformResponse: (response: { data: Project }) => response.data,
       invalidatesTags: ["Project"],
     }),
     updateProject: builder.mutation<Project, { id: string; body: Partial<Project> }>({
@@ -36,6 +36,21 @@ export const projectApi = createApi({
       }),
       invalidatesTags: ["Project"],
     }),
+    addTeamToProject: builder.mutation<void, { projectId: string; teamId: string }>({
+      query: ({ projectId, teamId }) => ({
+        url: `/projects/${projectId}/teams`,
+        method: "POST",
+        body: { teamId },
+      }),
+      invalidatesTags: ["Project", "Team"],
+    }),
+    removeTeamFromProject: builder.mutation<void, { projectId: string; teamId: string }>({
+      query: ({ projectId, teamId }) => ({
+        url: `/projects/${projectId}/teams/${teamId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Project", "Team"],
+    }),
   }),
 });
 
@@ -44,4 +59,6 @@ export const {
   useAddProjectMutation,
   useUpdateProjectMutation,
   useRemoveProjectMutation,
+  useAddTeamToProjectMutation,
+  useRemoveTeamFromProjectMutation,
 } = projectApi;

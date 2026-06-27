@@ -6,6 +6,7 @@ import {
   Plus,
   KeyRound,
   Users,
+  Layers3,
   ArrowLeft,
   Settings,
   Save,
@@ -269,6 +270,16 @@ export default function Environments() {
         </DashboardButton>
       </div>
 
+      {environments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <Layers3 className="w-12 h-12 text-[#8E8E93] mb-4" />
+          <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No environments yet</h3>
+          <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">Create an environment to organize your secrets.</p>
+          <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+            <Plus className="w-4 h-4" />Add Environment
+          </DashboardButton>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {environments.map((env) => (
           <DashboardCard key={env._id} hover padding="lg" className="cursor-pointer" onClick={() => { dispatch(setSelectedEnvironment(env)); settingsFormik.resetForm(); }}>
@@ -307,8 +318,9 @@ export default function Environments() {
               </DashboardButton>
             </div>
           </DashboardCard>
-        ))}
+          ))}
       </div>
+      )}
 
       <Modal
         open={showCreateModal}

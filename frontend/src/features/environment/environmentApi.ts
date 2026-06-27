@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../../api/baseQuery";
 import type { Environment } from "../../types/environment";
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 export const environmentApi = createApi({
   reducerPath: "environmentApi",
-  baseQuery: fetchBaseQuery({ baseUrl: API_URL, credentials: "include" }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Environment"],
   endpoints: (builder) => ({
     getEnvironments: builder.query<Environment[], void>({

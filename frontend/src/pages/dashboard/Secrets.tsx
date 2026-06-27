@@ -21,6 +21,8 @@ import {
   useUpdateSecretMutation,
   useRemoveSecretMutation,
 } from "../../features/secret/secretApi";
+import { useGetProjectsQuery } from "../../features/project/projectApi";
+import { useGetEnvironmentsQuery } from "../../features/environment/environmentApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedSecret, selectSelectedSecret } from "../../features/secret/secretSlice";
 
@@ -48,6 +50,8 @@ export default function Secrets() {
   const toast = useToast();
   const location = useLocation();
   const { data: secrets = [], isLoading, isError } = useGetSecretsQuery();
+  const { data: projects = [] } = useGetProjectsQuery();
+  const { data: environments = [] } = useGetEnvironmentsQuery();
   const [addSecret] = useAddSecretMutation();
   const [updateSecret] = useUpdateSecretMutation();
   const [removeSecret] = useRemoveSecretMutation();
@@ -85,6 +89,15 @@ export default function Secrets() {
       setDropdownTarget({ id: secretId, anchor: btn.getBoundingClientRect() });
     }
   }
+
+  const projectOptions: { label: string; value: string }[] = projects.map((p) => ({
+    label: p.projectName,
+    value: p._id,
+  }));
+
+  const environmentOptions: { label: string; value: string }[] = environments
+    .filter((e) => e.projectId === (createFormik.values.projectId || editFormik.values.projectId))
+    .map((e) => ({ label: e.name, value: e._id }));
 
   const filtered = secrets.filter((s) => {
     const q = search.toLowerCase();
@@ -193,6 +206,17 @@ export default function Secrets() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search secrets..." />
       </div>
 
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <KeyRound className="w-12 h-12 text-[#8E8E93] mb-4" />
+          <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No secrets yet</h3>
+          <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">Create your first secret to get started.</p>
+          <DashboardButton onClick={() => { setShowCreateModal(true); createFormik.resetForm(); }} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+            <Plus className="w-4 h-4" />Add Secret
+          </DashboardButton>
+        </div>
+      ) : (
+      <>
       <div className="hidden sm:block">
         <DashboardTable>
           <thead>
@@ -270,6 +294,8 @@ export default function Secrets() {
             </DashboardCard>
           ))}
       </div>
+      </>
+      )}
 
       {dropdownTarget && (() => {
         const secret = secrets.find((s) => s._id === dropdownTarget.id);
@@ -345,8 +371,8 @@ export default function Secrets() {
               label="Project"
               name="projectId"
               value={createFormik.values.projectId}
-              onChange={(v) => createFormik.setFieldValue("projectId", v)}
-              options={[]}
+              onChange={(v) => { createFormik.setFieldValue("projectId", v); createFormik.setFieldValue("environmentId", ""); }}
+              options={projectOptions}
               placeholder="Select a project"
               error={createFormik.touched.projectId ? createFormik.errors.projectId : undefined}
               touched={!!createFormik.touched.projectId}
@@ -357,7 +383,7 @@ export default function Secrets() {
               name="environmentId"
               value={createFormik.values.environmentId}
               onChange={(v) => createFormik.setFieldValue("environmentId", v)}
-              options={[]}
+              options={environmentOptions}
               placeholder="Select an environment (optional)"
               error={createFormik.touched.environmentId ? createFormik.errors.environmentId : undefined}
               touched={!!createFormik.touched.environmentId}
@@ -410,8 +436,8 @@ export default function Secrets() {
               label="Project"
               name="projectId"
               value={editFormik.values.projectId}
-              onChange={(v) => editFormik.setFieldValue("projectId", v)}
-              options={[]}
+              onChange={(v) => { editFormik.setFieldValue("projectId", v); editFormik.setFieldValue("environmentId", ""); }}
+              options={projectOptions}
               placeholder="Select a project"
               error={editFormik.touched.projectId ? editFormik.errors.projectId : undefined}
               touched={!!editFormik.touched.projectId}
@@ -422,7 +448,7 @@ export default function Secrets() {
               name="environmentId"
               value={editFormik.values.environmentId}
               onChange={(v) => editFormik.setFieldValue("environmentId", v)}
-              options={[]}
+              options={environmentOptions}
               placeholder="Select an environment (optional)"
               error={editFormik.touched.environmentId ? editFormik.errors.environmentId : undefined}
               touched={!!editFormik.touched.environmentId}

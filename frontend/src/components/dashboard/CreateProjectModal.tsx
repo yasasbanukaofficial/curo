@@ -1,21 +1,24 @@
 import { useFormik } from "formik";
 import { z } from "zod";
-import { FolderKanban, HelpCircle } from "lucide-react";
+import { FolderKanban, Users, HelpCircle } from "lucide-react";
 import Modal from "./Modal";
 import FormField from "./FormField";
 import FormInput from "./FormInput";
+import FormSelect from "./FormSelect";
 import FormTextarea from "./FormTextarea";
 import { validateZod } from "../../types/settings";
 
 interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (values: { projectName: string; description: string; projectLink?: string }) => Promise<void>;
+  onSubmit?: (values: { projectName: string; description: string; team?: string; projectLink?: string }) => Promise<void>;
+  teams?: { id: string; name: string }[];
 }
 
 const createProjectSchema = z.object({
   projectName: z.string().trim().min(2, "Project name must be at least 2 characters").max(100, "Project name is too long"),
   description: z.string().trim().min(2, "Description must be at least 2 characters").max(500, "Description is too long"),
+  team: z.string().optional(),
   projectLink: z
     .string()
     .url("Must be a valid URL")
@@ -23,9 +26,9 @@ const createProjectSchema = z.object({
     .or(z.literal("")),
 });
 
-export default function CreateProjectModal({ open, onClose, onSubmit }: CreateProjectModalProps) {
+export default function CreateProjectModal({ open, onClose, onSubmit, teams = [] }: CreateProjectModalProps) {
   const formik = useFormik({
-    initialValues: { projectName: "", description: "", projectLink: "" },
+    initialValues: { projectName: "", description: "", team: "", projectLink: "" },
     validate: validateZod(createProjectSchema),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       if (onSubmit) {
@@ -70,6 +73,17 @@ export default function CreateProjectModal({ open, onClose, onSubmit }: CreatePr
             error={formik.touched.projectName ? formik.errors.projectName : undefined}
             touched={!!formik.touched.projectName}
             required
+          />
+          <FormSelect
+            label="Team"
+            name="team"
+            value={formik.values.team}
+            onChange={(v) => formik.setFieldValue("team", v)}
+            options={teams.map((t) => ({ label: t.name, value: t.id }))}
+            placeholder="Select a team (optional)"
+            icon={<Users className="w-4 h-4 text-[#8E8E93]" />}
+            error={formik.touched.team ? formik.errors.team : undefined}
+            touched={!!formik.touched.team}
           />
         </div>
 

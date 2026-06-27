@@ -13,6 +13,7 @@ export interface Project {
   environmentCount: number;
   teamCount: number;
   memberCount: number;
+  teams: string[];
   createdAt: string;
   updatedAt: string;
 }

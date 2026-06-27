@@ -28,11 +28,15 @@ import AlertModal from "../../components/dashboard/AlertModal";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
 import type { Project } from "../../types/project";
+import { useGetTeamsQuery } from "../../features/team/teamApi";
+import type { Team } from "../../types/team";
 import {
   useGetProjectsQuery,
   useAddProjectMutation,
   useUpdateProjectMutation,
   useRemoveProjectMutation,
+  useAddTeamToProjectMutation,
+  useRemoveTeamFromProjectMutation,
 } from "../../features/project/projectApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedProject, selectSelectedProject } from "../../features/project/projectSlice";
@@ -57,6 +61,9 @@ export default function Projects() {
   const [addProject] = useAddProjectMutation();
   const [updateProject] = useUpdateProjectMutation();
   const [removeProject] = useRemoveProjectMutation();
+  const [addTeamToProject] = useAddTeamToProjectMutation();
+  const [removeTeamFromProject] = useRemoveTeamFromProjectMutation();
+  const { data: allTeams = [] } = useGetTeamsQuery();
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
@@ -111,9 +118,12 @@ export default function Projects() {
     }
   }
 
-  async function handleCreateProject(values: { projectName: string; description: string; projectLink?: string }) {
+  async function handleCreateProject(values: { projectName: string; description: string; team?: string; projectLink?: string }) {
     try {
-      await addProject(values).unwrap();
+      const result = await addProject(values).unwrap();
+      if (values.team && result?._id) {
+        await addTeamToProject({ projectId: result._id, teamId: values.team }).unwrap();
+      }
       toast.success("Project created", `${values.projectName} has been created.`);
     } catch (err: any) {
       toast.error("Failed to create project", err?.data?.msg || "Something went wrong. Please try again.");
@@ -287,9 +297,57 @@ export default function Projects() {
 
         {detailTab === "teams" && (
           <DashboardCard>
-            <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-5">Assigned Teams</h3>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Assigned Teams</h3>
+                <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">{(selectedProject.teams ?? []).length} teams assigned to this project.</p>
+              </div>
+            </div>
             <div className="space-y-1">
-              {[]}
+              {allTeams.length === 0 ? (
+                <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No teams available. Create a team first.</p>
+              ) : (
+                allTeams.map((team) => {
+                  const isAssigned = (selectedProject.teams ?? []).includes(team._id);
+                  return (
+                    <div key={team._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{team.name}</p>
+                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{team.slug}</p>
+                        </div>
+                      </div>
+                      <DashboardButton
+                        onClick={async () => {
+                          if (isAssigned) {
+                            await removeTeamFromProject({ projectId: selectedProject._id, teamId: team._id }).unwrap();
+                            dispatch(setSelectedProject({
+                              ...selectedProject,
+                              teams: (selectedProject.teams ?? []).filter((id) => id !== team._id),
+                            }));
+                          } else {
+                            await addTeamToProject({ projectId: selectedProject._id, teamId: team._id }).unwrap();
+                            dispatch(setSelectedProject({
+                              ...selectedProject,
+                              teams: [...(selectedProject.teams ?? []), team._id],
+                            }));
+                          }
+                        }}
+                        className={`h-7 px-3 text-xs font-medium rounded-[8px] ${
+                          isAssigned
+                            ? "text-[#FF3B30] bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20"
+                            : "text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                        }`}
+                      >
+                        {isAssigned ? "Remove" : "Assign"}
+                      </DashboardButton>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </DashboardCard>
         )}
@@ -390,6 +448,16 @@ export default function Projects() {
             <SearchInput value={search} onChange={setSearch} placeholder="Search projects..." />
           </div>
 
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <FolderKanban className="w-12 h-12 text-[#8E8E93] mb-4" />
+              <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No projects yet</h3>
+              <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">Create your first project to get started.</p>
+              <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+                <Plus className="w-4 h-4" />Add Project
+              </DashboardButton>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((p) => (
               <DashboardCard key={p._id} hover padding="md" className="cursor-pointer" onClick={() => { dispatch(setSelectedProject(p)); setDetailTab("overview"); }}>
@@ -438,6 +506,7 @@ export default function Projects() {
               </DashboardCard>
             ))}
           </div>
+          )}
         </>
       )}
 
@@ -445,6 +514,7 @@ export default function Projects() {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateProject}
+        teams={allTeams.map((t) => ({ id: t._id, name: t.name }))}
       />
     </div>
   );

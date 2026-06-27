@@ -1,5 +1,5 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { axiosBaseQuery } from "../../api/axiosBaseQuery";
+import { baseQueryWithReauth } from "../../api/baseQuery";
 import type { User } from "../../types/user";
 
 interface AuthResponse {
@@ -41,7 +41,7 @@ interface ChangePasswordRequest {
 
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: axiosBaseQuery(),
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     verifySession: builder.query<{ data: User }, void>({
       query: () => ({ url: "/auth/me", method: "GET" }),
@@ -73,6 +73,9 @@ export const authApi = createApi({
     disconnectOAuth: builder.mutation<AuthResponse, { provider: string }>({
       query: (body) => ({ url: "/auth/disconnect-oauth", method: "POST", body }),
     }),
+    refreshToken: builder.mutation<AuthResponse, void>({
+      query: () => ({ url: "/auth/refresh", method: "POST" }),
+    }),
   }),
 });
 
@@ -87,4 +90,5 @@ export const {
   useChangePasswordMutation,
   useLogoutMutation,
   useDisconnectOAuthMutation,
+  useRefreshTokenMutation,
 } = authApi;
