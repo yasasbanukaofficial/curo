@@ -147,8 +147,21 @@ export const handleGithubCallback = async (req: Request, res: Response) => {
 };
 
 export const refreshToken = async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
-  const result = await authService.refreshToken(refreshToken);
+  const token = req.body.refreshToken || req.cookies?.refreshtoken;
+  if (!token) {
+    return sendResponse(res, {
+      success: false,
+      status: 401,
+      msg: "Your session has expired. Please log in again.",
+    });
+  }
+  const result = await authService.refreshToken(token);
+  if (result.success && result.data) {
+    setCookie(res, "access_token", result.data.accessToken);
+    setCookie(res, "refreshtoken", result.data.refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+  }
   return sendResponse(res, result);
 };
 

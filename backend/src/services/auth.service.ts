@@ -204,40 +204,44 @@ export const authService = {
   },
 
   refreshToken: async (refreshToken: string) => {
-    const decoded = verifyToken(refreshToken);
+    try {
+      const decoded = verifyToken(refreshToken);
 
-    const user = await UserModel.findById(decoded.id);
-    if (!user) {
-      return { success: false, status: 404, msg: "Account not found. Please log in again." };
-    }
+      const user = await UserModel.findById(decoded.id);
+      if (!user) {
+        return { success: false, status: 404, msg: "Account not found. Please log in again." };
+      }
 
-    const tokenExists = user.refreshTokens.includes(refreshToken);
-    if (!tokenExists) {
+      const tokenExists = user.refreshTokens.includes(refreshToken);
+      if (!tokenExists) {
+        return { success: false, status: 401, msg: "Your session has expired. Please log in again." };
+      }
+
+      const newAccessToken = tokenGen.genAccessToken(user);
+      const newRefreshToken = tokenGen.genRefreshToken(user);
+
+      await UserModel.findByIdAndUpdate(user._id, {
+        $pull: { refreshTokens: refreshToken },
+      }).then(() =>
+        UserModel.findByIdAndUpdate(user._id, {
+          $push: { refreshTokens: newRefreshToken },
+        }),
+      );
+
+      return {
+        success: true,
+        status: 200,
+        msg: "Tokens refreshed successfully",
+        data: {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+          userId: user._id.toString(),
+          userEmail: user.email,
+        },
+      };
+    } catch (error) {
       return { success: false, status: 401, msg: "Your session has expired. Please log in again." };
     }
-
-    const newAccessToken = tokenGen.genAccessToken(user);
-    const newRefreshToken = tokenGen.genRefreshToken(user);
-
-    await UserModel.findByIdAndUpdate(user._id, {
-      $pull: { refreshTokens: refreshToken },
-    }).then(() =>
-      UserModel.findByIdAndUpdate(user._id, {
-        $push: { refreshTokens: newRefreshToken },
-      }),
-    );
-
-    return {
-      success: true,
-      status: 200,
-      msg: "Tokens refreshed successfully",
-      data: {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-        userId: user._id.toString(),
-        userEmail: user.email,
-      },
-    };
   },
 
   getCurrentUser: async (userId: string) => {
