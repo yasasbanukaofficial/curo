@@ -10,7 +10,10 @@ export const projectApi = createApi({
     getProjects: builder.query<Project[], void>({
       query: () => "/projects/all",
       transformResponse: (response: { data: Project[] }) => response.data,
-      providesTags: ["Project"],
+      providesTags: (result) => [
+        { type: "Project", id: "LIST" },
+        ...(result ?? []).map((p) => ({ type: "Project" as const, id: p._id })),
+      ],
     }),
     addProject: builder.mutation<Project, Partial<Project>>({
       query: (body) => ({
@@ -19,7 +22,7 @@ export const projectApi = createApi({
         body,
       }),
       transformResponse: (response: { data: Project }) => response.data,
-      invalidatesTags: ["Project"],
+      invalidatesTags: [{ type: "Project", id: "LIST" }, { type: "Team", id: "LIST" }],
     }),
     updateProject: builder.mutation<Project, { id: string; body: Partial<Project> }>({
       query: ({ id, body }) => ({
@@ -27,14 +30,14 @@ export const projectApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Project"],
+      invalidatesTags: (result, error, arg) => [{ type: "Project", id: arg.id }],
     }),
     removeProject: builder.mutation<void, string>({
       query: (id) => ({
         url: `/projects/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Project"],
+      invalidatesTags: [{ type: "Project", id: "LIST" }, { type: "Team", id: "LIST" }],
     }),
     addTeamToProject: builder.mutation<void, { projectId: string; teamId: string }>({
       query: ({ projectId, teamId }) => ({
@@ -42,14 +45,20 @@ export const projectApi = createApi({
         method: "POST",
         body: { teamId },
       }),
-      invalidatesTags: ["Project", "Team"],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Project", id: arg.projectId },
+        { type: "Team", id: "LIST" },
+      ],
     }),
     removeTeamFromProject: builder.mutation<void, { projectId: string; teamId: string }>({
       query: ({ projectId, teamId }) => ({
         url: `/projects/${projectId}/teams/${teamId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Project", "Team"],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Project", id: arg.projectId },
+        { type: "Team", id: "LIST" },
+      ],
     }),
   }),
 });

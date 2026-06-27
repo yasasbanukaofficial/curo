@@ -30,6 +30,8 @@ import { validateZod } from "../../types/settings";
 import type { Project } from "../../types/project";
 import { useGetTeamsQuery } from "../../features/team/teamApi";
 import type { Team } from "../../types/team";
+import { useGetSecretsQuery } from "../../features/secret/secretApi";
+import { useGetEnvironmentsQuery } from "../../features/environment/environmentApi";
 import {
   useGetProjectsQuery,
   useAddProjectMutation,
@@ -64,6 +66,8 @@ export default function Projects() {
   const [addTeamToProject] = useAddTeamToProjectMutation();
   const [removeTeamFromProject] = useRemoveTeamFromProjectMutation();
   const { data: allTeams = [] } = useGetTeamsQuery();
+  const { data: allSecretList = [] } = useGetSecretsQuery();
+  const { data: allEnvList = [] } = useGetEnvironmentsQuery();
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
@@ -281,7 +285,28 @@ export default function Projects() {
               <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search secrets..." className="max-w-[260px]" />
             </div>
             <div className="space-y-1">
-              {[]}
+              {(() => {
+                const projectSecretIds = selectedProject.secrets ?? [];
+                const projectSecrets = allSecretList.filter((s) => projectSecretIds.includes(s._id));
+                const filteredSecrets = projectSecrets.filter((s) =>
+                  s.secName.toLowerCase().includes(projectSearch.toLowerCase())
+                );
+                return filteredSecrets.length === 0 ? (
+                  <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No secrets assigned to this project.</p>
+                ) : (
+                  filteredSecrets.map((s) => (
+                    <div key={s._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <KeyRound className="w-4 h-4 text-[#8E8E93]" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{s.secName}</p>
+                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{s.author} · {s.updatedAt}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                );
+              })()}
             </div>
           </DashboardCard>
         )}
@@ -290,7 +315,25 @@ export default function Projects() {
           <DashboardCard>
             <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-5">Assigned Environments</h3>
             <div className="space-y-1">
-              {[]}
+              {(() => {
+                const projectEnvIds = selectedProject.environments ?? [];
+                const projectEnvs = allEnvList.filter((e) => projectEnvIds.includes(e._id));
+                return projectEnvs.length === 0 ? (
+                  <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No environments assigned to this project.</p>
+                ) : (
+                  projectEnvs.map((e) => (
+                    <div key={e._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Layers3 className="w-4 h-4 text-[#8E8E93]" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{e.name}</p>
+                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{e.projectName} · {e.secretCount} secrets</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                );
+              })()}
             </div>
           </DashboardCard>
         )}

@@ -26,8 +26,8 @@ import { useGetEnvironmentsQuery } from "../../features/environment/environmentA
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedSecret, selectSelectedSecret } from "../../features/secret/secretSlice";
 
-function getEnvName(_envId: string): string {
-  return "unknown";
+function getEnvName(envId: string, allEnvironments: { _id: string; name: string }[]): string {
+  return allEnvironments.find((e) => e._id === envId)?.name ?? "unknown";
 }
 
 const createSecretSchema = z.object({
@@ -95,10 +95,6 @@ export default function Secrets() {
     value: p._id,
   }));
 
-  const environmentOptions: { label: string; value: string }[] = environments
-    .filter((e) => e.projectId === (createFormik.values.projectId || editFormik.values.projectId))
-    .map((e) => ({ label: e.name, value: e._id }));
-
   const filtered = secrets.filter((s) => {
     const q = search.toLowerCase();
     return s.secName.toLowerCase().includes(q);
@@ -137,6 +133,10 @@ export default function Secrets() {
       }
     },
   });
+
+  const environmentOptions: { label: string; value: string }[] = environments
+    .filter((e) => e.projectId === (createFormik.values.projectId || editFormik.values.projectId))
+    .map((e) => ({ label: e.name, value: e._id }));
 
   function openEditForm(secret: Secret) {
     setEditSecret(secret);
@@ -243,7 +243,7 @@ export default function Secrets() {
                       <span className="text-xs text-[#8E8E93] dark:text-[#666]">Value hidden</span>
                     </div>
                   </Td>
-                  <Td><EnvBadge label={getEnvName(s.environmentId ?? "")} /></Td>
+                  <Td><EnvBadge label={getEnvName(s.environmentId ?? "", environments)} /></Td>
                   <Td className="hidden md:table-cell text-sm text-[#8E8E93] dark:text-[#666]">
                     <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{s.author}</span> · {s.updatedAt}
                   </Td>
@@ -286,7 +286,7 @@ export default function Secrets() {
 
               <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
                 <div className="flex items-center gap-2">
-                  <EnvBadge label={getEnvName(s.environmentId ?? "")} />
+                  <EnvBadge label={getEnvName(s.environmentId ?? "", environments)} />
                   <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{s.updatedAt}</span>
                 </div>
                 <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">by {s.author}</span>

@@ -40,6 +40,7 @@ export const authSlice = createSlice({
       state.isAuthenticated = false;
       state.isEmailVerified = false;
       state.user = null;
+      localStorage.clear();
     },
   },
 });

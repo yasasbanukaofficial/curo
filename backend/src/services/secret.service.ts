@@ -42,12 +42,12 @@ export const secretService = {
     secretId: string,
     data: Partial<ISecret>,
   ): Promise<boolean> => {
-    const { secName, secKey, projectId, environmentId } = data;
+    const { secName, projectId, environmentId } = data;
     if (!secretId) {
       throw new Error("SECRET_ID_NOT_EXISTING");
     }
 
-    if (!secName && !secKey && !projectId && !environmentId) {
+    if (!secName && !data.secKey && !projectId && !environmentId) {
       throw new Error("INVALID_PAYLOAD");
     }
 
@@ -57,10 +57,11 @@ export const secretService = {
         throw new Error("SECRET_NOT_FOUND");
       }
 
-      await versionService.createVersion(userId, secretId, currentSecret.secKey);
-
-      if (secKey) {
-        data.secKey = encrypt.gen(secKey);
+      if (!data.secKey) {
+        delete data.secKey;
+      } else {
+        await versionService.createVersion(userId, secretId, currentSecret.secKey);
+        data.secKey = encrypt.gen(data.secKey);
       }
 
       await SecretsModel.findOneAndUpdate(

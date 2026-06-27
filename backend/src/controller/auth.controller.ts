@@ -192,6 +192,8 @@ export const logoutUser = async (req: AuthRequest, res: Response) => {
   const result = await authService.logoutUser(req.userId!, refreshToken);
   res.clearCookie("access_token");
   res.clearCookie("refreshtoken");
+  res.clearCookie("oauth_state");
+  res.clearCookie("github_oauth_state");
   return sendResponse(res, result);
 };
 

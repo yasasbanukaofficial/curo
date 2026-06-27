@@ -5,12 +5,15 @@ import type { Team } from "../../types/team";
 export const teamApi = createApi({
   reducerPath: "teamApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Team"],
+  tagTypes: ["Team", "Project"],
   endpoints: (builder) => ({
     getTeams: builder.query<Team[], void>({
         query: () => "/teams/all",
       transformResponse: (response: { data: Team[] }) => response.data,
-      providesTags: ["Team"],
+      providesTags: (result) => [
+        { type: "Team", id: "LIST" },
+        ...(result ?? []).map((t) => ({ type: "Team" as const, id: t._id })),
+      ],
     }),
     addTeam: builder.mutation<Team, Partial<Team>>({
       query: (body) => ({
@@ -18,7 +21,7 @@ export const teamApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Team"],
+      invalidatesTags: [{ type: "Team", id: "LIST" }],
     }),
     updateTeam: builder.mutation<Team, { id: string; body: Partial<Team> }>({
       query: ({ id, body }) => ({
@@ -26,14 +29,14 @@ export const teamApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Team"],
+      invalidatesTags: (result, error, arg) => [{ type: "Team", id: arg.id }],
     }),
     removeTeam: builder.mutation<void, string>({
       query: (id) => ({
         url: `/teams/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Team"],
+      invalidatesTags: [{ type: "Team", id: "LIST" }, { type: "Project", id: "LIST" }],
     }),
   }),
 });

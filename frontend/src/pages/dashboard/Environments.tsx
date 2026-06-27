@@ -29,6 +29,7 @@ import {
   useUpdateEnvironmentMutation,
   useRemoveEnvironmentMutation,
 } from "../../features/environment/environmentApi";
+import { useGetProjectsQuery } from "../../features/project/projectApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedEnvironment, selectSelectedEnvironment } from "../../features/environment/environmentSlice";
 
@@ -47,6 +48,8 @@ export default function Environments() {
   const selectedEnv = useAppSelector(selectSelectedEnvironment);
   const toast = useToast();
   const { data: environments = [], isLoading, isError } = useGetEnvironmentsQuery();
+  const { data: projects = [] } = useGetProjectsQuery();
+  const projectOptions = projects.map((p) => ({ label: p.projectName, value: p._id }));
   const [addEnvironment] = useAddEnvironmentMutation();
   const [updateEnvironment] = useUpdateEnvironmentMutation();
   const [removeEnvironment] = useRemoveEnvironmentMutation();
@@ -188,7 +191,7 @@ export default function Environments() {
                 name="projectId"
                 value={settingsFormik.values.projectId}
                 onChange={(v) => settingsFormik.setFieldValue("projectId", v)}
-                options={[]}
+                options={projectOptions}
                 placeholder="Select a project"
                     error={settingsFormik.touched.projectId ? settingsFormik.errors.projectId : undefined}
                     touched={!!settingsFormik.touched.projectId}
@@ -350,7 +353,7 @@ export default function Environments() {
               name="projectId"
               value={createFormik.values.projectId}
               onChange={(v) => createFormik.setFieldValue("projectId", v)}
-              options={[]}
+              options={projectOptions}
               placeholder="Select a project"
               error={createFormik.touched.projectId ? createFormik.errors.projectId : undefined}
               touched={!!createFormik.touched.projectId}

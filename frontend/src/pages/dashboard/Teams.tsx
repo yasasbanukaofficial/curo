@@ -14,6 +14,8 @@ import {
   Copy,
   Trash2,
   FolderKanban,
+  KeyRound,
+  Layers3,
   Save,
   ToggleLeft,
   ToggleRight,
@@ -36,6 +38,7 @@ import {
   useUpdateTeamMutation,
   useRemoveTeamMutation,
 } from "../../features/team/teamApi";
+import { useGetProjectsQuery } from "../../features/project/projectApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { setSelectedTeam, selectSelectedTeam } from "../../features/team/teamSlice";
 
@@ -144,6 +147,10 @@ export default function Teams() {
   const [addTeam] = useAddTeamMutation();
   const [updateTeam] = useUpdateTeamMutation();
   const [removeTeam] = useRemoveTeamMutation();
+  const { data: allProjects = [] } = useGetProjectsQuery();
+  const teamProjects = selectedTeam
+    ? allProjects.filter((p) => (selectedTeam.projects ?? []).includes(p._id))
+    : [];
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPlan, setCreatePlan] = useState<TeamPlan>("starter");
@@ -431,12 +438,41 @@ export default function Teams() {
           <DashboardCard>
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
-                <SectionHeader title="Projects" description={`${(selectedTeam.projects ?? []).length} projects assigned to this team.`} />
+                <SectionHeader title="Projects" description={`${teamProjects.length} projects assigned to this team.`} />
               </div>
               <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
             </div>
             <div className="space-y-1">
-              {[]}
+              {teamProjects.length === 0 ? (
+                <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No projects assigned to this team.</p>
+              ) : (
+                teamProjects
+                  .filter((p) =>
+                    p.projectName.toLowerCase().includes(projectSearch.toLowerCase()) ||
+                    p.description.toLowerCase().includes(projectSearch.toLowerCase())
+                  )
+                  .map((p) => (
+                    <div key={p._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">
+                          <FolderKanban className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{p.projectName}</p>
+                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{p.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="flex items-center gap-1 text-[11px] text-[#8E8E93] dark:text-[#666]">
+                          <KeyRound className="w-3 h-3" />{p.secretCount}
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-[#8E8E93] dark:text-[#666]">
+                          <Layers3 className="w-3 h-3" />{p.environmentCount}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              )}
             </div>
           </DashboardCard>
         )}

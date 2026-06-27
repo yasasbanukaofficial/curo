@@ -5,12 +5,15 @@ import type { Secret } from "../../types/secret";
 export const secretApi = createApi({
   reducerPath: "secretApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Secret"],
+  tagTypes: ["Secret", "Project", "Environment"],
   endpoints: (builder) => ({
     getSecrets: builder.query<Secret[], void>({
       query: () => "/secrets/all",
       transformResponse: (response: { data: Secret[] }) => response.data,
-      providesTags: ["Secret"],
+      providesTags: (result) => [
+        { type: "Secret", id: "LIST" },
+        ...(result ?? []).map((s) => ({ type: "Secret" as const, id: s._id })),
+      ],
     }),
     addSecret: builder.mutation<Secret, Partial<Secret>>({
       query: (body) => ({
@@ -18,7 +21,11 @@ export const secretApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Secret"],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Secret", id: "LIST" },
+        { type: "Project", id: arg.projectId! },
+        ...(arg.environmentId ? [{ type: "Environment" as const, id: arg.environmentId }] : []),
+      ],
     }),
     updateSecret: builder.mutation<Secret, { id: string; body: Partial<Secret> }>({
       query: ({ id, body }) => ({
@@ -26,14 +33,18 @@ export const secretApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Secret"],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Secret", id: arg.id },
+        { type: "Project", id: arg.body.projectId! },
+        ...(arg.body.environmentId ? [{ type: "Environment" as const, id: arg.body.environmentId }] : []),
+      ],
     }),
     removeSecret: builder.mutation<void, string>({
       query: (id) => ({
         url: `/secrets/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Secret"],
+      invalidatesTags: [{ type: "Secret", id: "LIST" }],
     }),
   }),
 });
