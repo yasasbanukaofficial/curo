@@ -263,6 +263,7 @@ export default function Sidebar({ onToggleSettings }: SidebarProps) {
                 return (
                   <DashboardButton
                     key={item.label}
+                    id={`sidenav-${item.label.toLowerCase()}`}
                     onClick={() => navigate(item.path)}
                     className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
                       active

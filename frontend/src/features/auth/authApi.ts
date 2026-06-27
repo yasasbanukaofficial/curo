@@ -77,6 +77,9 @@ export const authApi = createApi({
     refreshToken: builder.mutation<AuthResponse, void>({
       query: () => ({ url: "/auth/refresh", method: "POST" }),
     }),
+    markOnboardingComplete: builder.mutation<AuthResponse, { skipped?: boolean }>({
+      query: (body) => ({ url: "/auth/onboarding-complete", method: "PATCH", body }),
+    }),
   }),
 });
 
@@ -92,4 +95,5 @@ export const {
   useLogoutMutation,
   useDisconnectOAuthMutation,
   useRefreshTokenMutation,
+  useMarkOnboardingCompleteMutation,
 } = authApi;

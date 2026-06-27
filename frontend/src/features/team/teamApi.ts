@@ -2,6 +2,14 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "../../api/baseQuery";
 import type { Team } from "../../types/team";
 import type { TeamInvite } from "../../types/teamInvite";
+import type { TeamMember } from "../../types/teamMember";
+
+interface InviteDetails {
+  teamName: string;
+  teamAvatar?: string;
+  memberCount: number;
+  role: string;
+}
 
 export const teamApi = createApi({
   reducerPath: "teamApi",
@@ -54,6 +62,10 @@ export const teamApi = createApi({
         { type: "TeamInvite", id: teamId },
       ],
     }),
+    getTeamMembers: builder.query<TeamMember[], string>({
+      query: (teamId) => `/teams/get/${teamId}/members`,
+      transformResponse: (response: { data: TeamMember[] }) => response.data,
+    }),
     inviteMember: builder.mutation<void, { teamId: string; email: string; role?: string }>({
       query: ({ teamId, ...body }) => ({
         url: `/teams/get/${teamId}/invites`,
@@ -73,6 +85,18 @@ export const teamApi = createApi({
       query: (token) => `/teams/invite/accept/${token}`,
       transformResponse: (response: { data: { redirect: string } }) => response.data,
     }),
+    getInviteDetails: builder.query<InviteDetails, string>({
+      query: (token) => `/teams/invite/${token}`,
+      transformResponse: (response: { data: InviteDetails }) => response.data,
+    }),
+    acceptInviteExplicit: builder.mutation<void, { token: string }>({
+      query: (body) => ({
+        url: "/teams/invite/accept",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Team", id: "LIST" }],
+    }),
   }),
 });
 
@@ -83,7 +107,10 @@ export const {
   useUpdateTeamMutation,
   useRemoveTeamMutation,
   useGetTeamInvitesQuery,
+  useGetTeamMembersQuery,
   useInviteMemberMutation,
   useRevokeInviteMutation,
   useLazyAcceptInviteQuery,
+  useLazyGetInviteDetailsQuery,
+  useAcceptInviteExplicitMutation,
 } = teamApi;

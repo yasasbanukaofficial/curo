@@ -20,6 +20,7 @@ export default function RegisterPage() {
     const inviteToken = searchParams.get("invite");
     if (inviteToken) {
       sessionStorage.setItem("inviteToken", inviteToken);
+      sessionStorage.setItem("pendingInvite", "true");
     }
   }, [searchParams]);
 
