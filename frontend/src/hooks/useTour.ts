@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import "../styles/tour.css";
-import { useMarkOnboardingCompleteMutation } from "../features/auth/authApi";
+import { useMarkOnboardingCompleteMutation, useLazyVerifySessionQuery } from "../features/auth/authApi";
 
 interface UseTourOptions {
   shouldShow: boolean;
@@ -10,6 +10,7 @@ interface UseTourOptions {
 
 export function useTour({ shouldShow }: UseTourOptions) {
   const [markComplete] = useMarkOnboardingCompleteMutation();
+  const [refetchSession] = useLazyVerifySessionQuery();
   const hasStarted = useRef(false);
 
   useEffect(() => {
@@ -68,17 +69,20 @@ export function useTour({ shouldShow }: UseTourOptions) {
           <span class="tour-step-counter">${idx + 1} of ${total}</span>
         `;
         const skipBtn = leftGroup.querySelector(".tour-skip-btn")!;
-        skipBtn.addEventListener("click", () => {
-          markComplete({ skipped: true });
+        skipBtn.addEventListener("click", async () => {
+          await markComplete({ skipped: true });
+          refetchSession();
           drive.destroy();
         });
       },
-      onCloseClick: () => {
-        markComplete({ skipped: true });
+      onCloseClick: async () => {
+        await markComplete({ skipped: true });
+        refetchSession();
         drive.destroy();
       },
-      onDoneClick: () => {
-        markComplete({ skipped: false });
+      onDoneClick: async () => {
+        await markComplete({ skipped: false });
+        refetchSession();
         drive.destroy();
       },
       stagePadding: 4,

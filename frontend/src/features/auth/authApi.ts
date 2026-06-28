@@ -84,6 +84,7 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useVerifySessionQuery,
+  useLazyVerifySessionQuery,
   useLoginMutation,
   useRegisterMutation,
   useVerifyOtpMutation,
