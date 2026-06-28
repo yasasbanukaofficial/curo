@@ -4,20 +4,23 @@ import DashboardButton from "../../components/dashboard/DashboardButton";
 import SearchInput from "../../components/dashboard/SearchInput";
 import FilterTabs from "../../components/dashboard/FilterTabs";
 import DashboardCard from "../../components/dashboard/DashboardCard";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import Modal from "../../components/dashboard/Modal";
 import { ActionBadge, EnvBadge } from "../../components/dashboard/Badges";
 import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
+import { useGetAuditLogsQuery } from "../../store";
+import type { Audit } from "../../types";
 
 const actionFilters = ["all", "CREATED", "UPDATED", "VIEWED", "DELETED"];
-
-const audits: any[] = [];
 
 export default function AuditLogs() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [selectedLog, setSelectedLog] = useState<any | null>(null);
+  const [selectedLog, setSelectedLog] = useState<Audit | null>(null);
 
-  const filtered = audits.filter((l) => {
+  const { data: audits = [], isLoading } = useGetAuditLogsQuery();
+
+  const filtered = (audits as Audit[]).filter((l) => {
     const q = search.toLowerCase();
     return (l.target?.toLowerCase().includes(q) || l.user?.toLowerCase().includes(q))
       && (filter === "all" || l.action === filter);
@@ -33,6 +36,14 @@ export default function AuditLogs() {
       minute: "2-digit",
       second: "2-digit",
     });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <LoadingSpinner size={28} />
+      </div>
+    );
   }
 
   return (
