@@ -11,7 +11,7 @@ export const baseApi = createApi({
     "Project",
     "Environment",
     "Secret",
-    "Version",
+
     "Audit",
   ],
   endpoints: () => ({}),

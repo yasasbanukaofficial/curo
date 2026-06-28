@@ -9,11 +9,10 @@ import {
   LayoutDashboard,
   FolderKanban,
   Users,
-  KeyRound,
-  Layers3,
+
+
   PlugZap,
   ScrollText,
-  History,
   Settings,
   UserCircle,
   ChevronDown,
@@ -39,7 +38,7 @@ const navSections = [
     items: [
       { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
       { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
-      { label: "Version History", icon: History, path: "/dashboard/versions" },
+
     ],
   },
 ];
