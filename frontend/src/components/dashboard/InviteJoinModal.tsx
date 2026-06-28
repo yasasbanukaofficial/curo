@@ -7,6 +7,7 @@ interface InviteDetails {
   teamAvatar?: string;
   memberCount: number;
   role: string;
+  hasAccount?: boolean;
 }
 
 interface InviteJoinModalProps {
@@ -33,23 +34,8 @@ export default function InviteJoinModal({
       title="You're invited!"
       description="Join your team to start collaborating."
       size="sm"
-    >
-      <div className="space-y-6">
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
-          <div className="w-12 h-12 rounded-xl bg-[#191919] dark:bg-white flex items-center justify-center">
-            <Users className="w-6 h-6 text-white dark:text-[#191919]" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">
-              {details.teamName}
-            </p>
-            <p className="text-[11px] text-[#8E8E93]">
-              {details.memberCount} {details.memberCount === 1 ? "member" : "members"} · {details.role} role
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+      footer={
+        <div className="flex items-center gap-3 w-full">
           <DashboardButton
             onClick={onDecline}
             disabled={loading}
@@ -64,6 +50,22 @@ export default function InviteJoinModal({
           >
             {loading ? "Joining..." : "Join team"}
           </DashboardButton>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
+          <div className="w-12 h-12 rounded-xl bg-[#191919] dark:bg-white flex items-center justify-center">
+            <Users className="w-6 h-6 text-white dark:text-[#191919]" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">
+              {details.teamName}
+            </p>
+            <p className="text-[11px] text-[#8E8E93]">
+              {details.memberCount} {details.memberCount === 1 ? "member" : "members"} · {details.role} role
+            </p>
+          </div>
         </div>
       </div>
     </Modal>

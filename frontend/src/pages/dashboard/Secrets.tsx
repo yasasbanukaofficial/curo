@@ -152,7 +152,7 @@ export default function Secrets() {
   async function handleDeleteSecret() {
     if (!deleteSecret) return;
     try {
-      await removeSecret(deleteSecret._id).unwrap();
+      await removeSecret({ id: deleteSecret._id, projectId: deleteSecret.projectId, environmentId: deleteSecret.environmentId }).unwrap();
       setDeleteSecret(null);
       setDropdownTarget(null);
       toast.success("Secret deleted", `${deleteSecret.secName} has been removed.`);

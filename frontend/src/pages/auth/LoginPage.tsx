@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const dispatch = useAppDispatch();
   const [login] = useLoginMutation();
   const toast = useToast();
+  const [searchParams] = useSearchParams();
 
   const formik = useFormik<LoginFormValues>({
     initialValues: { email: "", password: "" },
@@ -35,7 +36,7 @@ export default function LoginPage() {
             },
           }));
           toast.success("Welcome back", "You have been signed in successfully.");
-          navigate("/dashboard");
+          navigate(searchParams.get("redirect") || "/dashboard");
         } else {
           setFieldError("email", result.msg || "Invalid email or password");
         }
