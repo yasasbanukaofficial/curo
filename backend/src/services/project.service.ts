@@ -52,8 +52,8 @@ export const projectService = {
       throw new Error("DATABASE_ERROR");
     }
   },
-  createProject: async (userId: string, data: IProject): Promise<any> => {
-    const { projectName, description, projectLink } = data;
+  createProject: async (userId: string, data: IProject & { teamId?: string }): Promise<any> => {
+    const { projectName, description, projectLink, teamId } = data;
     if (!projectName || !description) {
       throw new Error("INVALID_PAYLOAD");
     }
@@ -68,7 +68,12 @@ export const projectService = {
         description,
         projectLink: projectLink || undefined,
         userId,
+        teams: teamId ? [teamId] : [],
       });
+
+      if (teamId) {
+        await TeamModel.findByIdAndUpdate(teamId, { $push: { projects: project._id } });
+      }
 
       return project.toObject();
     } catch (dbError: any) {

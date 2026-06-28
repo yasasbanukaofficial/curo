@@ -80,7 +80,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
   try {
     const created = await projectService.createProject(
       userId,
-      body as IProject,
+      body as IProject & { teamId?: string },
     );
 
     if (created) {
@@ -301,17 +301,22 @@ export const updateProjectSecret = async (req: AuthRequest, res: Response) => {
 
 export const deleteProjectSecret = async (req: AuthRequest, res: Response) => {
   const { projectId, secretId } = req.params as { projectId: string; secretId: string };
+  const userId = req.userId!;
+  const member = (req as any).member;
 
   if (!secretId) {
     return sendResponse(res, { success: false, status: 400, msg: "Secret ID is required" });
   }
 
   try {
-    await secretService.deleteProjectSecret(projectId, secretId);
+    await secretService.deleteProjectSecret(projectId, secretId, userId, member?.role);
     return sendResponse(res, { success: true, status: 200, msg: "Secret deleted successfully" });
   } catch (error: any) {
     if (error.message === "SECRET_NOT_FOUND") {
       return sendResponse(res, { success: false, status: 404, msg: "Secret not found" });
+    }
+    if (error.message === "FORBIDDEN") {
+      return sendResponse(res, { success: false, status: 403, msg: "You do not have permission to perform this action." });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the secret." });
   }
@@ -380,17 +385,22 @@ export const updateProjectEnvironment = async (req: AuthRequest, res: Response) 
 
 export const deleteProjectEnvironment = async (req: AuthRequest, res: Response) => {
   const { projectId, environmentId } = req.params as { projectId: string; environmentId: string };
+  const userId = req.userId!;
+  const member = (req as any).member;
 
   if (!environmentId) {
     return sendResponse(res, { success: false, status: 400, msg: "Environment ID is required" });
   }
 
   try {
-    await environmentService.deleteProjectEnvironment(projectId, environmentId);
+    await environmentService.deleteProjectEnvironment(projectId, environmentId, userId, member?.role);
     return sendResponse(res, { success: true, status: 200, msg: "Environment deleted successfully" });
   } catch (error: any) {
     if (error.message === "ENVIRONMENT_NOT_FOUND") {
       return sendResponse(res, { success: false, status: 404, msg: "Environment not found" });
+    }
+    if (error.message === "FORBIDDEN") {
+      return sendResponse(res, { success: false, status: 403, msg: "You do not have permission to perform this action." });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the environment." });
   }
