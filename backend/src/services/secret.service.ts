@@ -2,7 +2,7 @@ import { SecretsModel } from "../models/secrets.model";
 import { EnvironmentModel } from "../models/environment.model";
 import { ISecret } from "../types/secret";
 import { encrypt } from "../util";
-import { versionService } from "./version.service";
+
 import { auditService } from "./audit.service";
 
 export const secretService = {
@@ -71,7 +71,6 @@ export const secretService = {
       if (!data.secKey) {
         delete data.secKey;
       } else {
-        await versionService.createVersion(userId, secretId, currentSecret.secKey);
         data.secKey = encrypt.gen(data.secKey);
       }
 
@@ -166,9 +165,9 @@ export const secretService = {
     }
   },
 
-  getProjectSecrets: async (userId: string, projectId: string): Promise<ISecret[]> => {
+  getProjectSecrets: async (projectId: string): Promise<ISecret[]> => {
     try {
-      const resp = await SecretsModel.find({ userId, projectId }).sort({ createdAt: -1 });
+      const resp = await SecretsModel.find({ projectId }).sort({ createdAt: -1 });
       return resp.map((secretDoc) => ({
         _id: secretDoc._id,
         secName: secretDoc.secName,
@@ -184,7 +183,7 @@ export const secretService = {
   },
 
   updateProjectSecret: async (
-    userId: string, projectId: string, secretId: string, data: Partial<ISecret>,
+    projectId: string, secretId: string, data: Partial<ISecret>,
   ): Promise<boolean> => {
     if (!secretId) throw new Error("SECRET_ID_NOT_EXISTING");
     if (!data.secName && !data.secKey) throw new Error("INVALID_PAYLOAD");
@@ -195,19 +194,17 @@ export const secretService = {
     }
 
     try {
-      const currentSecret = await SecretsModel.findOne({ _id: secretId, userId, projectId });
+      const currentSecret = await SecretsModel.findOne({ _id: secretId, projectId });
       if (!currentSecret) throw new Error("SECRET_NOT_FOUND");
 
       if (data.secKey) {
-        await versionService.createVersion(userId, secretId, currentSecret.secKey);
         data.secKey = encrypt.gen(data.secKey);
       }
 
       delete data.projectId;
-      delete data.userId;
 
       await SecretsModel.findOneAndUpdate(
-        { _id: secretId, userId, projectId },
+        { _id: secretId, projectId },
         { $set: data },
       );
 
@@ -219,10 +216,10 @@ export const secretService = {
   },
 
   deleteProjectSecret: async (
-    userId: string, projectId: string, secretId: string,
+    projectId: string, secretId: string,
   ): Promise<boolean> => {
     try {
-      const deleted = await SecretsModel.findOneAndDelete({ _id: secretId, userId, projectId });
+      const deleted = await SecretsModel.findOneAndDelete({ _id: secretId, projectId });
       if (!deleted) throw new Error("SECRET_NOT_FOUND");
       return true;
     } catch (error) {
