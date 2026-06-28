@@ -140,11 +140,15 @@ export const environmentService = {
   },
 
   deleteProjectEnvironment: async (
-    projectId: string, environmentId: string,
+    projectId: string, environmentId: string, userId: string, role: string,
   ): Promise<boolean> => {
     try {
-      const deleted = await EnvironmentModel.findOneAndDelete({ _id: environmentId, projectId });
-      if (!deleted) throw new Error("ENVIRONMENT_NOT_FOUND");
+      const env = await EnvironmentModel.findOne({ _id: environmentId, projectId });
+      if (!env) throw new Error("ENVIRONMENT_NOT_FOUND");
+      if (role === "developer" && env.userId !== userId) {
+        throw new Error("FORBIDDEN");
+      }
+      await EnvironmentModel.findOneAndDelete({ _id: environmentId, projectId });
       return true;
     } catch (error) {
       console.error("DB Error:", error);

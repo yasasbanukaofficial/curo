@@ -216,11 +216,15 @@ export const secretService = {
   },
 
   deleteProjectSecret: async (
-    projectId: string, secretId: string,
+    projectId: string, secretId: string, userId: string, role: string,
   ): Promise<boolean> => {
     try {
-      const deleted = await SecretsModel.findOneAndDelete({ _id: secretId, projectId });
-      if (!deleted) throw new Error("SECRET_NOT_FOUND");
+      const secret = await SecretsModel.findOne({ _id: secretId, projectId });
+      if (!secret) throw new Error("SECRET_NOT_FOUND");
+      if (role === "developer" && secret.userId !== userId) {
+        throw new Error("FORBIDDEN");
+      }
+      await SecretsModel.findOneAndDelete({ _id: secretId, projectId });
       return true;
     } catch (error) {
       console.error("DB Error:", error);
