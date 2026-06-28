@@ -46,10 +46,18 @@ export default function Account() {
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
   const [doDisconnect] = useDisconnectOAuthMutation();
-  const { refetch: refetchSession } = useVerifySessionQuery();
+  const { refetch: refetchSession, isLoading: sessionLoading } = useVerifySessionQuery();
   const [editMode, setEditMode] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  if (sessionLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size={28} />
+      </div>
+    );
+  }
 
   const connectedAccounts = useMemo(() => ({
     google: { connected: user?.provider.includes("google") ?? false },

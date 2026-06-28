@@ -26,6 +26,7 @@ import DashboardButton from "../../components/dashboard/DashboardButton";
 import SectionHeader from "../../components/dashboard/SectionHeader";
 import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import FormInput from "../../components/dashboard/FormInput";
 import FormField from "../../components/dashboard/FormField";
 import FormSelect from "../../components/dashboard/FormSelect";
@@ -354,7 +355,7 @@ export default function Teams() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#8E8E93]">Loading teams...</p>
+        <LoadingSpinner size={28} />
       </div>
     );
   }

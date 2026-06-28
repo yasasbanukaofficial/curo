@@ -5,6 +5,7 @@ import SearchInput from "../../components/dashboard/SearchInput";
 import FilterTabs from "../../components/dashboard/FilterTabs";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import Modal from "../../components/dashboard/Modal";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import { ActionBadge, EnvBadge } from "../../components/dashboard/Badges";
 import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
 import { useGetAuditsQuery } from "../../features/audit/auditApi";
@@ -38,7 +39,7 @@ export default function AuditLogs() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#8E8E93]">Loading audit logs...</p>
+        <LoadingSpinner size={28} />
       </div>
     );
   }

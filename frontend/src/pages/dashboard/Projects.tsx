@@ -30,6 +30,7 @@ import FormInput from "../../components/dashboard/FormInput";
 import FormTextarea from "../../components/dashboard/FormTextarea";
 import FormSelect from "../../components/dashboard/FormSelect";
 import Select from "../../components/dashboard/Select";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import AlertModal from "../../components/dashboard/AlertModal";
 import Modal from "../../components/dashboard/Modal";
 import { useToast } from "../../components/dashboard/Toast";
@@ -300,7 +301,7 @@ export default function Projects() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#8E8E93]">Loading projects...</p>
+        <LoadingSpinner size={28} />
       </div>
     );
   }
