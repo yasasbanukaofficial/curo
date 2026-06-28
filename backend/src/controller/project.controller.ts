@@ -25,10 +25,11 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
         msg: "Project not found or you don't have access to it",
       });
     }
+    const member = (req as any).member;
     return sendResponse(res, {
       success: true,
       status: 200,
-      data: project,
+      data: { ...project, role: member?.role ?? "viewer" },
     });
   } catch (error) {
     return sendResponse(res, {
@@ -46,15 +47,25 @@ export const getAllProjects = async (req: AuthRequest, res: Response) => {
     const memberships = await TeamMemberModel.find({ userId, status: "active" }).lean();
     const teamIds = memberships.map((m) => m.teamId.toString());
 
-    if (teamIds.length === 0) {
-      return sendResponse(res, { success: true, status: 200, data: [] });
-    }
+    const allProjects = await projectService.getAllProjects(userId, teamIds);
 
-    const allProjects = await projectService.getAllProjects(teamIds);
+    const projectsWithRole = allProjects.map((project) => {
+      let role = "viewer";
+      if (project.userId?.toString() === userId) {
+        role = "owner";
+      } else {
+        const membership = memberships.find((m) =>
+          (project.teams ?? []).some((tId) => tId.toString() === m.teamId.toString()),
+        );
+        if (membership) role = membership.role;
+      }
+      return { ...project, role };
+    });
+
     return sendResponse(res, {
       success: true,
       status: 200,
-      data: allProjects,
+      data: projectsWithRole,
     });
   } catch (error) {
     return sendResponse(res, {
@@ -96,7 +107,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "Project name and description are required",
+        msg: "Project name is required",
       });
     }
 

@@ -1,5 +1,7 @@
 import { ProjectModel } from "../models/project.model";
 import { TeamModel } from "../models/team.model";
+import { SecretsModel } from "../models/secrets.model";
+import { EnvironmentModel } from "../models/environment.model";
 import { IProject } from "../types/project";
 
 function isValidUrl(url: string): boolean {
@@ -33,9 +35,12 @@ export const projectService = {
     }
   },
 
-  getAllProjects: async (teamIds: string[]): Promise<IProject[]> => {
+  getAllProjects: async (userId: string, teamIds: string[]): Promise<any[]> => {
     try {
-      const resp = await ProjectModel.find({ teams: { $in: teamIds } }).sort({
+      const filter = teamIds.length > 0
+        ? { $or: [{ userId }, { teams: { $in: teamIds } }] }
+        : { userId };
+      const resp = await ProjectModel.find(filter).sort({
         createdAt: -1,
       });
       const allProjects = resp.map((projectDoc) => ({
@@ -45,8 +50,26 @@ export const projectService = {
         projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
         teams: projectDoc.teams,
+        createdAt: projectDoc.createdAt,
+        updatedAt: projectDoc.updatedAt,
       }));
-      return allProjects;
+
+      const projectsWithCounts = await Promise.all(
+        allProjects.map(async (project) => {
+          const [secretCount, environmentCount] = await Promise.all([
+            SecretsModel.countDocuments({ projectId: project._id }),
+            EnvironmentModel.countDocuments({ projectId: project._id }),
+          ]);
+          return {
+            ...project,
+            secretCount,
+            environmentCount,
+            teamCount: (project.teams ?? []).length,
+          };
+        }),
+      );
+
+      return projectsWithCounts;
     } catch (error) {
       console.error("DB Error:", error);
       throw new Error("DATABASE_ERROR");
@@ -54,7 +77,7 @@ export const projectService = {
   },
   createProject: async (userId: string, data: IProject & { teamId?: string }): Promise<any> => {
     const { projectName, description, projectLink, teamId } = data;
-    if (!projectName || !description) {
+    if (!projectName) {
       throw new Error("INVALID_PAYLOAD");
     }
 

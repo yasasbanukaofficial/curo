@@ -3,8 +3,6 @@ import { EnvironmentModel } from "../models/environment.model";
 import { ISecret } from "../types/secret";
 import { encrypt } from "../util";
 
-import { auditService } from "./audit.service";
-
 export const secretService = {
   saveSecretToDB: async (userId: string, data: ISecret): Promise<boolean> => {
     const { secName, secKey, projectId, environmentId } = data;
@@ -25,13 +23,6 @@ export const secretService = {
         projectId,
         userId,
         environmentId,
-      });
-
-      auditService.createAudit({
-        userId: userId as any,
-        action: "CREATED",
-        resource: "SECRET",
-        metadata: { secName, projectId, environmentId },
       });
 
       return true;
@@ -80,13 +71,6 @@ export const secretService = {
         { returnDocument: "after" },
       );
 
-      auditService.createAudit({
-        userId: userId as any,
-        action: "UPDATED",
-        resource: "SECRET",
-        metadata: { secretId, ...data },
-      });
-
       return true;
     } catch (error: any) {
       console.error("DB Error:", error);
@@ -104,13 +88,6 @@ export const secretService = {
       });
       if (!deleted) throw new Error("SECRET_NOT_FOUND");
 
-      auditService.createAudit({
-        userId: userId as any,
-        action: "DELETED",
-        resource: "SECRET",
-        metadata: { secName: deleted.secName, projectId: deleted.projectId },
-      });
-
       return true;
     } catch (error) {
       console.error("DB Error:", error);
@@ -124,13 +101,6 @@ export const secretService = {
     try {
       const secretDoc = await SecretsModel.findOne({ _id: secretId, userId });
       if (!secretDoc) return null;
-
-      auditService.createAudit({
-        userId: userId as any,
-        action: "VIEWED",
-        resource: "SECRET",
-        metadata: { secName: secretDoc.secName, projectId: secretDoc.projectId },
-      });
 
       return {
         secName: secretDoc.secName,

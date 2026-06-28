@@ -43,13 +43,22 @@ export const teamService = {
     }
   },
 
-  getAllTeams: async (userId: string): Promise<ITeam[]> => {
+  getAllTeams: async (userId: string): Promise<any[]> => {
     try {
       const memberships = await TeamMemberModel.find({ userId, status: "active" });
       const teamIds = memberships.map((m) => m.teamId);
 
       const teams = await TeamModel.find({ _id: { $in: teamIds } }).sort({ createdAt: -1 });
-      return teams.map((t) => t.toObject());
+      const teamData = teams.map((t) => t.toObject());
+
+      const teamsWithCounts = await Promise.all(
+        teamData.map(async (team) => {
+          const memberCount = await TeamMemberModel.countDocuments({ teamId: team._id });
+          return { ...team, memberCount };
+        }),
+      );
+
+      return teamsWithCounts;
     } catch (error) {
       console.error("DB Error:", error);
       throw new Error("DATABASE_ERROR");

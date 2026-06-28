@@ -38,6 +38,12 @@ export const validateProjectAccess = async (
     return sendResponse(res, { success: false, status: 404, msg: "Project not found" });
   }
 
+  if (project.userId?.toString() === userId) {
+    (req as any).project = project;
+    (req as any).member = { role: "owner" };
+    return next();
+  }
+
   const member = await TeamMemberModel.findOne({
     userId,
     teamId: { $in: project.teams || [] },
@@ -57,7 +63,19 @@ export const validateRole = (...allowedRoles: TeamRole[]) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     const member = (req as any).member;
 
-    if (!member || !allowedRoles.includes(member.role)) {
+    if (!member) {
+      return sendResponse(res, {
+        success: false,
+        status: 403,
+        msg: "You do not have permission to perform this action.",
+      });
+    }
+
+    if (member.role === "owner") {
+      return next();
+    }
+
+    if (!allowedRoles.includes(member.role)) {
       return sendResponse(res, {
         success: false,
         status: 403,
