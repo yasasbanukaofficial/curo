@@ -2,10 +2,10 @@ import { useVerifySessionQuery, useGetTeamMembersQuery } from "../store";
 import type { TeamMember } from "../types";
 
 export function useTeamRole(teamId: string | null) {
-  const { data: currentUser } = useVerifySessionQuery(undefined, { skip: !teamId });
-  const { data: members } = useGetTeamMembersQuery(teamId ?? "", { skip: !teamId });
-
+  const { data: currentUser } = useVerifySessionQuery();
   const currentUserId = (currentUser as any)?._id ?? (currentUser as any)?.id;
+
+  const { data: members } = useGetTeamMembersQuery(teamId ?? "", { skip: !teamId });
 
   const member = (members ?? []).find((m: TeamMember) => {
     const memberUserId =
@@ -15,14 +15,12 @@ export function useTeamRole(teamId: string | null) {
     return memberUserId === currentUserId;
   });
 
-  const role = member?.role ?? "viewer";
-
+  const role = member?.role ?? (teamId ? "viewer" : "owner");
   const canCreate = ["owner", "admin", "developer"].includes(role);
   const canEdit = ["owner", "admin"].includes(role);
   const canDelete = ["owner", "admin"].includes(role);
   const canManageMembers = ["owner", "admin"].includes(role);
   const canViewSecretValues = ["owner", "admin", "developer"].includes(role);
-  const canViewAuditLogs = ["owner", "admin"].includes(role);
 
   function canDeleteResource(resourceUserId: string | undefined): boolean {
     if (!resourceUserId) return false;
@@ -31,5 +29,5 @@ export function useTeamRole(teamId: string | null) {
     return false;
   }
 
-  return { role, currentUserId, canCreate, canEdit, canDelete, canManageMembers, canViewSecretValues, canViewAuditLogs, canDeleteResource };
+  return { role, currentUserId, canCreate, canEdit, canDelete, canManageMembers, canViewSecretValues, canDeleteResource };
 }

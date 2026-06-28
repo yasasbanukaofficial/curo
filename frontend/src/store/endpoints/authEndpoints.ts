@@ -21,7 +21,7 @@ export const authEndpoints = baseApi.injectEndpoints({
     }),
     logout: builder.mutation<any, void>({
       query: () => ({ url: "/auth/logout", method: "POST" }),
-      invalidatesTags: ["User", "Team", "TeamMember", "TeamInvite", "Project", "Secret", "Environment", "AuditLog", "Version"],
+      invalidatesTags: ["User", "Team", "TeamMember", "TeamInvite", "Project", "Secret", "Environment", "Version"],
     }),
     changePassword: builder.mutation<any, { currentPassword: string; newPassword: string }>({
       query: (body) => ({ url: "/auth/change-password", method: "PUT", body }),

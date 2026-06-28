@@ -17,7 +17,7 @@ export const teamEndpoints = baseApi.injectEndpoints({
       query: (body) => ({ url: "/teams/create", method: "POST", body }),
       invalidatesTags: [{ type: "Team", id: "LIST" }],
     }),
-    updateTeam: builder.mutation<any, { id: string; name?: string; slug?: string }>({
+    updateTeam: builder.mutation<any, { id: string; name?: string; slug?: string; billingEmail?: string }>({
       query: ({ id, ...body }) => ({ url: `/teams/update/${id}`, method: "PUT", body }),
       invalidatesTags: (_result, _error, arg) => [{ type: "Team", id: arg.id }, { type: "Team", id: "LIST" }],
     }),

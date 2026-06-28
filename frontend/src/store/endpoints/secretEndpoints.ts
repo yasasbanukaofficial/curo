@@ -15,21 +15,18 @@ export const secretEndpoints = baseApi.injectEndpoints({
       query: ({ projectId, ...body }) => ({ url: `/projects/${projectId}/secrets`, method: "POST", body }),
       invalidatesTags: (_result, _error, arg) => [
         { type: "Secret", id: arg.projectId },
-        { type: "AuditLog", id: "LIST" },
       ],
     }),
     updateSecret: builder.mutation<any, { projectId: string; secretId: string; secName?: string; secKey?: string; environmentId?: string }>({
       query: ({ projectId, secretId, ...body }) => ({ url: `/projects/${projectId}/secrets/${secretId}`, method: "PUT", body }),
       invalidatesTags: (_result, _error, arg) => [
         { type: "Secret", id: arg.projectId },
-        { type: "AuditLog", id: "LIST" },
       ],
     }),
     deleteSecret: builder.mutation<any, { projectId: string; secretId: string }>({
       query: ({ projectId, secretId }) => ({ url: `/projects/${projectId}/secrets/${secretId}`, method: "DELETE" }),
       invalidatesTags: (_result, _error, arg) => [
         { type: "Secret", id: arg.projectId },
-        { type: "AuditLog", id: "LIST" },
       ],
     }),
   }),

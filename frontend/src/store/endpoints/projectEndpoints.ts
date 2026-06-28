@@ -18,7 +18,7 @@ export const projectEndpoints = baseApi.injectEndpoints({
       query: (body) => ({ url: "/projects/create", method: "POST", body }),
       invalidatesTags: [{ type: "Project", id: "LIST" }],
     }),
-    updateProject: builder.mutation<any, { projectId: string; projectName?: string; description?: string }>({
+    updateProject: builder.mutation<any, { projectId: string; projectName?: string; description?: string; projectLink?: string }>({
       query: ({ projectId, ...body }) => ({ url: `/projects/update/${projectId}`, method: "PUT", body }),
       invalidatesTags: (_result, _error, arg) => [
         { type: "Project", id: "LIST" },
@@ -32,6 +32,20 @@ export const projectEndpoints = baseApi.injectEndpoints({
         { type: "Project", id: projectId },
       ],
     }),
+    addTeamToProject: builder.mutation<any, { projectId: string; teamId: string }>({
+      query: ({ projectId, ...body }) => ({ url: `/projects/${projectId}/teams`, method: "POST", body }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Project", id: "LIST" },
+        { type: "Project", id: arg.projectId },
+      ],
+    }),
+    removeTeamFromProject: builder.mutation<any, { projectId: string; teamId: string }>({
+      query: ({ projectId, teamId }) => ({ url: `/projects/${projectId}/teams/${teamId}`, method: "DELETE" }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Project", id: "LIST" },
+        { type: "Project", id: arg.projectId },
+      ],
+    }),
   }),
 });
 
@@ -41,4 +55,6 @@ export const {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useAddTeamToProjectMutation,
+  useRemoveTeamFromProjectMutation,
 } = projectEndpoints;
