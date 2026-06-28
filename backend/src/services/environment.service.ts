@@ -1,5 +1,4 @@
 import { EnvironmentModel } from "../models/environment.model";
-import { SecretsModel } from "../models/secrets.model";
 import { IEnvironment } from "../types/environment";
 
 export const environmentService = {
@@ -8,12 +7,8 @@ export const environmentService = {
     environmentId: string,
   ): Promise<IEnvironment | null> => {
     try {
-      const envDoc = await EnvironmentModel.findOne({
-        _id: environmentId,
-        userId,
-      });
+      const envDoc = await EnvironmentModel.findOne({ _id: environmentId, userId });
       if (!envDoc) return null;
-
       return {
         name: envDoc.name,
         projectId: envDoc.projectId,
@@ -27,16 +22,13 @@ export const environmentService = {
 
   getAllEnvironments: async (userId: string): Promise<IEnvironment[]> => {
     try {
-      const resp = await EnvironmentModel.find({ userId }).sort({
-        createdAt: -1,
-      });
-      const allEnvs = resp.map((envDoc) => ({
+      const resp = await EnvironmentModel.find({ userId }).sort({ createdAt: -1 });
+      return resp.map((envDoc) => ({
         _id: envDoc._id,
         name: envDoc.name,
         projectId: envDoc.projectId,
         userId: envDoc.userId,
       }));
-      return allEnvs;
     } catch (error) {
       console.error("DB Error:", error);
       throw new Error("DATABASE_ERROR");
@@ -48,22 +40,13 @@ export const environmentService = {
     data: IEnvironment,
   ): Promise<boolean> => {
     const { name, projectId } = data;
-    if (!name || !projectId) {
-      throw new Error("INVALID_PAYLOAD");
-    }
+    if (!name || !projectId) throw new Error("INVALID_PAYLOAD");
 
     try {
-      await EnvironmentModel.create({
-        name,
-        projectId,
-        userId,
-      });
-
+      await EnvironmentModel.create({ name, projectId, userId });
       return true;
     } catch (dbError: any) {
-      if (dbError.code === 11000) {
-        throw new Error("DUPLICATE_ENVIRONMENT");
-      }
+      if (dbError.code === 11000) throw new Error("DUPLICATE_ENVIRONMENT");
       console.error("DB Error:", dbError);
       throw new Error("DATABASE_ERROR");
     }
@@ -74,14 +57,8 @@ export const environmentService = {
     environmentId: string,
     data: Partial<IEnvironment>,
   ): Promise<boolean> => {
-    const { name, projectId } = data;
-    if (!environmentId) {
-      throw new Error("ENVIRONMENT_ID_NOT_EXISTING");
-    }
-
-    if (!name && !projectId) {
-      throw new Error("INVALID_PAYLOAD");
-    }
+    if (!environmentId) throw new Error("ENVIRONMENT_ID_NOT_EXISTING");
+    if (!data.name && !data.projectId) throw new Error("INVALID_PAYLOAD");
 
     try {
       const existing = await EnvironmentModel.findOneAndUpdate(
@@ -89,11 +66,7 @@ export const environmentService = {
         { $set: data },
         { returnDocument: "after" },
       );
-
-      if (!existing) {
-        throw new Error("ENVIRONMENT_NOT_FOUND");
-      }
-
+      if (!existing) throw new Error("ENVIRONMENT_NOT_FOUND");
       return true;
     } catch (error: any) {
       console.error("DB Error:", error);
@@ -106,11 +79,71 @@ export const environmentService = {
     environmentId: string,
   ): Promise<boolean> => {
     try {
-      await SecretsModel.deleteMany({ environmentId, userId });
-      const deleted = await EnvironmentModel.findOneAndDelete({
-        _id: environmentId,
-        userId,
-      });
+      const deleted = await EnvironmentModel.findOneAndDelete({ _id: environmentId, userId });
+      if (!deleted) throw new Error("ENVIRONMENT_NOT_FOUND");
+      return true;
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw error;
+    }
+  },
+
+  getProjectEnvironments: async (userId: string, projectId: string): Promise<IEnvironment[]> => {
+    try {
+      const resp = await EnvironmentModel.find({ userId, projectId }).sort({ createdAt: -1 });
+      return resp.map((envDoc) => ({
+        _id: envDoc._id,
+        name: envDoc.name,
+        projectId: envDoc.projectId,
+        userId: envDoc.userId,
+      }));
+    } catch (error) {
+      console.error("DB Error:", error);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
+
+  createProjectEnvironment: async (
+    userId: string, projectId: string, data: IEnvironment,
+  ): Promise<boolean> => {
+    const { name } = data;
+    if (!name) throw new Error("INVALID_PAYLOAD");
+
+    try {
+      await EnvironmentModel.create({ name, projectId, userId });
+      return true;
+    } catch (dbError: any) {
+      if (dbError.code === 11000) throw new Error("DUPLICATE_ENVIRONMENT");
+      console.error("DB Error:", dbError);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
+
+  updateProjectEnvironment: async (
+    userId: string, projectId: string, environmentId: string, data: Partial<IEnvironment>,
+  ): Promise<boolean> => {
+    if (!environmentId) throw new Error("ENVIRONMENT_ID_NOT_EXISTING");
+    if (!data.name) throw new Error("INVALID_PAYLOAD");
+
+    try {
+      const existing = await EnvironmentModel.findOneAndUpdate(
+        { _id: environmentId, userId, projectId },
+        { $set: { name: data.name } },
+        { returnDocument: "after" },
+      );
+      if (!existing) throw new Error("ENVIRONMENT_NOT_FOUND");
+      return true;
+    } catch (error: any) {
+      console.error("DB Error:", error);
+      throw error;
+    }
+  },
+
+  deleteProjectEnvironment: async (
+    userId: string, projectId: string, environmentId: string,
+  ): Promise<boolean> => {
+    try {
+      const deleted = await EnvironmentModel.findOneAndDelete({ _id: environmentId, userId, projectId });
       if (!deleted) throw new Error("ENVIRONMENT_NOT_FOUND");
       return true;
     } catch (error) {

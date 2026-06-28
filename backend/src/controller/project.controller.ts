@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { sendResponse } from "../util";
 import { AuthRequest } from "../middlewares";
-import { IProject } from "../types/project";
-import { projectService } from "../services";
+import { IProject, ISecret, IEnvironment } from "../types";
+import { projectService, secretService, environmentService } from "../services";
 
 export const getProjectById = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
@@ -234,5 +234,167 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, { success: false, status: 404, msg: "Project not found or you don't have access to it" });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the project. Please try again." });
+  }
+};
+
+export const getAllProjectSecrets = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params as { projectId: string };
+  const userId = req.userId!;
+
+  if (!projectId) {
+    return sendResponse(res, { success: false, status: 400, msg: "Project ID is required" });
+  }
+
+  try {
+    const secrets = await secretService.getProjectSecrets(userId, projectId);
+    return sendResponse(res, { success: true, status: 200, data: secrets });
+  } catch (error) {
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while loading secrets." });
+  }
+};
+
+export const createProjectSecret = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params as { projectId: string };
+  const userId = req.userId!;
+  const { environmentId, ...rest } = req.body;
+
+  if (!rest) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide the secret details" });
+  }
+
+  try {
+    const created = await secretService.saveSecretToDB(userId, { ...rest, projectId, environmentId: environmentId || undefined } as ISecret);
+    if (created) {
+      return sendResponse(res, { success: true, status: 201, msg: "Secret created successfully" });
+    }
+  } catch (error: any) {
+    if (error.message === "INVALID_PAYLOAD") {
+      return sendResponse(res, { success: false, status: 400, msg: "Secret name and secret key are required" });
+    }
+    if (error.message === "DUPLICATE_SECRET") {
+      return sendResponse(res, { success: false, status: 400, msg: `A secret named "${rest?.secName}" already exists in this project` });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while saving the secret." });
+  }
+};
+
+export const updateProjectSecret = async (req: AuthRequest, res: Response) => {
+  const { projectId, secretId } = req.params as { projectId: string; secretId: string };
+  const userId = req.userId!;
+  const { environmentId, ...rest } = req.body;
+
+  if (!secretId || !rest) {
+    return sendResponse(res, { success: false, status: 400, msg: !rest ? "Request body is required" : "Secret ID is required" });
+  }
+
+  try {
+    await secretService.updateProjectSecret(userId, projectId, secretId, { ...rest, environmentId: environmentId || undefined });
+    return sendResponse(res, { success: true, status: 200, msg: "Secret updated successfully" });
+  } catch (error: any) {
+    if (error.message === "SECRET_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Secret not found" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the secret." });
+  }
+};
+
+export const deleteProjectSecret = async (req: AuthRequest, res: Response) => {
+  const { projectId, secretId } = req.params as { projectId: string; secretId: string };
+  const userId = req.userId!;
+
+  if (!secretId) {
+    return sendResponse(res, { success: false, status: 400, msg: "Secret ID is required" });
+  }
+
+  try {
+    await secretService.deleteProjectSecret(userId, projectId, secretId);
+    return sendResponse(res, { success: true, status: 200, msg: "Secret deleted successfully" });
+  } catch (error: any) {
+    if (error.message === "SECRET_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Secret not found" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the secret." });
+  }
+};
+
+export const getAllProjectEnvironments = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params as { projectId: string };
+  const userId = req.userId!;
+
+  if (!projectId) {
+    return sendResponse(res, { success: false, status: 400, msg: "Project ID is required" });
+  }
+
+  try {
+    const environments = await environmentService.getProjectEnvironments(userId, projectId);
+    return sendResponse(res, { success: true, status: 200, data: environments });
+  } catch (error) {
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while loading environments." });
+  }
+};
+
+export const createProjectEnvironment = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params as { projectId: string };
+  const userId = req.userId!;
+  const body = req.body;
+
+  if (!body) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide the environment details" });
+  }
+
+  try {
+    const isCreated = await environmentService.createProjectEnvironment(
+      userId, projectId, body as IEnvironment,
+    );
+    if (isCreated) {
+      return sendResponse(res, { success: true, status: 201, msg: "Environment created successfully" });
+    }
+  } catch (error: any) {
+    if (error.message === "INVALID_PAYLOAD") {
+      return sendResponse(res, { success: false, status: 400, msg: "Environment name is required" });
+    }
+    if (error.message === "DUPLICATE_ENVIRONMENT") {
+      return sendResponse(res, { success: false, status: 400, msg: `An environment named "${body?.name}" already exists in this project` });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while creating the environment." });
+  }
+};
+
+export const updateProjectEnvironment = async (req: AuthRequest, res: Response) => {
+  const { projectId, environmentId } = req.params as { projectId: string; environmentId: string };
+  const userId = req.userId!;
+  const body = req.body;
+
+  if (!environmentId || !body) {
+    return sendResponse(res, { success: false, status: 400, msg: !body ? "Request body is required" : "Environment ID is required" });
+  }
+
+  try {
+    await environmentService.updateProjectEnvironment(userId, projectId, environmentId, body);
+    return sendResponse(res, { success: true, status: 200, msg: "Environment updated successfully" });
+  } catch (error: any) {
+    if (error.message === "ENVIRONMENT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Environment not found" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the environment." });
+  }
+};
+
+export const deleteProjectEnvironment = async (req: AuthRequest, res: Response) => {
+  const { projectId, environmentId } = req.params as { projectId: string; environmentId: string };
+  const userId = req.userId!;
+
+  if (!environmentId) {
+    return sendResponse(res, { success: false, status: 400, msg: "Environment ID is required" });
+  }
+
+  try {
+    await environmentService.deleteProjectEnvironment(userId, projectId, environmentId);
+    return sendResponse(res, { success: true, status: 200, msg: "Environment deleted successfully" });
+  } catch (error: any) {
+    if (error.message === "ENVIRONMENT_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Environment not found" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the environment." });
   }
 };
