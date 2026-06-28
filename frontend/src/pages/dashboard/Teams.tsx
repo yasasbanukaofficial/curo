@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import {
   Users,
@@ -14,8 +15,6 @@ import {
   Copy,
   Trash2,
   FolderKanban,
-  KeyRound,
-  Layers3,
   Save,
   ToggleLeft,
   ToggleRight,
@@ -26,14 +25,29 @@ import DashboardButton from "../../components/dashboard/DashboardButton";
 import SectionHeader from "../../components/dashboard/SectionHeader";
 import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
-import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import FormInput from "../../components/dashboard/FormInput";
 import FormField from "../../components/dashboard/FormField";
 import FormSelect from "../../components/dashboard/FormSelect";
 import FilterTabs from "../../components/dashboard/FilterTabs";
 import SearchInput from "../../components/dashboard/SearchInput";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
+import {
+  useGetTeamsQuery,
+  useCheckEmailsMutation,
+  useCreateTeamMutation,
+  useUpdateTeamMutation,
+  useDeleteTeamMutation,
+  useGetTeamMembersQuery,
+  useInviteMemberMutation,
+  useRemoveMemberMutation,
+  useGetTeamInvitesQuery,
+  useRevokeInviteMutation,
+  useGetProjectsQuery,
+} from "../../store";
+import { useTeamRole } from "../../hooks/useTeamRole";
+import type { Team, TeamMember, TeamInvite, Project } from "../../types";
 
 type TeamRole = "owner" | "admin" | "developer" | "viewer";
 type TeamPlan = "starter" | "team" | "enterprise";
@@ -64,7 +78,7 @@ function PlanBadge({ plan }: { plan: TeamPlan }) {
   );
 }
 
-function TeamCard({ team, onSelect, onDelete }: { team: { _id: string; name: string; slug: string; plan: TeamPlan; memberCount: number; projects: string[]; createdAt: string }; onSelect: () => void; onDelete: () => void }) {
+function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => void; onDelete: () => void }) {
   return (
     <DashboardCard hover padding="md" className="cursor-pointer" onClick={onSelect}>
       <div className="flex items-start justify-between mb-4">
@@ -77,18 +91,18 @@ function TeamCard({ team, onSelect, onDelete }: { team: { _id: string; name: str
             <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{team.slug}</p>
           </div>
         </div>
-        <PlanBadge plan={team.plan} />
+        <PlanBadge plan={team.plan || "starter"} />
       </div>
       <div className="flex items-center gap-4 mb-4">
         <span className="flex items-center gap-1.5 text-xs text-[#8E8E93] dark:text-[#666]">
-          <Users className="w-3.5 h-3.5" />{team.memberCount} {team.memberCount === 1 ? "member" : "members"}
+          <Users className="w-3.5 h-3.5" />{team.memberCount || 0} {(team.memberCount || 0) === 1 ? "member" : "members"}
         </span>
         <span className="flex items-center gap-1.5 text-xs text-[#8E8E93] dark:text-[#666]">
           <FolderKanban className="w-3.5 h-3.5" />{(team.projects ?? []).length} projects
         </span>
       </div>
       <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
-        <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Created {team.createdAt}</span>
+        <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{team.createdAt ? new Date(team.createdAt).toLocaleDateString() : ""}</span>
         <DashboardButton onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Delete</DashboardButton>
       </div>
     </DashboardCard>
@@ -131,14 +145,19 @@ const detailTabs = [
   { label: "Settings", value: "settings" as DetailTab },
 ];
 
-const teams: { _id: string; name: string; slug: string; plan: TeamPlan; memberCount: number; projects: string[]; createdAt: string; billingEmail?: string; allowedDomains?: string[]; enforce2fa?: boolean }[] = [];
-const teamMembers: any[] = [];
-const teamInvites: any[] = [];
-const allProjects: any[] = [];
-
 export default function Teams() {
-  const toast = useToast();
-  const [selectedTeam, setSelectedTeam] = useState<any | null>(null);
+  const { success: showSuccess, error: showError } = useToast();
+  const navigate = useNavigate();
+  const { data: teams = [], isLoading: teamsLoading } = useGetTeamsQuery();
+  const [createTeam] = useCreateTeamMutation();
+  const [checkEmails] = useCheckEmailsMutation();
+  const [updateTeam] = useUpdateTeamMutation();
+  const [deleteTeam] = useDeleteTeamMutation();
+  const [inviteMember] = useInviteMemberMutation();
+  const [removeMember] = useRemoveMemberMutation();
+  const [revokeInvite] = useRevokeInviteMutation();
+
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPlan, setCreatePlan] = useState<TeamPlan>("starter");
@@ -160,16 +179,29 @@ export default function Teams() {
   const [showInviteUnregisteredConfirm, setShowInviteUnregisteredConfirm] = useState(false);
   const [pendingInviteEmail, setPendingInviteEmail] = useState("");
 
-  const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m: any) => m.email === inv.email));
+  const teamId = selectedTeam?._id || "";
+  const { data: teamMembers = [], isLoading: membersLoading } = useGetTeamMembersQuery(teamId, { skip: !teamId });
+  const { data: teamInvites = [] } = useGetTeamInvitesQuery(teamId, { skip: !teamId });
+  const { data: allProjects = [] } = useGetProjectsQuery();
+  const teamProjects = allProjects.filter((p: Project) => (p.teams ?? []).includes(teamId));
+  const { canDelete, canEdit, canManageMembers } = useTeamRole(teamId);
 
-  const executeCreateTeam = async (_values: typeof createFormik.initialValues, resetForm: () => void) => {
-    setShowCreateModal(false);
-    resetForm();
-    setCreatePlan("starter");
-    setCreateMembers([]);
-    setCreateMemberEmail("");
-    setCreateMemberRole("developer");
-    toast.success("Team created", `${_values.name} has been created.`);
+  const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m) => m.email === inv.email));
+
+  const executeCreateTeam = async (values: typeof createFormik.initialValues, resetForm: () => void) => {
+    try {
+      const members = createMembers.length > 0 ? createMembers.map((m) => ({ email: m.email, role: m.role })) : undefined;
+      await createTeam({ name: values.name, slug: values.slug, emails: members }).unwrap();
+      showSuccess("Team created", `${values.name} has been created.`);
+      setShowCreateModal(false);
+      resetForm();
+      setCreatePlan("starter");
+      setCreateMembers([]);
+      setCreateMemberEmail("");
+      setCreateMemberRole("developer");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to create team");
+    }
   };
 
   const createFormik = useFormik({
@@ -178,11 +210,22 @@ export default function Teams() {
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       if (createMembers.length > 0) {
         setIsCheckingEmails(true);
-        const unreg = createMembers;
-        setUnregisteredList(unreg);
-        setShowUnregisteredConfirm(true);
-        setSubmitting(false);
-        setIsCheckingEmails(false);
+        try {
+          const result = await checkEmails({ emails: createMembers.map((m) => m.email) }).unwrap();
+          const unregistered = createMembers.filter((m) => result.unregistered.includes(m.email));
+          if (unregistered.length > 0) {
+            setUnregisteredList(unregistered);
+            setShowUnregisteredConfirm(true);
+          } else {
+            await executeCreateTeam(values, resetForm);
+          }
+        } catch {
+          setUnregisteredList(createMembers);
+          setShowUnregisteredConfirm(true);
+        } finally {
+          setIsCheckingEmails(false);
+          setSubmitting(false);
+        }
         return;
       }
 
@@ -194,26 +237,41 @@ export default function Teams() {
   const inviteFormik = useFormik({
     initialValues: { email: "" },
     validate: validateZod(inviteMemberSchema),
-    onSubmit: async (_values, { setSubmitting, resetForm }) => {
-      setSubmitting(false);
-      setShowInviteModal(false);
-      resetForm();
-      setInviteRole("developer");
-      toast.success("Invite sent", `An invitation has been sent to ${_values.email}.`);
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      if (!selectedTeam) return;
+      try {
+        await inviteMember({ teamId: selectedTeam._id, email: values.email, role: inviteRole }).unwrap();
+        setShowInviteModal(false);
+        resetForm();
+        setInviteRole("developer");
+        showSuccess("Invite sent", `An invitation has been sent to ${values.email}.`);
+      } catch (err: any) {
+        showError(err?.data?.msg || "Failed to send invite");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
   const settingsFormik = useFormik({
     initialValues: { name: "", slug: "", billingEmail: "" },
     validate: validateZod(updateTeamSchema),
-    onSubmit: async (_values, { setSubmitting }) => {
-      setSubmitting(false);
-      toast.success("Settings saved", "Team settings have been updated successfully.");
+    onSubmit: async (values, { setSubmitting }) => {
+      if (!selectedTeam) return;
+      try {
+        await updateTeam({ id: selectedTeam._id, name: values.name, slug: values.slug }).unwrap();
+        showSuccess("Settings saved", "Team settings have been updated successfully.");
+      } catch (err: any) {
+        showError(err?.data?.msg || "Failed to update team");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
   function openSettingsForm() {
     if (!selectedTeam) return;
+    if (!canEdit) return;
     settingsFormik.setValues({ name: selectedTeam.name, slug: selectedTeam.slug, billingEmail: selectedTeam.billingEmail || "" });
     setEnforce2fa(selectedTeam.enforce2fa);
     setDetailTab("settings");
@@ -221,31 +279,54 @@ export default function Teams() {
 
   async function handleDeleteTeamConfirm() {
     if (!deleteTeamId) return;
-    setSelectedTeam(null);
-    setDeleteTeamId(null);
-    setShowDeleteTeamModal(false);
-    setDetailTab("overview");
-    toast.success("Team deleted", "The team has been removed.");
+    try {
+      await deleteTeam(deleteTeamId).unwrap();
+      setSelectedTeam(null);
+      setDeleteTeamId(null);
+      setShowDeleteTeamModal(false);
+      setDetailTab("overview");
+      showSuccess("Team deleted", "The team has been removed.");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to delete team");
+    }
+  }
+
+  async function confirmRemoveMember() {
+    if (!selectedTeam || !confirmMemberRemove) return;
+    try {
+      await removeMember({ teamId: selectedTeam._id, memberId: confirmMemberRemove }).unwrap();
+      setConfirmMemberRemove(null);
+      showSuccess("Member removed", "Team member has been removed successfully.");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to remove member");
+    }
+  }
+
+  async function confirmRevokeInvite() {
+    if (!selectedTeam || !confirmInviteRevoke) return;
+    try {
+      await revokeInvite({ teamId: selectedTeam._id, inviteId: confirmInviteRevoke }).unwrap();
+      setConfirmInviteRevoke(null);
+      showSuccess("Invite revoked", "The invitation has been revoked.");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to revoke invite");
+    }
   }
 
   function handleRemoveMember(memberId: string) {
     setConfirmMemberRemove(memberId);
   }
 
-  async function confirmRemoveMember() {
-    if (!selectedTeam || !confirmMemberRemove) return;
-    setConfirmMemberRemove(null);
-    toast.success("Member removed", "Team member has been removed successfully.");
-  }
-
   function handleRevokeInvite(inviteId: string) {
     setConfirmInviteRevoke(inviteId);
   }
 
-  async function confirmRevokeInvite() {
-    if (!selectedTeam || !confirmInviteRevoke) return;
-    setConfirmInviteRevoke(null);
-    toast.success("Invite revoked", "The invitation has been revoked.");
+  if (teamsLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <LoadingSpinner size={28} />
+      </div>
+    );
   }
 
   const teamDetail = selectedTeam ? (
@@ -256,11 +337,13 @@ export default function Teams() {
         </DashboardButton>
         <div className="flex-1">
           <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.name}</h1>
-          <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{selectedTeam.slug} · {selectedTeam.plan} plan</p>
+          <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{selectedTeam.slug} · {selectedTeam.plan || "starter"} plan</p>
         </div>
-        <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="h-9 px-4 text-sm font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-[10px] hover:bg-[#FF3B30]/20">
-          <Trash2 className="w-4 h-4" />Delete Team
-        </DashboardButton>
+        {canDelete && (
+          <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="h-9 px-4 text-sm font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-[10px] hover:bg-[#FF3B30]/20">
+            <Trash2 className="w-4 h-4" />Delete Team
+          </DashboardButton>
+        )}
       </div>
 
       <FilterTabs options={detailTabs.map((t) => t.label)} value={detailTabs.find((t) => t.value === detailTab)?.label || "Overview"} onChange={(v) => setDetailTab(detailTabs.find((t) => t.label === v)?.value || "overview")} />
@@ -272,14 +355,14 @@ export default function Teams() {
               <DashboardCard>
                 <div className="flex items-center justify-between mb-4">
                   <SectionHeader title="Team Information" description="Manage your team settings and preferences." />
-                  <DashboardButton onClick={openSettingsForm} className="h-8 px-3 text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
+                  <DashboardButton onClick={openSettingsForm} disabled={!canEdit} className="h-8 px-3 text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#F5F5F7] dark:disabled:hover:bg-[#1A1A1A]">
                     <Settings className="w-3.5 h-3.5" />Edit
                   </DashboardButton>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Name</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.name}</p></div>
                   <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Slug</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.slug}</p></div>
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Plan</p><PlanBadge plan={selectedTeam.plan} /></div>
+                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Plan</p><PlanBadge plan={selectedTeam.plan || "starter"} /></div>
                   <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Billing Email</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.billingEmail || "—"}</p></div>
                   <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Subscription</p><span className="text-[11px] text-[#30D158] font-medium">Active</span></div>
                   <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Enforce 2FA</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.enforce2fa ? "Enabled" : "Disabled"}</p></div>
@@ -292,38 +375,48 @@ export default function Teams() {
                 </div>
               </DashboardCard>
 
-              <DashboardCard>
-                <div className="flex items-center justify-between mb-5">
-                  <SectionHeader title="Members" description={`${teamMembers.length} members in this team.`} />
-                  <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
-                    <UserPlus className="w-3.5 h-3.5" />Invite
-                  </DashboardButton>
-                </div>
-                <div className="space-y-1">
-                  {teamMembers.map((m: any) => (
-                    <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{m.name?.charAt(0) || "?"}</div>
-                        <div className="min-w-0"><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{m.name}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{m.email}</p></div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <RoleBadge role={m.role} />
-                        <span className="text-[11px] text-[#8E8E93] dark:text-[#666] hidden sm:inline">{m.joinedAt}</span>
-                        {m.role !== "owner" && <DashboardButton onClick={() => handleRemoveMember(m._id)} className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"><X className="w-3.5 h-3.5" /></DashboardButton>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </DashboardCard>
+              {membersLoading ? (
+                <DashboardCard><LoadingSpinner size={24} /></DashboardCard>
+              ) : (
+                <DashboardCard>
+                  <div className="flex items-center justify-between mb-5">
+                    <SectionHeader title="Members" description={`${teamMembers.length} members in this team.`} />
+                    {canManageMembers && (
+                      <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+                        <UserPlus className="w-3.5 h-3.5" />Invite
+                      </DashboardButton>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    {teamMembers.map((m: TeamMember) => {
+                      const memberName = typeof m.userId === "object" && m.userId ? (m.userId as any).name || "" : m.name || "";
+                      const memberEmail = typeof m.userId === "object" && m.userId ? (m.userId as any).email || "" : m.email || "";
+                      return (
+                        <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{memberName?.charAt(0) || "?"}</div>
+                            <div className="min-w-0"><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{memberName}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{memberEmail}</p></div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <RoleBadge role={m.role} />
+                            <span className="text-[11px] text-[#8E8E93] dark:text-[#666] hidden sm:inline">{m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : ""}</span>
+                            {canManageMembers && m.role !== "owner" && <DashboardButton onClick={() => handleRemoveMember(m._id)} className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"><X className="w-3.5 h-3.5" /></DashboardButton>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </DashboardCard>
+              )}
 
               {pendingInvites.length > 0 && (
                 <DashboardCard>
                   <SectionHeader title="Pending Invites" description={`${pendingInvites.length} pending invitation${pendingInvites.length > 1 ? "s" : ""}.`} />
                   <div className="space-y-1">
-                    {pendingInvites.map((inv) => (
+                    {pendingInvites.map((inv: TeamInvite) => (
                       <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                         <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#8E8E93]" /><div><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{inv.email}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Expires {new Date(inv.expiresAt).toLocaleDateString()}</p></div></div>
-                        <div className="flex items-center gap-2"><RoleBadge role={inv.role} /><DashboardButton onClick={() => handleRevokeInvite(inv._id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton></div>
+                        <div className="flex items-center gap-2"><RoleBadge role={inv.role} />{canManageMembers && <DashboardButton onClick={() => handleRevokeInvite(inv._id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton>}</div>
                       </div>
                     ))}
                   </div>
@@ -335,16 +428,20 @@ export default function Teams() {
               <DashboardCard>
                 <SectionHeader title="Quick Actions" />
                 <div className="space-y-2">
-                  <DashboardButton onClick={openSettingsForm} className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><Settings className="w-4 h-4" />Team Settings</DashboardButton>
-                  <DashboardButton className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><Copy className="w-4 h-4" />Copy Invite Link</DashboardButton>
+                  <DashboardButton onClick={openSettingsForm} disabled={!canEdit} className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#F5F5F7] dark:disabled:hover:bg-[#1A1A1A]"><Settings className="w-4 h-4" />Team Settings</DashboardButton>
+                  {canManageMembers && (
+                    <DashboardButton className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><Copy className="w-4 h-4" />Copy Invite Link</DashboardButton>
+                  )}
                   <DashboardButton onClick={() => setDetailTab("projects")} className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><FolderKanban className="w-4 h-4" />View Projects</DashboardButton>
                 </div>
               </DashboardCard>
-              <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
-                <SectionHeader title="Danger Zone" />
-                <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4"><AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Team</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Permanently delete this team and all its data.</p></div></div>
-                <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Team</DashboardButton>
-              </DashboardCard>
+              {canDelete && (
+                <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
+                  <SectionHeader title="Danger Zone" />
+                  <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4"><AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Team</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Permanently delete this team and all its data.</p></div></div>
+                  <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Team</DashboardButton>
+                </DashboardCard>
+              )}
             </div>
           </div>
         )}
@@ -355,25 +452,25 @@ export default function Teams() {
               <SectionHeader title="Team Settings" description="Modify your team details and preferences." />
               <form onSubmit={settingsFormik.handleSubmit} noValidate>
                 <div className="space-y-4">
-                  <FormField label="Team Name" name="name" placeholder="e.g. Acme Corp" value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required />
-                  <FormField label="Slug" name="slug" placeholder="e.g. acme-corp" value={settingsFormik.values.slug} onChange={(v) => settingsFormik.setFieldValue("slug", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.slug ? settingsFormik.errors.slug : undefined} touched={!!settingsFormik.touched.slug} required />
-                  <FormField label="Billing Email" name="billingEmail" type="email" placeholder="billing@company.com" value={settingsFormik.values.billingEmail} onChange={(v) => settingsFormik.setFieldValue("billingEmail", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.billingEmail ? settingsFormik.errors.billingEmail : undefined} touched={!!settingsFormik.touched.billingEmail} />
+                  <FormField label="Team Name" name="name" placeholder="e.g. Acme Corp" value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required disabled={!canEdit} />
+                  <FormField label="Slug" name="slug" placeholder="e.g. acme-corp" value={settingsFormik.values.slug} onChange={(v) => settingsFormik.setFieldValue("slug", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.slug ? settingsFormik.errors.slug : undefined} touched={!!settingsFormik.touched.slug} required disabled={!canEdit} />
+                  <FormField label="Billing Email" name="billingEmail" type="email" placeholder="billing@company.com" value={settingsFormik.values.billingEmail} onChange={(v) => settingsFormik.setFieldValue("billingEmail", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.billingEmail ? settingsFormik.errors.billingEmail : undefined} touched={!!settingsFormik.touched.billingEmail} disabled={!canEdit} />
                   <div>
                     <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Plan</label>
-                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]"><PlanBadge plan={selectedTeam.plan} /></p>
+                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]"><PlanBadge plan={selectedTeam.plan || "starter"} /></p>
                   </div>
                   <div className="flex items-center justify-between py-3">
                     <div><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Enforce Two-Factor Authentication</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Require all members to enable 2FA.</p></div>
-                    <DashboardButton onClick={() => setEnforce2fa(!enforce2fa)} className="text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]">{enforce2fa ? <ToggleRight className="w-6 h-6 text-[#30D158]" /> : <ToggleLeft className="w-6 h-6" />}</DashboardButton>
+                    <DashboardButton onClick={() => setEnforce2fa(!enforce2fa)} disabled={!canEdit} className="text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed">{enforce2fa ? <ToggleRight className="w-6 h-6 text-[#30D158]" /> : <ToggleLeft className="w-6 h-6" />}</DashboardButton>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Allowed Domains</label>
                     <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mb-2">Domains comma separated (e.g. acme.com, example.com)</p>
-                    <FormInput value={(selectedTeam.allowedDomains ?? []).join(", ")} onChange={() => {}} placeholder="acme.com, example.com" />
+                    <FormInput value={(selectedTeam.allowedDomains ?? []).join(", ")} onChange={() => {}} placeholder="acme.com, example.com" disabled={!canEdit} />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
+                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting || !canEdit} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
@@ -387,12 +484,33 @@ export default function Teams() {
           <DashboardCard>
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
-                <SectionHeader title="Projects" description={`0 projects assigned to this team.`} />
+                <SectionHeader title="Projects" description={`${teamProjects.length} projects assigned to this team.`} />
               </div>
-              <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
+              <div className="flex items-center gap-3">
+                <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
+                <DashboardButton onClick={() => navigate("/dashboard/projects")} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
+                  <Plus className="w-4 h-4" />New Project
+                </DashboardButton>
+              </div>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No projects assigned to this team.</p>
+              {teamProjects.length === 0 ? (
+                <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No projects assigned to this team.</p>
+              ) : (
+                teamProjects
+                  .filter((p: Project) => p.projectName.toLowerCase().includes(projectSearch.toLowerCase()))
+                  .map((p: Project) => (
+                    <div key={p._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FolderKanban className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{p.projectName}</p>
+                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{p.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              )}
             </div>
           </DashboardCard>
         )}
@@ -640,12 +758,18 @@ export default function Teams() {
         buttons={[
           { label: "Cancel", onClick: () => { setShowInviteUnregisteredConfirm(false); setPendingInviteEmail(""); }, variant: "secondary" },
           { label: "Send invite", onClick: async () => {
+            if (!selectedTeam) return;
             setShowInviteUnregisteredConfirm(false);
-            setPendingInviteEmail("");
-            setShowInviteModal(false);
-            inviteFormik.resetForm();
-            setInviteRole("developer");
-            toast.success("Invite sent", `An invitation has been sent to ${pendingInviteEmail}.`);
+            try {
+              await inviteMember({ teamId: selectedTeam._id, email: pendingInviteEmail, role: inviteRole }).unwrap();
+              setPendingInviteEmail("");
+              setShowInviteModal(false);
+              inviteFormik.resetForm();
+              setInviteRole("developer");
+              showSuccess("Invite sent", `An invitation has been sent to ${pendingInviteEmail}.`);
+            } catch (err: any) {
+              showError(err?.data?.msg || "Failed to send invite");
+            }
           }, variant: "primary" },
         ]}
       />
