@@ -6,13 +6,7 @@ import environmentReducer from "../features/environment/environmentSlice";
 import versionReducer from "../features/version/versionSlice";
 import auditReducer from "../features/audit/auditSlice";
 import teamReducer from "../features/team/teamSlice";
-import { secretApi } from "../features/secret/secretApi";
-import { projectApi } from "../features/project/projectApi";
-import { environmentApi } from "../features/environment/environmentApi";
-import { authApi } from "../features/auth/authApi";
-import { teamApi } from "../features/team/teamApi";
-import { auditApi } from "../features/audit/auditApi";
-import { versionApi } from "../features/version/versionApi";
+import { baseApi } from "../api/baseApi";
 
 const store = configureStore({
   reducer: {
@@ -23,24 +17,10 @@ const store = configureStore({
     version: versionReducer,
     audit: auditReducer,
     team: teamReducer,
-    [secretApi.reducerPath]: secretApi.reducer,
-    [projectApi.reducerPath]: projectApi.reducer,
-    [environmentApi.reducerPath]: environmentApi.reducer,
-    [authApi.reducerPath]: authApi.reducer,
-    [teamApi.reducerPath]: teamApi.reducer,
-    [auditApi.reducerPath]: auditApi.reducer,
-    [versionApi.reducerPath]: versionApi.reducer,
+    [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(
-      secretApi.middleware,
-      projectApi.middleware,
-      environmentApi.middleware,
-      authApi.middleware,
-      teamApi.middleware,
-      auditApi.middleware,
-      versionApi.middleware,
-    ),
+    getDefaultMiddleware().concat(baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

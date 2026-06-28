@@ -1,11 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { Project } from "../../types/project";
 
-export const projectApi = createApi({
-  reducerPath: "projectApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ["Project", "Team"],
+export const projectApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getProjects: builder.query<Project[], void>({
       query: () => "/projects/all",
@@ -61,6 +57,8 @@ export const projectApi = createApi({
       ],
     }),
   }),
+
+  overrideExisting: false,
 });
 
 export const {

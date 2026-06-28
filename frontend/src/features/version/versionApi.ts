@@ -1,11 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { Version } from "../../types/version";
 
-export const versionApi = createApi({
-  reducerPath: "versionApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ["Version", "Secret"],
+export const versionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getVersions: builder.query<Version[], string>({
       query: (secretId) => `/version/all/${secretId}`,
@@ -24,6 +20,8 @@ export const versionApi = createApi({
       ],
     }),
   }),
+
+  overrideExisting: false,
 });
 
 export const {

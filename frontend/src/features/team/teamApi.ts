@@ -1,5 +1,4 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { Team } from "../../types/team";
 import type { TeamInvite } from "../../types/teamInvite";
 import type { TeamMember } from "../../types/teamMember";
@@ -9,12 +8,10 @@ interface InviteDetails {
   teamAvatar?: string;
   memberCount: number;
   role: string;
+  hasAccount: boolean;
 }
 
-export const teamApi = createApi({
-  reducerPath: "teamApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ["Team", "Project", "TeamInvite"],
+export const teamApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTeams: builder.query<Team[], void>({
         query: () => "/teams/all",
@@ -59,12 +56,38 @@ export const teamApi = createApi({
       query: (teamId) => `/teams/get/${teamId}/invites`,
       transformResponse: (response: { data: TeamInvite[] }) => response.data,
       providesTags: (result, error, teamId) => [
+        { type: "TeamInvite", id: "LIST" },
         { type: "TeamInvite", id: teamId },
       ],
     }),
     getTeamMembers: builder.query<TeamMember[], string>({
       query: (teamId) => `/teams/get/${teamId}/members`,
       transformResponse: (response: { data: TeamMember[] }) => response.data,
+      providesTags: (result, error, teamId) => [
+        { type: "TeamMembers", id: "LIST" },
+        { type: "TeamMembers", id: teamId },
+      ],
+    }),
+    removeTeamMember: builder.mutation<void, { teamId: string; memberId: string }>({
+      query: ({ teamId, memberId }) => ({
+        url: `/teams/get/${teamId}/members/${memberId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: "TeamMembers", id: teamId },
+        { type: "Team", id: "LIST" },
+      ],
+    }),
+    removeMemberToInvite: builder.mutation<void, { teamId: string; memberId: string }>({
+      query: ({ teamId, memberId }) => ({
+        url: `/teams/get/${teamId}/members/${memberId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: "TeamMembers", id: teamId },
+        { type: "TeamInvite", id: teamId },
+        { type: "Team", id: "LIST" },
+      ],
     }),
     inviteMember: builder.mutation<void, { teamId: string; email: string; role?: string }>({
       query: ({ teamId, ...body }) => ({
@@ -72,14 +95,20 @@ export const teamApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: (result, error, { teamId }) => [{ type: "TeamInvite", id: teamId }],
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: "TeamInvite", id: teamId },
+        { type: "TeamMembers", id: teamId },
+      ],
     }),
     revokeInvite: builder.mutation<void, { teamId: string; inviteId: string }>({
       query: ({ teamId, inviteId }) => ({
         url: `/teams/get/${teamId}/invites/${inviteId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, { teamId }) => [{ type: "TeamInvite", id: teamId }],
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: "TeamInvite", id: teamId },
+        { type: "TeamMembers", id: teamId },
+      ],
     }),
     acceptInvite: builder.query<{ redirect: string }, string>({
       query: (token) => `/teams/invite/accept/${token}`,
@@ -95,9 +124,11 @@ export const teamApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "Team", id: "LIST" }],
+      invalidatesTags: [{ type: "Team", id: "LIST" }, { type: "TeamInvite", id: "LIST" }, { type: "TeamMembers", id: "LIST" }],
     }),
   }),
+
+  overrideExisting: false,
 });
 
 export const {
@@ -110,6 +141,8 @@ export const {
   useGetTeamMembersQuery,
   useInviteMemberMutation,
   useRevokeInviteMutation,
+  useRemoveTeamMemberMutation,
+  useRemoveMemberToInviteMutation,
   useLazyAcceptInviteQuery,
   useLazyGetInviteDetailsQuery,
   useAcceptInviteExplicitMutation,
