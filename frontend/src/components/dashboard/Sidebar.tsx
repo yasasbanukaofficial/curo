@@ -9,18 +9,15 @@ import {
 
 
   PlugZap,
-  ScrollText,
   Settings,
   UserCircle,
   ChevronDown,
-  Check,
   Sun,
   LogOut,
   Plus,
 } from "lucide-react";
-
-const projects: string[] = [];
-
+import { useGetProjectsQuery, useVerifySessionQuery, useLogoutMutation, clearCredentials } from "../../store";
+import { useAppDispatch } from "../../app/store";
 const navSections = [
   {
     label: "Workspace",
@@ -34,15 +31,15 @@ const navSections = [
     label: "Management",
     items: [
       { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
-      { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
-
     ],
   },
 ];
 
 function ProjectSwitcher() {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(projects[0] ?? "");
+  const { data: allProjects = [] } = useGetProjectsQuery();
+  const projects = (allProjects as any[]) ?? [];
+  const [, setSelected] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -74,27 +71,24 @@ function ProjectSwitcher() {
         onClick={() => setOpen(!open)}
         className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] justify-between"
       >
-        <span className="truncate">{selected}</span>
+        <span className="truncate font-normal">Switch project</span>
         <ChevronDown className={`w-3.5 h-3.5 text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </DashboardButton>
 
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 transition-colors duration-200">
-          {projects.map((p) => (
+          {projects.map((p: any) => (
             <DashboardButton
-              key={p}
+              key={p._id}
               onClick={() => {
-                setSelected(p);
+                setSelected(p.projectName);
                 setOpen(false);
+                navigate(`/dashboard/projects?projectId=${p._id}`);
               }}
-              className={`w-full h-9 px-3 text-sm rounded-lg justify-start ${
-                p === selected
-                  ? "bg-[#F5F5F7] dark:bg-[#333] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
-                  : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
-              }`}
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
             >
-              <span className="flex-1 text-left">{p}</span>
-              {p === selected && <Check className="w-3.5 h-3.5 text-[#1D1D1F] dark:text-[#E5E5E5]" />}
+              <FolderKanban className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="flex-1 text-left truncate">{p.projectName}</span>
             </DashboardButton>
           ))}
         </div>
@@ -102,12 +96,6 @@ function ProjectSwitcher() {
     </div>
   );
 }
-
-const demoUser = {
-  name: "Demo User",
-  email: "demo@example.com",
-  emailVerified: true,
-};
 
 interface UserDropdownProps {
   onToggleSettings: (tab?: string) => void;
@@ -118,19 +106,36 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const user = demoUser;
+  const dispatch = useAppDispatch();
+
+  const { data: userData } = useVerifySessionQuery();
+  const [logout] = useLogoutMutation();
+
+  const user = (userData as any) ?? null;
+  const userName = user?.displayName || user?.name || user?.email?.split("@")[0] || "";
+  const userEmail = user?.email || "";
+  const emailVerified = user?.emailVerified ?? user?.isEmailVerified ?? false;
+
   const initials = useMemo(() => {
-    if (!user?.name) return "?";
-    return user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }, [user?.name]);
+    if (userName) {
+      return userName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (userEmail) return userEmail[0].toUpperCase();
+    return "?";
+  }, [userName, userEmail]);
 
   async function handleLogout() {
-    navigate("/");
+    try {
+      await logout().unwrap();
+    } catch {
+    }
+    dispatch(clearCredentials());
+    navigate("/login", { replace: true });
   }
 
   useEffect(() => {
@@ -154,8 +159,8 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{user?.name || ""}</p>
-          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{user?.email || ""}</p>
+          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{userName}</p>
+          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{userEmail}</p>
         </div>
       </button>
 
@@ -167,12 +172,12 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{user?.name || ""}</p>
-                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{user?.email || ""}</p>
+                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{userName}</p>
+                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{userEmail}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {user?.emailVerified && (
+              {emailVerified && (
                 <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#30D158]/10 text-[#30D158]">
                   Verified
                 </span>

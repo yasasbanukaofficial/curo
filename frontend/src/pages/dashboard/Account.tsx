@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
@@ -33,7 +34,9 @@ import {
   useVerifySessionQuery,
   useChangePasswordMutation,
   useDisconnectOAuthMutation,
+  clearCredentials,
 } from "../../store";
+import { useAppDispatch } from "../../app/store";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -122,10 +125,14 @@ export default function Account() {
     setShowDeleteModal(false);
   }
 
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   async function handleDisconnectGoogle() {
     try {
       await disconnectOAuth({ provider: "google" }).unwrap();
-      toast.success("Google disconnected", "Your Google account has been unlinked.");
+      dispatch(clearCredentials());
+      navigate("/login", { replace: true });
     } catch (err: any) {
       toast.error(err?.data?.msg || "Failed to disconnect Google account");
     }
@@ -133,7 +140,8 @@ export default function Account() {
   async function handleDisconnectGithub() {
     try {
       await disconnectOAuth({ provider: "github" }).unwrap();
-      toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
+      dispatch(clearCredentials());
+      navigate("/login", { replace: true });
     } catch (err: any) {
       toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
     }
@@ -459,7 +467,7 @@ export default function Account() {
         onClose={() => setShowDeleteModal(false)}
         variant="warning"
         title="Delete Account"
-        message="All your data will be permanently deleted, including projects, secrets, environments, integrations, and audit logs. Your account cannot be recovered."
+        message="All your data will be permanently deleted, including projects, secrets, environments, and integrations. Your account cannot be recovered."
         buttons={[
           { label: "Cancel", onClick: () => setShowDeleteModal(false), variant: "secondary" },
           { label: "Delete Account", onClick: handleDeleteAccount, variant: "destructive" },

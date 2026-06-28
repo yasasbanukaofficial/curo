@@ -37,7 +37,6 @@ const tiers = [
       "Advanced access controls",
       "Version history & rollbacks",
       "Priority support",
-      "Audit log",
       "API access",
     ],
     cta: "Start Free Trial",
@@ -66,7 +65,7 @@ const tiers = [
 
 const allFeatures = [
   { category: "Secrets", items: ["Secrets storage", "Environment variables", "Config files", "Secret rotation", "Encryption at rest", "Encryption in transit"] },
-  { category: "Team", items: ["Team management", "Role-based access", "Audit logging", "Activity feed", "Webhook notifications", "Slack integration"] },
+  { category: "Team", items: ["Team management", "Role-based access", "Activity feed", "Webhook notifications", "Slack integration"] },
   { category: "Deploy", items: ["CLI tool", "API access", "CI/CD integration", "Git sync", "Environment cloning", "Rollback support"] },
   { category: "Security", items: ["SOC 2 compliance", "GDPR compliant", "Data encryption", "Access policies", "Session management", "IP whitelisting"] },
 ];

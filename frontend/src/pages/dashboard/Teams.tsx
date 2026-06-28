@@ -254,12 +254,17 @@ export default function Teams() {
   });
 
   const settingsFormik = useFormik({
-    initialValues: { name: "", slug: "", billingEmail: "" },
+    enableReinitialize: true,
+    initialValues: {
+      name: selectedTeam?.name ?? "",
+      slug: selectedTeam?.slug ?? "",
+      billingEmail: selectedTeam?.billingEmail ?? "",
+    },
     validate: validateZod(updateTeamSchema),
     onSubmit: async (values, { setSubmitting }) => {
       if (!selectedTeam) return;
       try {
-        await updateTeam({ id: selectedTeam._id, name: values.name, slug: values.slug }).unwrap();
+        await updateTeam({ id: selectedTeam._id, name: values.name, slug: values.slug, billingEmail: values.billingEmail || undefined }).unwrap();
         showSuccess("Settings saved", "Team settings have been updated successfully.");
       } catch (err: any) {
         showError(err?.data?.msg || "Failed to update team");
@@ -272,7 +277,6 @@ export default function Teams() {
   function openSettingsForm() {
     if (!selectedTeam) return;
     if (!canEdit) return;
-    settingsFormik.setValues({ name: selectedTeam.name, slug: selectedTeam.slug, billingEmail: selectedTeam.billingEmail || "" });
     setEnforce2fa(selectedTeam.enforce2fa);
     setDetailTab("settings");
   }
@@ -452,9 +456,9 @@ export default function Teams() {
               <SectionHeader title="Team Settings" description="Modify your team details and preferences." />
               <form onSubmit={settingsFormik.handleSubmit} noValidate>
                 <div className="space-y-4">
-                  <FormField label="Team Name" name="name" placeholder="e.g. Acme Corp" value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required disabled={!canEdit} />
-                  <FormField label="Slug" name="slug" placeholder="e.g. acme-corp" value={settingsFormik.values.slug} onChange={(v) => settingsFormik.setFieldValue("slug", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.slug ? settingsFormik.errors.slug : undefined} touched={!!settingsFormik.touched.slug} required disabled={!canEdit} />
-                  <FormField label="Billing Email" name="billingEmail" type="email" placeholder="billing@company.com" value={settingsFormik.values.billingEmail} onChange={(v) => settingsFormik.setFieldValue("billingEmail", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.billingEmail ? settingsFormik.errors.billingEmail : undefined} touched={!!settingsFormik.touched.billingEmail} disabled={!canEdit} />
+                  <FormField label="Team Name" name="name" placeholder={settingsFormik.values.name || "e.g. Acme Corp"} value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required disabled={!canEdit} />
+                  <FormField label="Slug" name="slug" placeholder={settingsFormik.values.slug || "e.g. acme-corp"} value={settingsFormik.values.slug} onChange={(v) => settingsFormik.setFieldValue("slug", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.slug ? settingsFormik.errors.slug : undefined} touched={!!settingsFormik.touched.slug} required disabled={!canEdit} />
+                  <FormField label="Billing Email" name="billingEmail" type="email" placeholder={settingsFormik.values.billingEmail || "billing@company.com"} value={settingsFormik.values.billingEmail} onChange={(v) => settingsFormik.setFieldValue("billingEmail", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.billingEmail ? settingsFormik.errors.billingEmail : undefined} touched={!!settingsFormik.touched.billingEmail} disabled={!canEdit} />
                   <div>
                     <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Plan</label>
                     <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]"><PlanBadge plan={selectedTeam.plan || "starter"} /></p>

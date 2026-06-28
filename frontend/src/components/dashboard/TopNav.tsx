@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, FolderKanban, KeyRound, Layers3, Users, PlugZap, ScrollText, Search } from "lucide-react";
+import { Bell, FolderKanban, KeyRound, Layers3, Users, PlugZap, Search } from "lucide-react";
 import DashboardButton from "./DashboardButton";
 import SearchInput from "./SearchInput";
 import CuroLogo from "../landing/CuroLogo";
@@ -9,7 +9,7 @@ interface SearchResult {
   id: string;
   label: string;
   description: string;
-  category: "project" | "secret" | "environment" | "team" | "integration" | "audit";
+  category: "project" | "secret" | "environment" | "team" | "integration";
   path: string;
 }
 
@@ -26,7 +26,6 @@ const categoryIcons: Record<string, typeof FolderKanban> = {
   environment: Layers3,
   team: Users,
   integration: PlugZap,
-  audit: ScrollText,
 };
 
 const categoryLabels: Record<string, string> = {
@@ -35,7 +34,6 @@ const categoryLabels: Record<string, string> = {
   environment: "Environments",
   team: "Teams",
   integration: "Integrations",
-  audit: "Audit Logs",
 };
 
 export default function TopNav() {

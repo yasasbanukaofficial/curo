@@ -39,6 +39,8 @@ import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useAddTeamToProjectMutation,
+  useRemoveTeamFromProjectMutation,
   useGetSecretsQuery,
   useCreateSecretMutation,
   useUpdateSecretMutation,
@@ -57,13 +59,19 @@ type EnvView = "list" | "secrets";
 
 const updateProjectSchema = z.object({
   name: z.string().trim().min(1, "Project name is required").max(100, "Name is too long"),
-  description: z.string().trim().min(1, "Description is required").max(500, "Description is too long"),
+  description: z.string().trim().max(500, "Description is too long").optional().or(z.literal("")),
   projectLink: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
-const secretSchema = z.object({
+const createSecretSchema = z.object({
   secName: z.string().trim().min(1, "Secret name is required"),
   secKey: z.string().trim().min(1, "Secret key is required"),
+  environmentId: z.string().optional(),
+});
+
+const editSecretSchema = z.object({
+  secName: z.string().trim().optional(),
+  secKey: z.string().trim().optional(),
   environmentId: z.string().optional(),
 });
 
@@ -114,9 +122,20 @@ export default function Projects() {
   const [createEnvironment] = useCreateEnvironmentMutation();
   const [updateEnvironment] = useUpdateEnvironmentMutation();
   const [deleteEnvironment] = useDeleteEnvironmentMutation();
+  const [addTeamToProject] = useAddTeamToProjectMutation();
+  const [removeTeamFromProject] = useRemoveTeamFromProjectMutation();
 
   const { activeTeamId } = useActiveTeamContext();
-  const { canCreate, canDeleteResource } = useTeamRole(activeTeamId);
+  const { currentUserId } = useTeamRole(activeTeamId);
+
+  const projectRole = selectedProject?.role ?? (activeTeamId ? "viewer" : "owner");
+  const canCreate = ["owner", "admin", "developer"].includes(projectRole);
+  const canDeleteResource = (resourceUserId: string | undefined) => {
+    if (!resourceUserId) return false;
+    if (projectRole === "owner" || projectRole === "admin") return true;
+    if (projectRole === "developer") return resourceUserId === currentUserId;
+    return false;
+  };
 
   useEffect(() => {
     if (location.state?.openNewProject) {
@@ -127,7 +146,7 @@ export default function Projects() {
 
   const filtered = projects.filter((p) =>
     p.projectName.toLowerCase().includes(search.toLowerCase()) ||
-    p.description.toLowerCase().includes(search.toLowerCase())
+    (p.description ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   function handleEnvClick(envId: string) {
@@ -144,12 +163,17 @@ export default function Projects() {
   });
 
   const settingsFormik = useFormik({
-    initialValues: { name: "", description: "", projectLink: "" },
+    enableReinitialize: true,
+    initialValues: {
+      name: selectedProject?.projectName ?? "",
+      description: selectedProject?.description ?? "",
+      projectLink: selectedProject?.projectLink ?? "",
+    },
     validate: validateZod(updateProjectSchema),
     onSubmit: async (values, { setSubmitting }) => {
       if (!selectedProject) return;
       try {
-        await updateProject({ projectId: selectedProject._id, projectName: values.name, description: values.description }).unwrap();
+        await updateProject({ projectId: selectedProject._id, projectName: values.name, description: values.description, projectLink: values.projectLink || undefined }).unwrap();
         showSuccess("Project saved", "Project settings have been updated.");
       } catch (err: any) {
         showError(err?.data?.msg || "Failed to update project");
@@ -161,7 +185,7 @@ export default function Projects() {
 
   const secretFormik = useFormik({
     initialValues: { secName: "", secKey: "", environmentId: "" },
-    validate: validateZod(secretSchema),
+    validate: (values) => validateZod(editingSecret ? editSecretSchema : createSecretSchema)(values),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       if (!selectedProject) return;
       try {
@@ -208,7 +232,6 @@ export default function Projects() {
   function openSettingsForm() {
     if (!selectedProject) return;
     if (!canCreate) return;
-    settingsFormik.setValues({ name: selectedProject.projectName, description: selectedProject.description, projectLink: selectedProject.projectLink || "" });
     setDetailTab("settings");
   }
 
@@ -266,7 +289,7 @@ export default function Projects() {
 
   function openEditSecret(secret: Secret) {
     setEditingSecret(secret);
-    secretFormik.setValues({ secName: secret.secName, secKey: secret.secKey, environmentId: secret.environmentId || "" });
+    secretFormik.setValues({ secName: secret.secName, secKey: "", environmentId: secret.environmentId || "" });
     setShowSecretModal(true);
   }
 
@@ -607,8 +630,20 @@ export default function Projects() {
                         </div>
                       </div>
                       <DashboardButton
-                        onClick={async () => {}}
-                        className={`h-7 px-3 text-xs font-medium rounded-[8px] ${isAssigned ? "text-[#FF3B30] bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20" : "text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"}`}
+                        onClick={async () => {
+                          if (isAssigned) {
+                            try {
+                              await removeTeamFromProject({ projectId: selectedProject._id, teamId: team._id }).unwrap();
+                              showSuccess("Team removed", `"${team.name}" has been removed from the project.`);
+                            } catch { showError("Failed to remove team"); }
+                          } else {
+                            try {
+                              await addTeamToProject({ projectId: selectedProject._id, teamId: team._id }).unwrap();
+                              showSuccess("Team assigned", `"${team.name}" has been assigned to the project.`);
+                            } catch { showError("Failed to assign team"); }
+                          }
+                        }}
+                        className={`h-7 px-3 text-xs font-medium rounded-[8px] ${isAssigned ? "text-[#FF3B30] bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20" : "text-white bg-[#1D1D1D] dark:bg-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"}`}
                       >
                         {isAssigned ? "Remove" : "Assign"}
                       </DashboardButton>
@@ -627,7 +662,7 @@ export default function Projects() {
               <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mb-5">Modify your project details.</p>
               <form onSubmit={settingsFormik.handleSubmit} noValidate>
                 <div className="space-y-4">
-                  <FormField label="Project Name" name="name" placeholder="e.g. Acme API" value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required />
+                  <FormField label="Project Name" name="name" placeholder={settingsFormik.values.name || "e.g. Acme API"} value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required />
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">URL</label>
@@ -638,9 +673,9 @@ export default function Projects() {
                         </div>
                       </div>
                     </div>
-                    <FormInput value={settingsFormik.values.projectLink} onChange={(v) => settingsFormik.setFieldValue("projectLink", v)} onBlur={settingsFormik.handleBlur} placeholder="https://example.com" error={settingsFormik.touched.projectLink ? settingsFormik.errors.projectLink : undefined} />
+                    <FormInput value={settingsFormik.values.projectLink} onChange={(v) => settingsFormik.setFieldValue("projectLink", v)} onBlur={settingsFormik.handleBlur} placeholder={settingsFormik.values.projectLink || "https://example.com"} error={settingsFormik.touched.projectLink ? settingsFormik.errors.projectLink : undefined} />
                   </div>
-                  <FormTextarea label="Description" name="description" placeholder="Describe what this project is for..." value={settingsFormik.values.description} onChange={(v) => settingsFormik.setFieldValue("description", v)} error={settingsFormik.touched.description ? settingsFormik.errors.description : undefined} touched={!!settingsFormik.touched.description} required rows={3} />
+                  <FormTextarea label="Description" name="description" placeholder={settingsFormik.values.description || "Describe what this project is for..."} value={settingsFormik.values.description} onChange={(v) => settingsFormik.setFieldValue("description", v)} error={settingsFormik.touched.description ? settingsFormik.errors.description : undefined} touched={!!settingsFormik.touched.description} rows={3} />
                 </div>
                 <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
                   <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
@@ -668,8 +703,8 @@ export default function Projects() {
         }
       >
         <div className="space-y-4">
-          <FormField label="Secret Name" name="secName" placeholder="e.g. DATABASE_URL" value={secretFormik.values.secName} onChange={(v) => secretFormik.setFieldValue("secName", v)} onBlur={secretFormik.handleBlur} error={secretFormik.touched.secName ? secretFormik.errors.secName : undefined} touched={!!secretFormik.touched.secName} required />
-          <FormField label="Secret Value" name="secKey" placeholder="e.g. postgres://..." value={secretFormik.values.secKey} onChange={(v) => secretFormik.setFieldValue("secKey", v)} onBlur={secretFormik.handleBlur} error={secretFormik.touched.secKey ? secretFormik.errors.secKey : undefined} touched={!!secretFormik.touched.secKey} required />
+          <FormField label="Secret Name" name="secName" placeholder={secretFormik.values.secName || "e.g. DATABASE_URL"} value={secretFormik.values.secName} onChange={(v) => secretFormik.setFieldValue("secName", v)} onBlur={secretFormik.handleBlur} error={secretFormik.touched.secName ? secretFormik.errors.secName : undefined} touched={!!secretFormik.touched.secName} required={!editingSecret} />
+          <FormField label="Secret Value" name="secKey" placeholder={editingSecret ? "Leave blank to keep current value" : "e.g. postgres://..."} value={secretFormik.values.secKey} onChange={(v) => secretFormik.setFieldValue("secKey", v)} onBlur={secretFormik.handleBlur} error={secretFormik.touched.secKey ? secretFormik.errors.secKey : undefined} touched={!!secretFormik.touched.secKey} required={!editingSecret} />
           {projectEnvironments.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Environment</label>
@@ -697,7 +732,7 @@ export default function Projects() {
         }
       >
         <div className="space-y-4">
-          <FormField label="Environment Name" name="name" placeholder="e.g. Development" value={envFormik.values.name} onChange={(v) => envFormik.setFieldValue("name", v)} onBlur={envFormik.handleBlur} error={envFormik.touched.name ? envFormik.errors.name : undefined} touched={!!envFormik.touched.name} required />
+          <FormField label="Environment Name" name="name" placeholder={envFormik.values.name || "e.g. Development"} value={envFormik.values.name} onChange={(v) => envFormik.setFieldValue("name", v)} onBlur={envFormik.handleBlur} error={envFormik.touched.name ? envFormik.errors.name : undefined} touched={!!envFormik.touched.name} required />
         </div>
       </Modal>
 

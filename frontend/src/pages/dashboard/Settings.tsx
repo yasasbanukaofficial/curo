@@ -64,7 +64,6 @@ export default function Settings() {
                 "Unlimited projects",
                 "Unlimited secrets",
                 "Up to 25 team members",
-                "Advanced audit logs",
                 "Environment sync",
                 "Priority email support",
               ].map((f) => (
