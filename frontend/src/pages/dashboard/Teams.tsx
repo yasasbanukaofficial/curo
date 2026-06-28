@@ -39,9 +39,11 @@ import {
   useAddTeamMutation,
   useUpdateTeamMutation,
   useRemoveTeamMutation,
+  useGetTeamMembersQuery,
   useGetTeamInvitesQuery,
   useInviteMemberMutation,
   useRevokeInviteMutation,
+  useRemoveMemberToInviteMutation,
 } from "../../features/team/teamApi";
 import { useGetProjectsQuery } from "../../features/project/projectApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -154,7 +156,9 @@ export default function Teams() {
   const [removeTeam] = useRemoveTeamMutation();
   const [inviteMember] = useInviteMemberMutation();
   const [revokeInvite] = useRevokeInviteMutation();
-  const { data: teamInvites = [] } = useGetTeamInvitesQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
+  const { data: teamInvites = [], refetch: refetchInvites } = useGetTeamInvitesQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
+  const { data: teamMembers = [], refetch: refetchMembers } = useGetTeamMembersQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
+  const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m) => m.email === inv.email));
   const { data: allProjects = [] } = useGetProjectsQuery();
   const teamProjects = selectedTeam
     ? allProjects.filter((p) => (selectedTeam.projects ?? []).includes(p._id))
@@ -247,6 +251,7 @@ export default function Teams() {
           return;
         }
         await inviteMember({ teamId: selectedTeam._id, email: values.email, role: inviteRole }).unwrap();
+        refetchInvites();
         setSubmitting(false);
         setShowInviteModal(false);
         resetForm();
@@ -303,12 +308,20 @@ export default function Teams() {
     setConfirmMemberRemove(memberId);
   }
 
-  function confirmRemoveMember() {
+  const [removeTeamMember] = useRemoveMemberToInviteMutation();
+
+  async function confirmRemoveMember() {
     if (!selectedTeam || !confirmMemberRemove) return;
-    const updated = { ...selectedTeam, members: (selectedTeam.members ?? []).filter((m) => m._id !== confirmMemberRemove), memberCount: selectedTeam.memberCount - 1 };
-    dispatch(setSelectedTeam(updated));
-    setConfirmMemberRemove(null);
-    toast.success("Member removed", "Team member has been removed successfully.");
+    try {
+      await removeTeamMember({ teamId: selectedTeam._id, memberId: confirmMemberRemove }).unwrap();
+      refetchMembers();
+      refetchInvites();
+      setConfirmMemberRemove(null);
+      toast.success("Member removed", "Team member has been removed successfully.");
+    } catch (err: any) {
+      setConfirmMemberRemove(null);
+      toast.error("Failed to remove member", err?.data?.msg || "Something went wrong. Please try again.");
+    }
   }
 
   function handleRevokeInvite(inviteId: string) {
@@ -319,6 +332,7 @@ export default function Teams() {
     if (!selectedTeam || !confirmInviteRevoke) return;
     try {
       await revokeInvite({ teamId: selectedTeam._id, inviteId: confirmInviteRevoke }).unwrap();
+      refetchInvites();
       setConfirmInviteRevoke(null);
       toast.success("Invite revoked", "The invitation has been revoked.");
     } catch (err: any) {
@@ -399,13 +413,13 @@ export default function Teams() {
 
               <DashboardCard>
                 <div className="flex items-center justify-between mb-5">
-                  <SectionHeader title="Members" description={`${(selectedTeam.members ?? []).length} members in this team.`} />
+                  <SectionHeader title="Members" description={`${teamMembers.length} members in this team.`} />
                   <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
                     <UserPlus className="w-3.5 h-3.5" />Invite
                   </DashboardButton>
                 </div>
                 <div className="space-y-1">
-                  {(selectedTeam.members ?? []).map((m: any) => (
+                  {teamMembers.map((m: any) => (
                     <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{m.name?.charAt(0) || "?"}</div>
@@ -421,11 +435,11 @@ export default function Teams() {
                 </div>
               </DashboardCard>
 
-              {teamInvites.length > 0 && (
+              {pendingInvites.length > 0 && (
                 <DashboardCard>
-                  <SectionHeader title="Pending Invites" description={`${teamInvites.length} pending invitation${teamInvites.length > 1 ? "s" : ""}.`} />
+                  <SectionHeader title="Pending Invites" description={`${pendingInvites.length} pending invitation${pendingInvites.length > 1 ? "s" : ""}.`} />
                   <div className="space-y-1">
-                    {teamInvites.map((inv) => (
+                    {pendingInvites.map((inv) => (
                       <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                         <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#8E8E93]" /><div><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{inv.email}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Expires {new Date(inv.expiresAt).toLocaleDateString()}</p></div></div>
                         <div className="flex items-center gap-2"><RoleBadge role={inv.role} /><DashboardButton onClick={() => handleRevokeInvite(inv._id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton></div>
@@ -778,6 +792,7 @@ export default function Teams() {
             setShowInviteUnregisteredConfirm(false);
             try {
               await inviteMember({ teamId: selectedTeam._id, email: pendingInviteEmail, role: inviteRole }).unwrap();
+              refetchInvites();
               setShowInviteModal(false);
               setPendingInviteEmail("");
               inviteFormik.resetForm();
