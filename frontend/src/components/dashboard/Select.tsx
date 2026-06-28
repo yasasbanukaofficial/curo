@@ -11,6 +11,7 @@ interface SelectProps {
   error?: string;
   touched?: boolean;
   disabled?: boolean;
+  size?: "md" | "sm";
   className?: string;
   onBlur?: (e: React.FocusEvent) => void;
 }
@@ -24,6 +25,7 @@ export default function Select({
   error,
   touched,
   disabled = false,
+  size = "md",
   className = "",
   onBlur,
 }: SelectProps) {
@@ -55,19 +57,19 @@ export default function Select({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!disabled) setOpen(!open); }
           if (e.key === "Escape") setOpen(false);
         }}
-        className={`flex items-center h-10 w-full text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none transition-colors duration-200 cursor-pointer relative ${
+        className={`flex items-center w-full bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none transition-colors duration-200 cursor-pointer relative ${
           icon ? "pl-10 pr-3" : "pl-3.5 pr-3"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${open ? "ring-2 ring-black/[0.08] dark:ring-white/[0.08]" : ""}`}
+        } ${size === "sm" ? "h-7 text-[11px]" : "h-10 text-sm"} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${open ? "ring-2 ring-black/[0.08] dark:ring-white/[0.08]" : ""}`}
       >
         {icon && <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">{icon}</div>}
         <span className={`flex-1 ${selected ? "text-[#1D1D1F] dark:text-[#E5E5E5]" : "text-[#8E8E93] dark:text-[#666]"}`}>
           {selected ? selected.label : placeholder || "Select..."}
         </span>
-        <ChevronDown className={`w-4 h-4 text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`${size === "sm" ? "w-3 h-3" : "w-4 h-4"} text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </div>
 
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 max-h-60 overflow-y-auto min-w-[160px] w-max">
           {options.map((opt) => (
             <div
               key={opt.value}
