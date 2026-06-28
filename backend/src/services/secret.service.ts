@@ -186,7 +186,7 @@ export const secretService = {
     projectId: string, secretId: string, data: Partial<ISecret>,
   ): Promise<boolean> => {
     if (!secretId) throw new Error("SECRET_ID_NOT_EXISTING");
-    if (!data.secName && !data.secKey) throw new Error("INVALID_PAYLOAD");
+    if (!data.secName && !data.secKey && !data.environmentId) throw new Error("INVALID_PAYLOAD");
 
     if (data.environmentId) {
       const env = await EnvironmentModel.findOne({ _id: data.environmentId, projectId });
