@@ -180,7 +180,7 @@ export const teamService = {
 
 
  
-  getTeamMembers: async (userId: string, teamId: string): Promise<ITeamMember[]> => {
+  getTeamMembers: async (userId: string, teamId: string): Promise<any[]> => {
     try {
       const membership = await TeamMemberModel.findOne({ teamId, userId, status: "active" });
       if (!membership) throw new Error("TEAM_NOT_FOUND");
@@ -189,7 +189,22 @@ export const teamService = {
         .populate("userId", "name email avatarUrl")
         .sort({ joinedAt: -1 });
 
-      return members.map((m) => m.toObject() as unknown as ITeamMember);
+      return members.map((m) => {
+        const obj = m.toObject();
+        const user = obj.userId as any;
+        return {
+          _id: obj._id,
+          teamId: obj.teamId,
+          userId: user?._id || obj.userId,
+          name: user?.name || "Unknown",
+          email: user?.email || "",
+          avatarUrl: user?.avatarUrl,
+          role: obj.role,
+          status: obj.status,
+          joinedAt: obj.joinedAt,
+          createdAt: obj.createdAt,
+        };
+      });
     } catch (error) {
       console.error("DB Error:", error);
       throw error;
@@ -293,6 +308,11 @@ export const teamService = {
       const target = await TeamMemberModel.findOne({ _id: memberId, teamId });
       if (!target) throw new Error("MEMBER_NOT_FOUND");
       if (target.role === "owner") throw new Error("CANNOT_REMOVE_OWNER");
+
+      const user = await UserModel.findById(target.userId).select("email");
+      if (user) {
+        await TeamInviteModel.deleteMany({ teamId, email: user.email });
+      }
 
       await TeamMemberModel.findByIdAndDelete(memberId);
 
@@ -399,7 +419,7 @@ export const teamService = {
     }
   },
 
-  getInviteDetailsByToken: async (token: string): Promise<{ teamName: string; teamAvatar?: string; memberCount: number; role: string }> => {
+  getInviteDetailsByToken: async (token: string): Promise<{ teamName: string; teamAvatar?: string; memberCount: number; role: string; hasAccount: boolean }> => {
     const invite = await TeamInviteModel.findOne({ token });
     if (!invite) throw new Error("INVITE_NOT_FOUND");
     if (invite.expiresAt < new Date()) throw new Error("INVITE_EXPIRED");
@@ -408,12 +428,14 @@ export const teamService = {
     if (!team) throw new Error("TEAM_NOT_FOUND");
 
     const memberCount = await TeamMemberModel.countDocuments({ teamId: invite.teamId });
+    const user = await UserModel.findOne({ email: invite.email });
 
     return {
       teamName: team.name,
       teamAvatar: team.avatarUrl,
       memberCount,
       role: invite.role,
+      hasAccount: !!user,
     };
   },
 
@@ -430,7 +452,11 @@ export const teamService = {
           teamId: invite.teamId,
           userId: user._id,
         });
-        if (!existingMembership) {
+        if (existingMembership) {
+          if (existingMembership.status === "invited") {
+            await TeamMemberModel.findByIdAndUpdate(existingMembership._id, { status: "active", joinedAt: new Date() });
+          }
+        } else {
           await TeamMemberModel.create({
             teamId: invite.teamId,
             userId: user._id,
@@ -439,7 +465,6 @@ export const teamService = {
             joinedAt: new Date(),
           });
         }
-        await TeamInviteModel.findByIdAndDelete(invite._id);
         return { redirect: "/dashboard" };
       }
 
@@ -460,7 +485,12 @@ export const teamService = {
         teamId: invite.teamId,
         userId,
       });
-      if (existingMembership) throw new Error("ALREADY_MEMBER");
+      if (existingMembership) {
+        if (existingMembership.status === "invited") {
+          await TeamMemberModel.findByIdAndUpdate(existingMembership._id, { status: "active", joinedAt: new Date() });
+        }
+        return true;
+      }
 
       await TeamMemberModel.create({
         teamId: invite.teamId,
@@ -469,8 +499,6 @@ export const teamService = {
         status: "active",
         joinedAt: new Date(),
       });
-
-      await TeamInviteModel.findByIdAndDelete(invite._id);
 
       return true;
     } catch (error) {
