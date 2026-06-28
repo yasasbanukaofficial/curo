@@ -27,17 +27,30 @@ import FilterTabs from "../../components/dashboard/FilterTabs";
 import FormField from "../../components/dashboard/FormField";
 import FormInput from "../../components/dashboard/FormInput";
 import FormTextarea from "../../components/dashboard/FormTextarea";
-import FormSelect from "../../components/dashboard/FormSelect";
 import Select from "../../components/dashboard/Select";
-import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import AlertModal from "../../components/dashboard/AlertModal";
 import Modal from "../../components/dashboard/Modal";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
-import type { Project } from "../../types/project";
-import type { Secret } from "../../types/secret";
-import type { Environment } from "../../types/environment";
-import type { Team } from "../../types/team";
+import {
+  useGetProjectsQuery,
+  useGetTeamsQuery,
+  useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+  useGetSecretsQuery,
+  useCreateSecretMutation,
+  useUpdateSecretMutation,
+  useDeleteSecretMutation,
+  useGetEnvironmentsQuery,
+  useCreateEnvironmentMutation,
+  useUpdateEnvironmentMutation,
+  useDeleteEnvironmentMutation,
+} from "../../store";
+import type { Project, Secret, Environment, Team } from "../../types";
+import { useActiveTeamContext } from "../../contexts/ActiveTeamContext";
+import { useTeamRole } from "../../hooks/useTeamRole";
 
 type DetailTab = "overview" | "secrets" | "environments" | "teams" | "settings";
 type EnvView = "list" | "secrets";
@@ -58,13 +71,8 @@ const environmentSchema = z.object({
   name: z.string().trim().min(1, "Environment name is required"),
 });
 
-const projects: Project[] = [];
-const projectSecrets: Secret[] = [];
-const projectEnvironments: Environment[] = [];
-const allTeams: Team[] = [];
-
 export default function Projects() {
-  const toast = useToast();
+  const { success: showSuccess, error: showError } = useToast();
 
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -74,18 +82,41 @@ export default function Projects() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { data: projects = [], isLoading: projectsLoading } = useGetProjectsQuery();
+  const { data: allTeams = [] } = useGetTeamsQuery();
+
+  const [createProject] = useCreateProjectMutation();
+  const [updateProject] = useUpdateProjectMutation();
+  const [deleteProject] = useDeleteProjectMutation();
+
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showSecretModal, setShowSecretModal] = useState(false);
   const [editingSecret, setEditingSecret] = useState<Secret | null>(null);
   const [showEnvModal, setShowEnvModal] = useState(false);
   const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
   const [envFilter, setEnvFilter] = useState("");
-  const [envView, setEnvView] = useState<EnvView>("list");
+  const [_envView, setEnvView] = useState<EnvView>("list");
   const [selectedEnvId, setSelectedEnvId] = useState<string>("");
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set());
 
   const [confirmSecretDelete, setConfirmSecretDelete] = useState<string | null>(null);
   const [confirmEnvDelete, setConfirmEnvDelete] = useState<string | null>(null);
+
+  const projectId = selectedProject?._id || "";
+
+  const { data: projectSecrets = [], isLoading: secretsLoading } = useGetSecretsQuery(projectId, { skip: !projectId });
+  const { data: projectEnvironments = [], isLoading: envsLoading } = useGetEnvironmentsQuery(projectId, { skip: !projectId });
+
+  const [createSecret] = useCreateSecretMutation();
+  const [updateSecret] = useUpdateSecretMutation();
+  const [deleteSecret] = useDeleteSecretMutation();
+
+  const [createEnvironment] = useCreateEnvironmentMutation();
+  const [updateEnvironment] = useUpdateEnvironmentMutation();
+  const [deleteEnvironment] = useDeleteEnvironmentMutation();
+
+  const { activeTeamId } = useActiveTeamContext();
+  const { canCreate, canDeleteResource } = useTeamRole(activeTeamId);
 
   useEffect(() => {
     if (location.state?.openNewProject) {
@@ -115,50 +146,113 @@ export default function Projects() {
   const settingsFormik = useFormik({
     initialValues: { name: "", description: "", projectLink: "" },
     validate: validateZod(updateProjectSchema),
-    onSubmit: async (_values, { setSubmitting }) => {
-      setSubmitting(false);
-      toast.success("Project saved", "Project settings have been updated.");
+    onSubmit: async (values, { setSubmitting }) => {
+      if (!selectedProject) return;
+      try {
+        await updateProject({ projectId: selectedProject._id, projectName: values.name, description: values.description }).unwrap();
+        showSuccess("Project saved", "Project settings have been updated.");
+      } catch (err: any) {
+        showError(err?.data?.msg || "Failed to update project");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
   const secretFormik = useFormik({
     initialValues: { secName: "", secKey: "", environmentId: "" },
     validate: validateZod(secretSchema),
-    onSubmit: async (_values, { setSubmitting, resetForm }) => {
-      setSubmitting(false);
-      setShowSecretModal(false);
-      setEditingSecret(null);
-      resetForm();
-      toast.success("Secret saved", "The secret has been saved.");
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      if (!selectedProject) return;
+      try {
+        if (editingSecret) {
+          await updateSecret({ projectId: selectedProject._id, secretId: editingSecret._id, secName: values.secName, secKey: values.secKey, environmentId: values.environmentId || undefined }).unwrap();
+        } else {
+          await createSecret({ projectId: selectedProject._id, secName: values.secName, secKey: values.secKey, environmentId: values.environmentId || undefined }).unwrap();
+        }
+        setShowSecretModal(false);
+        setEditingSecret(null);
+        resetForm();
+        showSuccess("Secret saved", "The secret has been saved.");
+      } catch (err: any) {
+        showError(err?.data?.msg || "Failed to save secret");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
   const envFormik = useFormik({
     initialValues: { name: "" },
     validate: validateZod(environmentSchema),
-    onSubmit: async (_values, { setSubmitting, resetForm }) => {
-      setSubmitting(false);
-      setShowEnvModal(false);
-      setEditingEnv(null);
-      resetForm();
-      toast.success("Environment saved", "The environment has been saved.");
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      if (!selectedProject) return;
+      try {
+        if (editingEnv) {
+          await updateEnvironment({ projectId: selectedProject._id, envId: editingEnv._id, name: values.name }).unwrap();
+        } else {
+          await createEnvironment({ projectId: selectedProject._id, name: values.name }).unwrap();
+        }
+        setShowEnvModal(false);
+        setEditingEnv(null);
+        resetForm();
+        showSuccess("Environment saved", "The environment has been saved.");
+      } catch (err: any) {
+        showError(err?.data?.msg || "Failed to save environment");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
   function openSettingsForm() {
     if (!selectedProject) return;
+    if (!canCreate) return;
     settingsFormik.setValues({ name: selectedProject.projectName, description: selectedProject.description, projectLink: selectedProject.projectLink || "" });
     setDetailTab("settings");
   }
 
   async function handleDeleteProject() {
     if (!selectedProject) return;
-    setShowDeleteModal(false);
-    toast.success("Project deleted", `${selectedProject.projectName} has been removed.`);
+    try {
+      await deleteProject(selectedProject._id).unwrap();
+      setSelectedProject(null);
+      setShowDeleteModal(false);
+      showSuccess("Project deleted", `${selectedProject.projectName} has been removed.`);
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to delete project");
+    }
   }
 
-  async function handleCreateProject(_values: { projectName: string; description: string; team?: string; projectLink?: string }) {
-    toast.success("Project created", `${_values.projectName} has been created.`);
+  async function handleCreateProject(values: { projectName: string; description: string; team?: string; projectLink?: string }) {
+    try {
+      await createProject({ projectName: values.projectName, description: values.description, projectLink: values.projectLink || undefined, teamId: activeTeamId || undefined }).unwrap();
+      showSuccess("Project created", `${values.projectName} has been created.`);
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to create project");
+    }
+  }
+
+  async function handleConfirmSecretDelete() {
+    if (!selectedProject || !confirmSecretDelete) return;
+    try {
+      await deleteSecret({ projectId: selectedProject._id, secretId: confirmSecretDelete }).unwrap();
+      setConfirmSecretDelete(null);
+      showSuccess("Secret deleted", "The secret has been removed.");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to delete secret");
+    }
+  }
+
+  async function handleConfirmEnvDelete() {
+    if (!selectedProject || !confirmEnvDelete) return;
+    try {
+      await deleteEnvironment({ projectId: selectedProject._id, envId: confirmEnvDelete }).unwrap();
+      setConfirmEnvDelete(null);
+      showSuccess("Environment deleted", "The environment has been removed.");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to delete environment");
+    }
   }
 
   function openCreateSecret() {
@@ -182,13 +276,33 @@ export default function Projects() {
     setShowEnvModal(true);
   }
 
-  async function handleSecretEnvChange(_secretId: string, _environmentId: string) {
-    toast.error("Failed to update environment", "Something went wrong.");
+  function openEditEnv(env: Environment) {
+    setEditingEnv(env);
+    envFormik.setValues({ name: env.name });
+    setShowEnvModal(true);
+  }
+
+  async function handleSecretEnvChange(secretId: string, environmentId: string) {
+    if (!selectedProject) return;
+    try {
+      await updateSecret({ projectId: selectedProject._id, secretId, environmentId: environmentId || undefined }).unwrap();
+      showSuccess("Environment updated", "Secret environment has been updated.");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to update environment");
+    }
   }
 
   function copyToClipboard(value: string) {
     navigator.clipboard.writeText(value);
-    toast.success("Copied", "Value copied to clipboard.");
+    showSuccess("Copied", "Value copied to clipboard.");
+  }
+
+  if (projectsLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <LoadingSpinner size={28} />
+      </div>
+    );
   }
 
   const detailTabs = [
@@ -231,7 +345,7 @@ export default function Projects() {
                     <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Project Information</h3>
                     <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">General details about this project.</p>
                   </div>
-                  <DashboardButton onClick={openSettingsForm} className="h-8 px-3 text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
+                  <DashboardButton onClick={openSettingsForm} disabled={!canCreate} className="h-8 px-3 text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#F5F5F7] dark:disabled:hover:bg-[#1A1A1A]">
                     <Settings className="w-3.5 h-3.5" />Edit
                   </DashboardButton>
                 </div>
@@ -242,7 +356,7 @@ export default function Projects() {
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Created</p>
-                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.createdAt}</p>
+                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedProject.createdAt ? new Date(selectedProject.createdAt).toLocaleDateString() : ""}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Secrets</p>
@@ -275,17 +389,19 @@ export default function Projects() {
                   <DashboardButton onClick={() => { setDetailTab("teams"); }} className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><Users className="w-4 h-4" />Assigned Teams</DashboardButton>
                 </div>
               </DashboardCard>
-              <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
-                <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-3">Danger Zone</h3>
-                <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4">
-                  <AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Project</p>
-                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Permanently delete this project and all its data.</p>
+              {canDeleteResource(selectedProject?.userId) && (
+                <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
+                  <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-3">Danger Zone</h3>
+                  <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4">
+                    <AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Project</p>
+                      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Permanently delete this project and all its data.</p>
+                    </div>
                   </div>
-                </div>
-                <DashboardButton onClick={() => setShowDeleteModal(true)} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Project</DashboardButton>
-              </DashboardCard>
+                  <DashboardButton onClick={() => setShowDeleteModal(true)} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Project</DashboardButton>
+                </DashboardCard>
+              )}
             </div>
           </div>
         )}
@@ -317,40 +433,43 @@ export default function Projects() {
                   </>
                 )}
               </div>
-              <DashboardButton onClick={openCreateSecret} disabled={projectEnvironments.length === 0} title={projectEnvironments.length === 0 ? "Create an environment first" : undefined} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#1D1D1F] dark:disabled:hover:bg-white">
-                <Plus className="w-4 h-4" />Add Secret
-              </DashboardButton>
+              {canCreate && (
+                <DashboardButton onClick={openCreateSecret} disabled={projectEnvironments.length === 0} title={projectEnvironments.length === 0 ? "Create an environment first" : undefined} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#1D1D1F] dark:disabled:hover:bg-white">
+                  <Plus className="w-3.5 h-3.5" />Add Secret
+                </DashboardButton>
+              )}
             </div>
 
-            {projectEnvironments.length === 0 && (
+            {secretsLoading || envsLoading ? (
+              <DashboardCard><LoadingSpinner size={24} /></DashboardCard>
+            ) : projectEnvironments.length === 0 ? (
               <DashboardCard>
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <Layers3 className="w-10 h-10 text-[#8E8E93] mb-3" />
                   <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No environments yet</h3>
                   <p className="text-xs text-[#8E8E93] dark:text-[#666] mb-4">
                     You need at least one environment before adding secrets.{" "}
-                    <span className="underline cursor-pointer text-[#007AFF] hover:text-[#007AFF]/80" onClick={openCreateEnv}>Create one</span>
+                    {canCreate && <span className="underline cursor-pointer text-[#007AFF] hover:text-[#007AFF]/80" onClick={openCreateEnv}>Create one</span>}
                   </p>
                 </div>
               </DashboardCard>
-            )}
-
-            {filteredSecrets.length === 0 && projectEnvironments.length > 0 ? (
+            ) : filteredSecrets.length === 0 ? (
               <DashboardCard>
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <KeyRound className="w-10 h-10 text-[#8E8E93] mb-3" />
                   <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No secrets yet</h3>
                   <p className="text-xs text-[#8E8E93] dark:text-[#666] mb-4">Add your first secret to this project.</p>
-                  <DashboardButton onClick={openCreateSecret} disabled={projectEnvironments.length === 0} title={projectEnvironments.length === 0 ? "Create an environment first" : undefined} className="h-8 px-4 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed">
-                    <Plus className="w-3.5 h-3.5" />Add Secret
-                  </DashboardButton>
+                  {canCreate && (
+                    <DashboardButton onClick={openCreateSecret} disabled={projectEnvironments.length === 0} className="h-8 px-4 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed">
+                      <Plus className="w-3.5 h-3.5" />Add Secret
+                    </DashboardButton>
+                  )}
                 </div>
               </DashboardCard>
             ) : (
               <div className="space-y-1">
                 {filteredSecrets.map((s) => {
                   const isRevealed = revealedKeys.has(s._id);
-                  const env = projectEnvironments.find((e) => e._id === s.environmentId);
                   return (
                     <DashboardCard key={s._id} padding="sm">
                       <div className="flex items-center justify-between">
@@ -377,12 +496,16 @@ export default function Projects() {
                           <DashboardButton onClick={() => copyToClipboard(s.secKey)} className="h-7 w-7 p-0 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
                             <Copy className="w-3.5 h-3.5" />
                           </DashboardButton>
-                          <DashboardButton onClick={() => openEditSecret(s)} className="h-7 px-2 text-xs font-medium text-[#007AFF] hover:bg-[#007AFF]/10 rounded-lg">
-                            Edit
-                          </DashboardButton>
-                          <DashboardButton onClick={() => setConfirmSecretDelete(s._id)} className="h-7 px-2 text-xs font-medium text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg">
-                            <Trash2 className="w-3 h-3" />
-                          </DashboardButton>
+                          {canCreate && (
+                            <DashboardButton onClick={() => openEditSecret(s)} className="h-7 px-2 text-xs font-medium text-[#007AFF] hover:bg-[#007AFF]/10 rounded-lg">
+                              Edit
+                            </DashboardButton>
+                          )}
+                          {canDeleteResource(s.userId) && (
+                            <DashboardButton onClick={() => setConfirmSecretDelete(s._id)} className="h-7 px-2 text-xs font-medium text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg">
+                              <Trash2 className="w-3 h-3" />
+                            </DashboardButton>
+                          )}
                         </div>
                       </div>
                     </DashboardCard>
@@ -399,20 +522,26 @@ export default function Projects() {
               <div>
                 <p className="text-xs text-[#8E8E93] dark:text-[#666]">{projectEnvironments.length} environments</p>
               </div>
-              <DashboardButton onClick={openCreateEnv} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
-                <Plus className="w-4 h-4" />Add Environment
-              </DashboardButton>
+              {canCreate && (
+                <DashboardButton onClick={openCreateEnv} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+                  <Plus className="w-4 h-4" />Add Environment
+                </DashboardButton>
+              )}
             </div>
 
-            {projectEnvironments.length === 0 ? (
+            {envsLoading ? (
+              <DashboardCard><LoadingSpinner size={24} /></DashboardCard>
+            ) : projectEnvironments.length === 0 ? (
               <DashboardCard>
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <Layers3 className="w-10 h-10 text-[#8E8E93] mb-3" />
                   <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No environments yet</h3>
                   <p className="text-xs text-[#8E8E93] dark:text-[#666] mb-4">Create environments like Development, Staging, and Production.</p>
-                  <DashboardButton onClick={openCreateEnv} className="h-8 px-4 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px]">
-                    <Plus className="w-3.5 h-3.5" />Add Environment
-                  </DashboardButton>
+                  {canCreate && (
+                    <DashboardButton onClick={openCreateEnv} className="h-8 px-4 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px]">
+                      <Plus className="w-3.5 h-3.5" />Add Environment
+                    </DashboardButton>
+                  )}
                 </div>
               </DashboardCard>
             ) : (
@@ -428,9 +557,18 @@ export default function Projects() {
                           </div>
                           <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{env.name}</p>
                         </div>
-                        <DashboardButton onClick={(e) => { e.stopPropagation(); setConfirmEnvDelete(env._id); }} className="h-7 w-7 p-0 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </DashboardButton>
+                        <div className="flex items-center gap-1">
+                          {canCreate && (
+                            <DashboardButton onClick={(e) => { e.stopPropagation(); openEditEnv(env); }} className="h-7 w-7 p-0 rounded-lg text-[#8E8E93] hover:text-[#007AFF] hover:bg-[#007AFF]/10">
+                              <Settings className="w-3.5 h-3.5" />
+                            </DashboardButton>
+                          )}
+                          {canDeleteResource(env.userId) && (
+                            <DashboardButton onClick={(e) => { e.stopPropagation(); setConfirmEnvDelete(env._id); }} className="h-7 w-7 p-0 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </DashboardButton>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-[#8E8E93] dark:text-[#666]">
                         <span>{envSecretCount} secrets</span>
@@ -455,7 +593,7 @@ export default function Projects() {
               {allTeams.length === 0 ? (
                 <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No teams available. Create a team first.</p>
               ) : (
-                allTeams.map((team) => {
+                allTeams.map((team: Team) => {
                   const isAssigned = (selectedProject.teams ?? []).includes(team._id);
                   return (
                     <div key={team._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
@@ -571,10 +709,7 @@ export default function Projects() {
         message="Are you sure you want to delete this secret? This action cannot be undone."
         buttons={[
           { label: "Cancel", onClick: () => setConfirmSecretDelete(null), variant: "secondary" },
-          { label: "Delete", onClick: async () => {
-            setConfirmSecretDelete(null);
-            toast.success("Secret deleted", "The secret has been removed.");
-          }, variant: "destructive" },
+          { label: "Delete", onClick: handleConfirmSecretDelete, variant: "destructive" },
         ]}
       />
 
@@ -586,10 +721,7 @@ export default function Projects() {
         message="Are you sure you want to delete this environment? Secrets in this environment will not be deleted."
         buttons={[
           { label: "Cancel", onClick: () => setConfirmEnvDelete(null), variant: "secondary" },
-          { label: "Delete", onClick: async () => {
-            setConfirmEnvDelete(null);
-            toast.success("Environment deleted", "The environment has been removed.");
-          }, variant: "destructive" },
+          { label: "Delete", onClick: handleConfirmEnvDelete, variant: "destructive" },
         ]}
       />
 
@@ -652,12 +784,12 @@ export default function Projects() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-[#8E8E93] dark:text-[#666] flex items-center gap-1"><KeyRound className="w-3 h-3" />{p.secretCount}</span>
-                  <span className="text-xs text-[#8E8E93] dark:text-[#666] flex items-center gap-1"><Layers3 className="w-3 h-3" />{p.environmentCount}</span>
-                  <span className="text-xs text-[#8E8E93] dark:text-[#666] flex items-center gap-1"><Users className="w-3 h-3" />{p.teamCount}</span>
+                  <span className="text-xs text-[#8E8E93] dark:text-[#666] flex items-center gap-1"><KeyRound className="w-3 h-3" />{p.secretCount || 0}</span>
+                  <span className="text-xs text-[#8E8E93] dark:text-[#666] flex items-center gap-1"><Layers3 className="w-3 h-3" />{p.environmentCount || 0}</span>
+                  <span className="text-xs text-[#8E8E93] dark:text-[#666] flex items-center gap-1"><Users className="w-3 h-3" />{p.teamCount || 0}</span>
                 </div>
                 <div className="flex items-center justify-between pt-3 mt-3 border-t border-black/[0.04] dark:border-[#222]">
-                  <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Updated {p.updatedAt}</span>
+                  <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">Updated {p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : ""}</span>
                 </div>
               </DashboardCard>
             ))}
@@ -670,7 +802,7 @@ export default function Projects() {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateProject}
-        teams={allTeams.map((t) => ({ id: t._id, name: t.name }))}
+        teams={allTeams.map((t: Team) => ({ id: t._id, name: t.name }))}
       />
     </div>
   );
