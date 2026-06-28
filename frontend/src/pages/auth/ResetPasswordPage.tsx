@@ -6,8 +6,6 @@ import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { validateZod } from "../../types/auth";
-import { useResetPasswordMutation } from "../../features/auth/authApi";
-import { useToast } from "../../components/dashboard/Toast";
 
 const resetPasswordSchema = z
   .object({
@@ -22,8 +20,6 @@ const resetPasswordSchema = z
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [resetPassword] = useResetPasswordMutation();
-  const toast = useToast();
   const token = searchParams.get("token");
 
   useEffect(() => {
@@ -33,24 +29,8 @@ export default function ResetPasswordPage() {
   const formik = useFormik({
     initialValues: { password: "", confirmPassword: "" },
     validate: validateZod(resetPasswordSchema),
-    onSubmit: async (values, { setSubmitting }) => {
-      if (!token) return;
-      try {
-        const result = await resetPassword({
-          token,
-          password: values.password,
-        }).unwrap();
-        if (result.success) {
-          toast.success("Password reset", "Your password has been reset successfully.");
-          navigate("/login");
-        } else {
-          toast.error("Failed", result.msg || "Could not reset password.");
-        }
-      } catch (err: any) {
-        toast.error("Failed", err?.data?.msg || "Something went wrong. Please try again.");
-      } finally {
-        setSubmitting(false);
-      }
+    onSubmit: (_values, { setSubmitting }) => {
+      setSubmitting(false);
     },
   });
 

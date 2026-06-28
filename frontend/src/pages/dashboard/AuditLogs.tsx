@@ -7,12 +7,12 @@ import DashboardCard from "../../components/dashboard/DashboardCard";
 import Modal from "../../components/dashboard/Modal";
 import { ActionBadge, EnvBadge } from "../../components/dashboard/Badges";
 import { DashboardTable, Th, Tr, Td } from "../../components/dashboard/DashboardTable";
-import { useGetAuditsQuery } from "../../features/audit/auditApi";
 
 const actionFilters = ["all", "CREATED", "UPDATED", "VIEWED", "DELETED"];
 
+const audits: any[] = [];
+
 export default function AuditLogs() {
-  const { data: audits = [], isLoading, isError } = useGetAuditsQuery();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
@@ -33,22 +33,6 @@ export default function AuditLogs() {
       minute: "2-digit",
       second: "2-digit",
     });
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#8E8E93]">Loading audit logs...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#FF3B30]">Something went wrong. Could not load audit logs.</p>
-      </div>
-    );
   }
 
   return (

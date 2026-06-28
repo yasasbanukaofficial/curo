@@ -13,14 +13,14 @@ function isValidUrl(url: string): boolean {
 
 export const projectService = {
   getProjectById: async (
-    userId: string,
     projectId: string,
   ): Promise<IProject | null> => {
     try {
-      const projectDoc = await ProjectModel.findOne({ _id: projectId, userId });
+      const projectDoc = await ProjectModel.findById(projectId).lean();
       if (!projectDoc) return null;
 
       return {
+        _id: projectDoc._id,
         projectName: projectDoc.projectName,
         description: projectDoc.description,
         projectLink: projectDoc.projectLink,
@@ -33,9 +33,9 @@ export const projectService = {
     }
   },
 
-  getAllProjects: async (userId: string): Promise<IProject[]> => {
+  getAllProjects: async (teamIds: string[]): Promise<IProject[]> => {
     try {
-      const resp = await ProjectModel.find({ userId }).sort({
+      const resp = await ProjectModel.find({ teams: { $in: teamIds } }).sort({
         createdAt: -1,
       });
       const allProjects = resp.map((projectDoc) => ({
@@ -80,7 +80,6 @@ export const projectService = {
     }
   },
   updateProject: async (
-    userId: string,
     projectId: string,
     data: Partial<IProject>,
   ): Promise<boolean> => {
@@ -97,8 +96,8 @@ export const projectService = {
     }
 
     try {
-      const existing = await ProjectModel.findOneAndUpdate(
-        { _id: projectId, userId },
+      const existing = await ProjectModel.findByIdAndUpdate(
+        projectId,
         { $set: data },
         { returnDocument: "after" },
       );
@@ -114,11 +113,10 @@ export const projectService = {
     }
   },
   deleteProject: async (
-    userId: string,
     projectId: string,
   ): Promise<boolean> => {
     try {
-      const project = await ProjectModel.findOne({ _id: projectId, userId });
+      const project = await ProjectModel.findById(projectId);
       if (!project) throw new Error("PROJECT_NOT_FOUND");
 
       await TeamModel.updateMany(
@@ -135,12 +133,11 @@ export const projectService = {
     }
   },
   addTeamToProject: async (
-    userId: string,
     projectId: string,
     teamId: string,
   ): Promise<boolean> => {
     try {
-      const project = await ProjectModel.findOne({ _id: projectId, userId });
+      const project = await ProjectModel.findById(projectId);
       if (!project) throw new Error("PROJECT_NOT_FOUND");
 
       if (project.teams?.some((id) => id.toString() === teamId)) {
@@ -162,12 +159,11 @@ export const projectService = {
     }
   },
   removeTeamFromProject: async (
-    userId: string,
     projectId: string,
     teamId: string,
   ): Promise<boolean> => {
     try {
-      const project = await ProjectModel.findOne({ _id: projectId, userId });
+      const project = await ProjectModel.findById(projectId);
       if (!project) throw new Error("PROJECT_NOT_FOUND");
 
       await ProjectModel.findByIdAndUpdate(projectId, {

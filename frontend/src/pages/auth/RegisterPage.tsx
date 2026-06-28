@@ -1,29 +1,12 @@
-import { useEffect } from "react";
 import { useFormik } from "formik";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { registerSchema, validateZod } from "../../types/auth";
 import { loginWithGoogle, loginWithGithub } from "../../lib/auth";
-import { useRegisterMutation } from "../../features/auth/authApi";
-import { useToast } from "../../components/dashboard/Toast";
 import type { RegisterFormValues } from "../../types/auth";
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [register] = useRegisterMutation();
-  const toast = useToast();
-
-  useEffect(() => {
-    const inviteToken = searchParams.get("invite");
-    if (inviteToken) {
-      sessionStorage.setItem("inviteToken", inviteToken);
-      sessionStorage.setItem("pendingInvite", "true");
-    }
-  }, [searchParams]);
-
   const formik = useFormik<RegisterFormValues>({
     initialValues: {
       name: "",
@@ -32,27 +15,8 @@ export default function RegisterPage() {
       confirmPassword: "",
     },
     validate: validateZod(registerSchema),
-    onSubmit: async (values, { setSubmitting, setFieldError }) => {
-      try {
-        const result = await register({
-          name: values.name,
-          email: values.email,
-          password: values.password,
-        }).unwrap();
-        if (result.success) {
-          toast.success("Account created", "Please verify your email to continue.");
-          const token = result.data?.verificationToken;
-          navigate(token ? `/verify-email?token=${token}` : "/login");
-        } else {
-          setFieldError("email", result.msg || "Registration failed");
-        }
-      } catch (err: any) {
-        const msg = err?.data?.msg || "Something went wrong. Please try again.";
-        setFieldError("email", msg);
-        toast.error("Registration failed", msg);
-      } finally {
-        setSubmitting(false);
-      }
+    onSubmit: (_values, { setSubmitting }) => {
+      setSubmitting(false);
     },
   });
 

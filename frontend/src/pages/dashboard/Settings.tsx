@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon, Check, CreditCard, ArrowLeft } from "lucide-react";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "./DashboardLayout";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 

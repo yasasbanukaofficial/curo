@@ -2,7 +2,7 @@ export type { User } from "./user";
 export type { Project, ProjectOption } from "./project";
 export type { Secret } from "./secret";
 export type { Environment } from "./environment";
-export type { Version } from "./version";
+
 export type { Audit } from "./audit";
 export type { Team, TeamPlan, SubscriptionStatus } from "./team";
 export type { TeamMember, TeamRole, MemberStatus } from "./teamMember";

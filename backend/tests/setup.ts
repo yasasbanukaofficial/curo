@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";
-import { AuthRouter, SecretRouter, ProjectRouter, EnvironmentRouter, VersionRouter, AuditRouter, TeamRouter } from "../src/routes/index";
+import { AuthRouter, SecretRouter, ProjectRouter, EnvironmentRouter, AuditRouter, TeamRouter } from "../src/routes/index";
 
 vi.mock("../src/middlewares/auth.middleware", () => ({
   authenticate: vi.fn((_req: any, _res: any, next: any) => {
@@ -26,7 +26,7 @@ export function createTestApp() {
   app.use("/api/v1/secrets", SecretRouter);
   app.use("/api/v1/projects", ProjectRouter);
   app.use("/api/v1/environments", EnvironmentRouter);
-  app.use("/api/v1/versions", VersionRouter);
+
   app.use("/api/v1/audits", AuditRouter);
   app.use("/api/v1/teams", TeamRouter);
   return app;
