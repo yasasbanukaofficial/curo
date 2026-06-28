@@ -41,7 +41,7 @@ src/
   store/
     baseApi.ts           — single createApi with tagTypes
     slices/authSlice.ts  — setCredentials / clearCredentials
-    endpoints/           — one file per domain (auth, team, member, project, secret, environment, audit)
+    endpoints/           — one file per domain (auth, team, member, project, secret, environment)
     index.ts             — barrel export
   hooks/
     useActiveTeam.ts     — sessionStorage-backed active team
@@ -60,9 +60,10 @@ src/
 - `auth` (authSlice — `{ user: User | null, isAuthenticated: boolean }`)
 
 ### RTK Query (`src/store/baseApi.ts`)
-- Single `createApi` with `tagTypes`: User, Team, TeamMember, TeamInvite, Project, Secret, Environment, AuditLog, Version
+- Single `createApi` with `tagTypes`: User, Team, TeamMember, TeamInvite, Project, Secret, Environment, Version
 - Endpoints injected via `.injectEndpoints()` in domain files
 - Cache invalidation via `providesTags` / `invalidatesTags` — IDs must match byte-for-byte for tags to work
+- Global refetch: `refetchOnMountOrArgChange: true`, `refetchOnFocus: true`, `refetchOnReconnect: true` — ensures fresh data on page visits
 
 ## Auth Flow
 - **Tokens stored exclusively in httpOnly cookies** set by backend. Frontend never touches localStorage/sessionStorage for tokens.
@@ -107,34 +108,42 @@ When creating a team with member emails (`POST /teams/check-emails` first), the 
 ## Role-Based Access Control
 
 ### `useTeamRole(teamId)` hook (`src/hooks/useTeamRole.ts`)
-Returns permissions for the current user within a specific team:
+Returns permissions for the current user within a specific team. Used by `Teams.tsx` for team-level actions.
 
 | Permission | Roles | What it controls |
 |---|---|---|
-| `canCreate` | owner, admin, **developer** | Create projects, secrets, environments. Also used for **edit** buttons in Projects page. |
-| `canEdit` | owner, admin | Edit team settings (name, slug). |
-| `canDelete` | owner, admin | Delete projects, secrets, environments, team. |
-| `canManageMembers` | owner, admin | Invite/remove members, revoke invites, copy invite link. |
-| `canViewSecretValues` | owner, admin, developer | Reveal secret key values. |
-| `canViewAuditLogs` | owner, admin | View audit log entries. |
-| `canDeleteResource(resourceUserId)` | per-resource check | Delete only if owner/admin, or developer owns the resource. |
+| `canCreate` | owner, admin, developer | Create/Edit buttons |
+| `canEdit` | owner, admin | Edit team settings |
+| `canDelete` | owner, admin | Delete team |
+| `canManageMembers` | owner, admin | Invite/remove members, revoke invites |
+| `canViewSecretValues` | owner, admin, developer | Reveal secret values |
+| `canDeleteResource(resourceUserId)` | per-resource | owner/admin can delete any; developer only own |
 
 ### Per-resource delete check
-`canDeleteResource(resourceUserId)` implements:
-- **owner/admin**: can delete any resource regardless of creator
-- **developer**: can only delete resources they created (`resourceUserId === currentUserId`)
+`canDeleteResource(resourceUserId)`:
+- **owner/admin**: delete any resource regardless of creator
+- **developer**: can only delete resources they created
 - **viewer**: cannot delete anything
 
 ### Where applied
-- **Teams page** (`src/pages/dashboard/Teams.tsx`): Uses `canEdit`, `canDelete`, `canManageMembers` to render action buttons.
-- **Projects page** (`src/pages/dashboard/Projects.tsx`): Uses `canCreate` for Create/Edit buttons (always visible for New Project); uses `canDeleteResource(project.userId)` / `canDeleteResource(secret.userId)` / `canDeleteResource(env.userId)` for delete buttons and Danger Zone.
+- **Teams page** (`Teams.tsx`): Uses `canEdit`, `canDelete`, `canManageMembers` from `useTeamRole(teamId)`.
+- **Projects page** (`Projects.tsx`): Permissions are computed from `selectedProject.role` returned by the backend API, NOT from `useTeamRole`. The project detail views use local variables:
+  ```ts
+  const projectRole = selectedProject?.role ?? (activeTeamId ? "viewer" : "owner");
+  const canCreate = ["owner", "admin", "developer"].includes(projectRole);
+  const canDeleteResource = (resourceUserId) => { ... };
+  ```
+  This ensures the role is authoritative from the backend and cannot be tampered with client-side.
 
 ### Backend enforcement
-- **Route middleware** (`project.routes.ts`): `validateRole("owner", "admin", "developer")` for secret/environment CRUD. Delete ownership checked at service level.
+- **`validateProjectAccess`** (`validate.middleware.ts`): If `req.userId === project.userId`, sets `member = { role: "owner" }` and passes through. Otherwise finds team member by `teamId` in project's teams array.
+- **`validateRole`**: If `member.role === "owner"`, allows all operations immediately. Otherwise checks against allowed roles list.
+- **Route middleware** (`project.routes.ts`): `validateRole("owner", "admin", "developer")` for secret/environment CRUD.
 - **Service level**: `deleteProjectSecret` and `deleteProjectEnvironment` accept `userId` + `role`. If `role === "developer"` and `resource.userId !== userId`, throws `FORBIDDEN` (403).
+- **Backend returns role**: `getProjectById` includes `role` in response; `getAllProjects` computes role per project from ownership or team membership.
 
-### Default role
-If `teamId` is null/empty or user is not found in members, defaults to `"viewer"` (all permissions false).
+### Default role (no team context)
+If `activeTeamId` is null (no team selected), defaults to `"owner"` so users have full control over their own projects.
 
 ## Backend Route Reference
 
@@ -186,11 +195,16 @@ If `teamId` is null/empty or user is not found in members, defaults to `"viewer"
 | POST | `/:projectId/environments` | Yes | owner/admin/developer |
 | PUT | `/:projectId/environments/:envId` | Yes | owner/admin/developer |
 | DELETE | `/:projectId/environments/:envId` | Yes | owner/admin/developer (developer only if they created it) |
+| POST | `/:projectId/teams` | Yes | owner/admin — `{ teamId }`, adds team to project's teams array |
+| DELETE | `/:projectId/teams/:teamId` | Yes | owner/admin — removes team from project |
 
-### Audit (`/api/v1/audits`)
-| Method | Path | Auth | Notes |
-|---|---|---|---|
-| GET | `/all` | Yes | — |
+### Team assign/remove pattern (frontend)
+In `projectEndpoints.ts`, two mutations handle team assignment:
+- `addTeamToProject: builder.mutation({ query: ({ projectId, ...body }) => ({ url: `/${projectId}/teams`, method: "POST", body }) })`
+- `removeTeamFromProject: builder.mutation({ query: ({ projectId, teamId }) => ({ url: `/${projectId}/teams/${teamId}`, method: "DELETE" }) })`
+Both invalidate `{ type: "Project", id: "LIST" }` and `{ type: "Project", id: arg.projectId }`.
+
+In `Projects.tsx`, the Teams detail tab maps over all teams and calls the appropriate mutation on button click, with success/error toasts.
 
 ## Coding Conventions
 
@@ -222,6 +236,12 @@ If `teamId` is null/empty or user is not found in members, defaults to `"viewer"
 - Zod schemas for validation, wrapped with `validateZod()` helper.
 - Submit calls mutation → `.unwrap()` → show toast → close modal/reset form.
 - Catch block: `showError(err?.data?.msg || "Fallback message")`.
+- **Settings forms**: Use `enableReinitialize: true` with `initialValues` pulled directly from the selected entity (`selectedTeam`, `selectedProject`). This auto-fills fields when navigating to the settings tab, without needing manual `setValues()` calls.
+- **Create vs Edit schemas**: When a form has different validation rules for create vs edit (e.g., secret name/key required on create but optional on edit), use separate Zod schemas. Switch dynamically in `useFormik`:
+  ```ts
+  validate: (values) => validateZod(editingSecret ? editSecretSchema : createSecretSchema)(values),
+  ```
+- **Conditional `required` prop**: For fields that are required only on create but optional on edit, set `required={!editingSecret}` on the FormField/FormInput.
 
 ### Modals
 - Use `Modal` component for forms.
@@ -249,7 +269,14 @@ error("Title", "Error details");
 - **Team projects tab**: Filters `useGetProjectsQuery()` by `teamId` to show only projects assigned to the selected team.
 - **Create project links to team**: `createProject` passes `activeTeamId` to `teamId` field. Backend stores it in project's `teams` array AND pushes project ID to team's `projects` array.
 - **Account page**: Wired via `useVerifySessionQuery()` for user data, `useChangePasswordMutation()` for password changes, `useDisconnectOAuthMutation()` for OAuth unlinking.
-- **AuditLogs page**: Connected via `useGetAuditLogsQuery()`.
+- **OAuthCallback**: Handles `?error=email_conflict&email=...` with a modal showing the conflicting email.
+- **Secret key privacy**: When editing a secret, `openEditSecret` sets `secKey` to `""` so the current value is never exposed in the form. The edit schema makes `secKey` optional, and the backend only re-encrypts if a new value is provided.
+
+## Computed Counts in Backend Responses
+The backend computes aggregate counts using `countDocuments` in parallel with `Promise.all`:
+- **Team cards** (`team.service.ts`): `memberCount = TeamMemberModel.countDocuments({ teamId })`
+- **Project cards** (`project.service.ts`): `secretCount = SecretsModel.countDocuments({ projectId })`, `environmentCount = EnvironmentModel.countDocuments({ projectId })`, `teamCount = project.teams.length`
+- These are computed in `getAllTeams` / `getAllProjects` and returned as part of the response. The frontend displays them directly from the API data.
 
 ## Active Team Context
 `DashboardLayout` sets the active team via `ActiveTeamContext.Provider`. On mount, if the user has teams but no active team is set, the first team becomes active. Child routes access it via `useActiveTeamContext()`.
