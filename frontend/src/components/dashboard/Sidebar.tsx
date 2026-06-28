@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { useLogoutMutation } from "../../features/auth/authApi";
-import { logout as logoutAction, selectUser } from "../../features/auth/authSlice";
 import DashboardButton from "./DashboardButton";
 import AlertModal from "./AlertModal";
 import {
@@ -106,6 +103,12 @@ function ProjectSwitcher() {
   );
 }
 
+const demoUser = {
+  name: "Demo User",
+  email: "demo@example.com",
+  emailVerified: true,
+};
+
 interface UserDropdownProps {
   onToggleSettings: (tab?: string) => void;
 }
@@ -115,9 +118,7 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const [doLogout] = useLogoutMutation();
-  const user = useAppSelector(selectUser);
+  const user = demoUser;
   const initials = useMemo(() => {
     if (!user?.name) return "?";
     return user.name
@@ -129,8 +130,6 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   }, [user?.name]);
 
   async function handleLogout() {
-    await doLogout();
-    dispatch(logoutAction());
     navigate("/");
   }
 

@@ -18,7 +18,6 @@ import {
   Eye,
   EyeOff,
   Copy,
-  X,
 } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
@@ -38,30 +37,7 @@ import { validateZod } from "../../types/settings";
 import type { Project } from "../../types/project";
 import type { Secret } from "../../types/secret";
 import type { Environment } from "../../types/environment";
-import { useGetTeamsQuery } from "../../features/team/teamApi";
 import type { Team } from "../../types/team";
-import {
-  useGetProjectSecretsQuery,
-  useAddProjectSecretMutation,
-  useUpdateProjectSecretMutation,
-  useRemoveProjectSecretMutation,
-} from "../../features/secret/secretApi";
-import {
-  useGetProjectEnvironmentsQuery,
-  useAddProjectEnvironmentMutation,
-  useUpdateProjectEnvironmentMutation,
-  useRemoveProjectEnvironmentMutation,
-} from "../../features/environment/environmentApi";
-import {
-  useGetProjectsQuery,
-  useAddProjectMutation,
-  useUpdateProjectMutation,
-  useRemoveProjectMutation,
-  useAddTeamToProjectMutation,
-  useRemoveTeamFromProjectMutation,
-} from "../../features/project/projectApi";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { setSelectedProject, selectSelectedProject } from "../../features/project/projectSlice";
 
 type DetailTab = "overview" | "secrets" | "environments" | "teams" | "settings";
 type EnvView = "list" | "secrets";
@@ -82,27 +58,13 @@ const environmentSchema = z.object({
   name: z.string().trim().min(1, "Environment name is required"),
 });
 
-export default function Projects() {
-  const dispatch = useAppDispatch();
-  const selectedProject = useAppSelector(selectSelectedProject);
-  const toast = useToast();
-  const { data: projects = [], isLoading, isError } = useGetProjectsQuery();
-  const [addProject] = useAddProjectMutation();
-  const [updateProject] = useUpdateProjectMutation();
-  const [removeProject] = useRemoveProjectMutation();
-  const [addTeamToProject] = useAddTeamToProjectMutation();
-  const [removeTeamFromProject] = useRemoveTeamFromProjectMutation();
-  const { data: allTeams = [] } = useGetTeamsQuery();
+const projects: Project[] = [];
+const projectSecrets: Secret[] = [];
+const projectEnvironments: Environment[] = [];
+const allTeams: Team[] = [];
 
-  const projectId = selectedProject?._id ?? "";
-  const { data: projectSecrets = [], refetch: refetchSecrets } = useGetProjectSecretsQuery(projectId, { skip: !projectId });
-  const { data: projectEnvironments = [], refetch: refetchEnvironments } = useGetProjectEnvironmentsQuery(projectId, { skip: !projectId });
-  const [addProjectSecret] = useAddProjectSecretMutation();
-  const [updateProjectSecret] = useUpdateProjectSecretMutation();
-  const [removeProjectSecret] = useRemoveProjectSecretMutation();
-  const [addProjectEnvironment] = useAddProjectEnvironmentMutation();
-  const [updateProjectEnvironment] = useUpdateProjectEnvironmentMutation();
-  const [removeProjectEnvironment] = useRemoveProjectEnvironmentMutation();
+export default function Projects() {
+  const toast = useToast();
 
   const [search, setSearch] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -112,6 +74,7 @@ export default function Projects() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showSecretModal, setShowSecretModal] = useState(false);
   const [editingSecret, setEditingSecret] = useState<Secret | null>(null);
   const [showEnvModal, setShowEnvModal] = useState(false);
@@ -152,66 +115,33 @@ export default function Projects() {
   const settingsFormik = useFormik({
     initialValues: { name: "", description: "", projectLink: "" },
     validate: validateZod(updateProjectSchema),
-    onSubmit: async (values, { setSubmitting }) => {
-      if (!selectedProject) return;
-      try {
-        await updateProject({ id: selectedProject._id, body: values }).unwrap();
-        setSubmitting(false);
-        toast.success("Project saved", "Project settings have been updated.");
-      } catch (err: any) {
-        setSubmitting(false);
-        toast.error("Failed to update project", err?.data?.msg || "Something went wrong.");
-      }
+    onSubmit: async (_values, { setSubmitting }) => {
+      setSubmitting(false);
+      toast.success("Project saved", "Project settings have been updated.");
     },
   });
 
   const secretFormik = useFormik({
     initialValues: { secName: "", secKey: "", environmentId: "" },
     validate: validateZod(secretSchema),
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
-      if (!selectedProject) return;
-      try {
-        if (editingSecret) {
-          await updateProjectSecret({ projectId: selectedProject._id, secretId: editingSecret._id, body: values }).unwrap();
-          toast.success("Secret updated", "The secret has been updated.");
-        } else {
-          await addProjectSecret({ projectId: selectedProject._id, body: values }).unwrap();
-          toast.success("Secret created", "The secret has been created.");
-        }
-        setSubmitting(false);
-        setShowSecretModal(false);
-        setEditingSecret(null);
-        resetForm();
-        refetchSecrets();
-      } catch (err: any) {
-        setSubmitting(false);
-        toast.error("Failed to save secret", err?.data?.msg || "Something went wrong.");
-      }
+    onSubmit: async (_values, { setSubmitting, resetForm }) => {
+      setSubmitting(false);
+      setShowSecretModal(false);
+      setEditingSecret(null);
+      resetForm();
+      toast.success("Secret saved", "The secret has been saved.");
     },
   });
 
   const envFormik = useFormik({
     initialValues: { name: "" },
     validate: validateZod(environmentSchema),
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
-      if (!selectedProject) return;
-      try {
-        if (editingEnv) {
-          await updateProjectEnvironment({ projectId: selectedProject._id, environmentId: editingEnv._id, name: values.name }).unwrap();
-          toast.success("Environment updated", "The environment has been updated.");
-        } else {
-          await addProjectEnvironment({ projectId: selectedProject._id, name: values.name }).unwrap();
-          toast.success("Environment created", "The environment has been created.");
-        }
-        setSubmitting(false);
-        setShowEnvModal(false);
-        setEditingEnv(null);
-        resetForm();
-        refetchEnvironments();
-      } catch (err: any) {
-        setSubmitting(false);
-        toast.error("Failed to save environment", err?.data?.msg || "Something went wrong.");
-      }
+    onSubmit: async (_values, { setSubmitting, resetForm }) => {
+      setSubmitting(false);
+      setShowEnvModal(false);
+      setEditingEnv(null);
+      resetForm();
+      toast.success("Environment saved", "The environment has been saved.");
     },
   });
 
@@ -223,26 +153,12 @@ export default function Projects() {
 
   async function handleDeleteProject() {
     if (!selectedProject) return;
-    try {
-      await removeProject(selectedProject._id).unwrap();
-      dispatch(setSelectedProject(null));
-      setShowDeleteModal(false);
-      toast.success("Project deleted", `${selectedProject.projectName} has been removed.`);
-    } catch (err: any) {
-      toast.error("Failed to delete project", err?.data?.msg || "Something went wrong.");
-    }
+    setShowDeleteModal(false);
+    toast.success("Project deleted", `${selectedProject.projectName} has been removed.`);
   }
 
-  async function handleCreateProject(values: { projectName: string; description: string; team?: string; projectLink?: string }) {
-    try {
-      const result = await addProject(values).unwrap();
-      if (values.team && result?._id) {
-        await addTeamToProject({ projectId: result._id, teamId: values.team }).unwrap();
-      }
-      toast.success("Project created", `${values.projectName} has been created.`);
-    } catch (err: any) {
-      toast.error("Failed to create project", err?.data?.msg || "Something went wrong.");
-    }
+  async function handleCreateProject(_values: { projectName: string; description: string; team?: string; projectLink?: string }) {
+    toast.success("Project created", `${_values.projectName} has been created.`);
   }
 
   function openCreateSecret() {
@@ -266,28 +182,13 @@ export default function Projects() {
     setShowEnvModal(true);
   }
 
-  async function handleSecretEnvChange(secretId: string, environmentId: string) {
-    if (!selectedProject) return;
-    try {
-      await updateProjectSecret({ projectId: selectedProject._id, secretId, body: { environmentId: environmentId || undefined } }).unwrap();
-      refetchSecrets();
-    } catch {
-      toast.error("Failed to update environment", "Something went wrong.");
-    }
+  async function handleSecretEnvChange(_secretId: string, _environmentId: string) {
+    toast.error("Failed to update environment", "Something went wrong.");
   }
 
   function copyToClipboard(value: string) {
     navigator.clipboard.writeText(value);
     toast.success("Copied", "Value copied to clipboard.");
-  }
-
-  function handleToggleTeam(teamId: string) {
-    if (!selectedProject) return;
-    const has = selectedProject.teams?.includes(teamId);
-    const updatedTeams = has
-      ? selectedProject.teams.filter((id) => id !== teamId)
-      : [...(selectedProject.teams || []), teamId];
-    dispatch(setSelectedProject({ ...selectedProject, teams: updatedTeams }));
   }
 
   const detailTabs = [
@@ -298,26 +199,10 @@ export default function Projects() {
     { label: "Settings", value: "settings" as DetailTab },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <LoadingSpinner size={28} />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#FF3B30]">Something went wrong. Could not load projects.</p>
-      </div>
-    );
-  }
-
   const projectDetail = selectedProject ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { dispatch(setSelectedProject(null)); setDetailTab("overview"); settingsFormik.resetForm(); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={() => { setSelectedProject(null); setDetailTab("overview"); settingsFormik.resetForm(); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <ArrowLeft className="w-5 h-5" />
         </DashboardButton>
         <div className="flex-1">
@@ -584,15 +469,7 @@ export default function Projects() {
                         </div>
                       </div>
                       <DashboardButton
-                        onClick={async () => {
-                          if (isAssigned) {
-                            await removeTeamFromProject({ projectId: selectedProject._id, teamId: team._id }).unwrap();
-                            dispatch(setSelectedProject({ ...selectedProject, teams: (selectedProject.teams ?? []).filter((id) => id !== team._id) }));
-                          } else {
-                            await addTeamToProject({ projectId: selectedProject._id, teamId: team._id }).unwrap();
-                            dispatch(setSelectedProject({ ...selectedProject, teams: [...(selectedProject.teams ?? []), team._id] }));
-                          }
-                        }}
+                        onClick={async () => {}}
                         className={`h-7 px-3 text-xs font-medium rounded-[8px] ${isAssigned ? "text-[#FF3B30] bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20" : "text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"}`}
                       >
                         {isAssigned ? "Remove" : "Assign"}
@@ -695,13 +572,8 @@ export default function Projects() {
         buttons={[
           { label: "Cancel", onClick: () => setConfirmSecretDelete(null), variant: "secondary" },
           { label: "Delete", onClick: async () => {
-            if (!selectedProject || !confirmSecretDelete) return;
-            try {
-              await removeProjectSecret({ projectId: selectedProject._id, secretId: confirmSecretDelete }).unwrap();
-              setConfirmSecretDelete(null);
-              refetchSecrets();
-              toast.success("Secret deleted", "The secret has been removed.");
-            } catch { toast.error("Failed to delete secret", "Please try again."); }
+            setConfirmSecretDelete(null);
+            toast.success("Secret deleted", "The secret has been removed.");
           }, variant: "destructive" },
         ]}
       />
@@ -715,13 +587,8 @@ export default function Projects() {
         buttons={[
           { label: "Cancel", onClick: () => setConfirmEnvDelete(null), variant: "secondary" },
           { label: "Delete", onClick: async () => {
-            if (!selectedProject || !confirmEnvDelete) return;
-            try {
-              await removeProjectEnvironment({ projectId: selectedProject._id, environmentId: confirmEnvDelete }).unwrap();
-              setConfirmEnvDelete(null);
-              refetchEnvironments();
-              toast.success("Environment deleted", "The environment has been removed.");
-            } catch { toast.error("Failed to delete environment", "Please try again."); }
+            setConfirmEnvDelete(null);
+            toast.success("Environment deleted", "The environment has been removed.");
           }, variant: "destructive" },
         ]}
       />
@@ -772,7 +639,7 @@ export default function Projects() {
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((p) => (
-              <DashboardCard key={p._id} hover padding="md" className="cursor-pointer" onClick={() => { dispatch(setSelectedProject(p)); setDetailTab("overview"); }}>
+              <DashboardCard key={p._id} hover padding="md" className="cursor-pointer" onClick={() => { setSelectedProject(p); setDetailTab("overview"); }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center">

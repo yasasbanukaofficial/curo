@@ -29,9 +29,6 @@ import type {
   SettingsProfileValues,
   ChangePasswordValues,
 } from "../../types/settings";
-import { useAppSelector, useAppDispatch } from "../../app/hooks";
-import { selectUser } from "../../features/auth/authSlice";
-import { useDisconnectOAuthMutation, useVerifySessionQuery } from "../../features/auth/authApi";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -41,15 +38,20 @@ function formatDate(iso: string) {
   });
 }
 
+const demoUser = {
+  name: "Demo User",
+  email: "demo@example.com",
+  provider: [] as string[],
+  createdAt: new Date().toISOString(),
+};
+
 export default function Account() {
   const toast = useToast();
-  const user = useAppSelector(selectUser);
-  const dispatch = useAppDispatch();
-  const [doDisconnect] = useDisconnectOAuthMutation();
-  const { refetch: refetchSession, isLoading: sessionLoading } = useVerifySessionQuery();
+  const user = demoUser;
   const [editMode, setEditMode] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [sessionLoading] = useState(false);
 
   if (sessionLoading) {
     return (
@@ -105,30 +107,14 @@ export default function Account() {
   }
 
   function handleConnectGoogle() {
-    const API_URL = import.meta.env.VITE_API_URL;
-    window.location.href = `${API_URL}/auth/google/connect`;
   }
   async function handleDisconnectGoogle() {
-    try {
-      await doDisconnect({ provider: "google" }).unwrap();
-      refetchSession();
-      toast.success("Google disconnected", "Your Google account has been unlinked.");
-    } catch (err: any) {
-      toast.error("Failed to disconnect", err?.data?.msg || "Please try again later.");
-    }
+    toast.success("Google disconnected", "Your Google account has been unlinked.");
   }
   function handleConnectGithub() {
-    const API_URL = import.meta.env.VITE_API_URL;
-    window.location.href = `${API_URL}/auth/github/connect`;
   }
   async function handleDisconnectGithub() {
-    try {
-      await doDisconnect({ provider: "github" }).unwrap();
-      refetchSession();
-      toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
-    } catch (err: any) {
-      toast.error("Failed to disconnect", err?.data?.msg || "Please try again later.");
-    }
+    toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
   }
 
   return (

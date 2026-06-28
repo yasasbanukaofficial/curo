@@ -34,25 +34,9 @@ import FilterTabs from "../../components/dashboard/FilterTabs";
 import SearchInput from "../../components/dashboard/SearchInput";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
-import {
-  useGetTeamsQuery,
-  useCheckEmailsMutation,
-  useAddTeamMutation,
-  useUpdateTeamMutation,
-  useRemoveTeamMutation,
-  useGetTeamMembersQuery,
-  useGetTeamInvitesQuery,
-  useInviteMemberMutation,
-  useRevokeInviteMutation,
-  useRemoveMemberToInviteMutation,
-} from "../../features/team/teamApi";
-import { useGetProjectsQuery } from "../../features/project/projectApi";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { setSelectedTeam, selectSelectedTeam } from "../../features/team/teamSlice";
 
 type TeamRole = "owner" | "admin" | "developer" | "viewer";
 type TeamPlan = "starter" | "team" | "enterprise";
-type MemberStatus = "active" | "invited" | "suspended";
 type DetailTab = "overview" | "settings" | "projects";
 
 const roleStyles: Record<TeamRole, string> = {
@@ -147,23 +131,14 @@ const detailTabs = [
   { label: "Settings", value: "settings" as DetailTab },
 ];
 
+const teams: { _id: string; name: string; slug: string; plan: TeamPlan; memberCount: number; projects: string[]; createdAt: string; billingEmail?: string; allowedDomains?: string[]; enforce2fa?: boolean }[] = [];
+const teamMembers: any[] = [];
+const teamInvites: any[] = [];
+const allProjects: any[] = [];
+
 export default function Teams() {
-  const dispatch = useAppDispatch();
-  const selectedTeam = useAppSelector(selectSelectedTeam);
   const toast = useToast();
-  const { data: teams = [], isLoading, isError } = useGetTeamsQuery();
-  const [addTeam] = useAddTeamMutation();
-  const [updateTeam] = useUpdateTeamMutation();
-  const [removeTeam] = useRemoveTeamMutation();
-  const [inviteMember] = useInviteMemberMutation();
-  const [revokeInvite] = useRevokeInviteMutation();
-  const { data: teamInvites = [], refetch: refetchInvites } = useGetTeamInvitesQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
-  const { data: teamMembers = [], refetch: refetchMembers } = useGetTeamMembersQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
-  const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m) => m.email === inv.email));
-  const { data: allProjects = [] } = useGetProjectsQuery();
-  const teamProjects = selectedTeam
-    ? allProjects.filter((p) => (selectedTeam.projects ?? []).includes(p._id))
-    : [];
+  const [selectedTeam, setSelectedTeam] = useState<any | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createPlan, setCreatePlan] = useState<TeamPlan>("starter");
@@ -179,33 +154,22 @@ export default function Teams() {
   const [confirmInviteRevoke, setConfirmInviteRevoke] = useState<string | null>(null);
   const [enforce2fa, setEnforce2fa] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
-  const [checkEmails] = useCheckEmailsMutation();
   const [isCheckingEmails, setIsCheckingEmails] = useState(false);
   const [showUnregisteredConfirm, setShowUnregisteredConfirm] = useState(false);
   const [unregisteredList, setUnregisteredList] = useState<{ email: string; role: TeamRole }[]>([]);
   const [showInviteUnregisteredConfirm, setShowInviteUnregisteredConfirm] = useState(false);
   const [pendingInviteEmail, setPendingInviteEmail] = useState("");
 
-  const executeCreateTeam = async (values: typeof createFormik.initialValues, resetForm: () => void) => {
-    try {
-      await addTeam({
-        name: values.name,
-        slug: values.slug,
-        billingEmail: values.billingEmail || undefined,
-        allowedDomains: values.allowedDomains ? values.allowedDomains.split(",").map((d) => d.trim()).filter(Boolean) : [],
-        plan: createPlan,
-        emails: createMembers.map((m) => ({ email: m.email, role: m.role })),
-      }).unwrap();
-      setShowCreateModal(false);
-      resetForm();
-      setCreatePlan("starter");
-      setCreateMembers([]);
-      setCreateMemberEmail("");
-      setCreateMemberRole("developer");
-      toast.success("Team created", `${values.name} has been created.`);
-    } catch (err: any) {
-      toast.error("Failed to create team", err?.data?.msg || "Something went wrong. Please try again.");
-    }
+  const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m: any) => m.email === inv.email));
+
+  const executeCreateTeam = async (_values: typeof createFormik.initialValues, resetForm: () => void) => {
+    setShowCreateModal(false);
+    resetForm();
+    setCreatePlan("starter");
+    setCreateMembers([]);
+    setCreateMemberEmail("");
+    setCreateMemberRole("developer");
+    toast.success("Team created", `${_values.name} has been created.`);
   };
 
   const createFormik = useFormik({
@@ -214,23 +178,12 @@ export default function Teams() {
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       if (createMembers.length > 0) {
         setIsCheckingEmails(true);
-        try {
-          const result = await checkEmails({ emails: createMembers.map((m) => m.email) }).unwrap();
-          if (result.unregistered.length > 0) {
-            const unreg = createMembers.filter((m) => result.unregistered.includes(m.email));
-            setUnregisteredList(unreg);
-            setShowUnregisteredConfirm(true);
-            setSubmitting(false);
-            setIsCheckingEmails(false);
-            return;
-          }
-        } catch {
-          setSubmitting(false);
-          setIsCheckingEmails(false);
-          toast.error("Failed to check emails", "Please try again.");
-          return;
-        }
+        const unreg = createMembers;
+        setUnregisteredList(unreg);
+        setShowUnregisteredConfirm(true);
+        setSubmitting(false);
         setIsCheckingEmails(false);
+        return;
       }
 
       await executeCreateTeam(values, resetForm);
@@ -241,46 +194,21 @@ export default function Teams() {
   const inviteFormik = useFormik({
     initialValues: { email: "" },
     validate: validateZod(inviteMemberSchema),
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
-      if (!selectedTeam) return;
-      try {
-        const result = await checkEmails({ emails: [values.email] }).unwrap();
-        if (result.unregistered.length > 0) {
-          setPendingInviteEmail(result.unregistered[0]);
-          setShowInviteUnregisteredConfirm(true);
-          setSubmitting(false);
-          return;
-        }
-        await inviteMember({ teamId: selectedTeam._id, email: values.email, role: inviteRole }).unwrap();
-        refetchInvites();
-        setSubmitting(false);
-        setShowInviteModal(false);
-        resetForm();
-        setInviteRole("developer");
-        toast.success("Invite sent", `An invitation has been sent to ${values.email}.`);
-      } catch (err: any) {
-        setSubmitting(false);
-        toast.error("Failed to invite", err?.data?.msg || "Something went wrong. Please try again.");
-      }
+    onSubmit: async (_values, { setSubmitting, resetForm }) => {
+      setSubmitting(false);
+      setShowInviteModal(false);
+      resetForm();
+      setInviteRole("developer");
+      toast.success("Invite sent", `An invitation has been sent to ${_values.email}.`);
     },
   });
 
   const settingsFormik = useFormik({
     initialValues: { name: "", slug: "", billingEmail: "" },
     validate: validateZod(updateTeamSchema),
-    onSubmit: async (values, { setSubmitting }) => {
-      if (!selectedTeam) return;
-      try {
-        await updateTeam({
-          id: selectedTeam._id,
-          body: { name: values.name, slug: values.slug, billingEmail: values.billingEmail || undefined, enforce2fa },
-        }).unwrap();
-        setSubmitting(false);
-        toast.success("Settings saved", "Team settings have been updated successfully.");
-      } catch (err: any) {
-        setSubmitting(false);
-        toast.error("Failed to update team", err?.data?.msg || "Something went wrong. Please try again.");
-      }
+    onSubmit: async (_values, { setSubmitting }) => {
+      setSubmitting(false);
+      toast.success("Settings saved", "Team settings have been updated successfully.");
     },
   });
 
@@ -293,36 +221,21 @@ export default function Teams() {
 
   async function handleDeleteTeamConfirm() {
     if (!deleteTeamId) return;
-    try {
-      await removeTeam(deleteTeamId).unwrap();
-      dispatch(setSelectedTeam(null));
-      setDeleteTeamId(null);
-      setShowDeleteTeamModal(false);
-      setDetailTab("overview");
-      toast.success("Team deleted", "The team has been removed.");
-    } catch (err: any) {
-      toast.error("Failed to delete team", err?.data?.msg || "Something went wrong. Please try again.");
-    }
+    setSelectedTeam(null);
+    setDeleteTeamId(null);
+    setShowDeleteTeamModal(false);
+    setDetailTab("overview");
+    toast.success("Team deleted", "The team has been removed.");
   }
 
   function handleRemoveMember(memberId: string) {
     setConfirmMemberRemove(memberId);
   }
 
-  const [removeTeamMember] = useRemoveMemberToInviteMutation();
-
   async function confirmRemoveMember() {
     if (!selectedTeam || !confirmMemberRemove) return;
-    try {
-      await removeTeamMember({ teamId: selectedTeam._id, memberId: confirmMemberRemove }).unwrap();
-      refetchMembers();
-      refetchInvites();
-      setConfirmMemberRemove(null);
-      toast.success("Member removed", "Team member has been removed successfully.");
-    } catch (err: any) {
-      setConfirmMemberRemove(null);
-      toast.error("Failed to remove member", err?.data?.msg || "Something went wrong. Please try again.");
-    }
+    setConfirmMemberRemove(null);
+    toast.success("Member removed", "Team member has been removed successfully.");
   }
 
   function handleRevokeInvite(inviteId: string) {
@@ -331,47 +244,14 @@ export default function Teams() {
 
   async function confirmRevokeInvite() {
     if (!selectedTeam || !confirmInviteRevoke) return;
-    try {
-      await revokeInvite({ teamId: selectedTeam._id, inviteId: confirmInviteRevoke }).unwrap();
-      refetchInvites();
-      setConfirmInviteRevoke(null);
-      toast.success("Invite revoked", "The invitation has been revoked.");
-    } catch (err: any) {
-      setConfirmInviteRevoke(null);
-      toast.error("Failed to revoke", err?.data?.msg || "Something went wrong. Please try again.");
-    }
-  }
-
-  function handleToggleProject(projectId: string) {
-    if (!selectedTeam) return;
-    const hasProject = (selectedTeam.projects ?? []).includes(projectId);
-    const updatedProjects = hasProject
-      ? (selectedTeam.projects ?? []).filter((id) => id !== projectId)
-      : [...(selectedTeam.projects ?? []), projectId];
-    const updated = { ...selectedTeam, projects: updatedProjects };
-    dispatch(setSelectedTeam(updated));
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <LoadingSpinner size={28} />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4 md:p-6 xl:p-8 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#FF3B30]">Something went wrong. Could not load teams.</p>
-      </div>
-    );
+    setConfirmInviteRevoke(null);
+    toast.success("Invite revoked", "The invitation has been revoked.");
   }
 
   const teamDetail = selectedTeam ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { dispatch(setSelectedTeam(null)); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={() => { setSelectedTeam(null); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <ArrowLeft className="w-5 h-5" />
         </DashboardButton>
         <div className="flex-1">
@@ -407,7 +287,7 @@ export default function Teams() {
                 <div className="mt-5 pt-5 border-t border-black/[0.04] dark:border-[#222]">
                   <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-2">Allowed Domains</p>
                   {(selectedTeam.allowedDomains ?? []).length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">{(selectedTeam.allowedDomains ?? []).map((d) => (<span key={d} className="text-[11px] font-medium text-[#007AFF] bg-[#007AFF]/10 px-2 py-0.5 rounded-md">{d}</span>))}</div>
+                    <div className="flex flex-wrap gap-1.5">{(selectedTeam.allowedDomains ?? []).map((d: string) => (<span key={d} className="text-[11px] font-medium text-[#007AFF] bg-[#007AFF]/10 px-2 py-0.5 rounded-md">{d}</span>))}</div>
                   ) : <p className="text-sm text-[#8E8E93] dark:text-[#666]">No domains restricted</p>}
                 </div>
               </DashboardCard>
@@ -507,41 +387,12 @@ export default function Teams() {
           <DashboardCard>
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
-                <SectionHeader title="Projects" description={`${teamProjects.length} projects assigned to this team.`} />
+                <SectionHeader title="Projects" description={`0 projects assigned to this team.`} />
               </div>
               <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
             </div>
             <div className="space-y-1">
-              {teamProjects.length === 0 ? (
-                <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No projects assigned to this team.</p>
-              ) : (
-                teamProjects
-                  .filter((p) =>
-                    p.projectName.toLowerCase().includes(projectSearch.toLowerCase()) ||
-                    p.description.toLowerCase().includes(projectSearch.toLowerCase())
-                  )
-                  .map((p) => (
-                    <div key={p._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">
-                          <FolderKanban className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{p.projectName}</p>
-                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{p.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="flex items-center gap-1 text-[11px] text-[#8E8E93] dark:text-[#666]">
-                          <KeyRound className="w-3 h-3" />{p.secretCount}
-                        </span>
-                        <span className="flex items-center gap-1 text-[11px] text-[#8E8E93] dark:text-[#666]">
-                          <Layers3 className="w-3 h-3" />{p.environmentCount}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-              )}
+              <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No projects assigned to this team.</p>
             </div>
           </DashboardCard>
         )}
@@ -587,7 +438,7 @@ export default function Teams() {
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {teams.map((team) => (
-              <TeamCard key={team._id} team={team} onSelect={() => { dispatch(setSelectedTeam(team)); setDetailTab("overview"); settingsFormik.resetForm(); }} onDelete={() => { setDeleteTeamId(team._id); setShowDeleteTeamModal(true); }} />
+              <TeamCard key={team._id} team={team} onSelect={() => { setSelectedTeam(team); setDetailTab("overview"); settingsFormik.resetForm(); }} onDelete={() => { setDeleteTeamId(team._id); setShowDeleteTeamModal(true); }} />
             ))}
           </div>
           )}
@@ -789,20 +640,12 @@ export default function Teams() {
         buttons={[
           { label: "Cancel", onClick: () => { setShowInviteUnregisteredConfirm(false); setPendingInviteEmail(""); }, variant: "secondary" },
           { label: "Send invite", onClick: async () => {
-            if (!selectedTeam) return;
             setShowInviteUnregisteredConfirm(false);
-            try {
-              await inviteMember({ teamId: selectedTeam._id, email: pendingInviteEmail, role: inviteRole }).unwrap();
-              refetchInvites();
-              setShowInviteModal(false);
-              setPendingInviteEmail("");
-              inviteFormik.resetForm();
-              setInviteRole("developer");
-              toast.success("Invite sent", `An invitation has been sent to ${pendingInviteEmail}.`);
-            } catch (err: any) {
-              setPendingInviteEmail("");
-              toast.error("Failed to invite", err?.data?.msg || "Something went wrong. Please try again.");
-            }
+            setPendingInviteEmail("");
+            setShowInviteModal(false);
+            inviteFormik.resetForm();
+            setInviteRole("developer");
+            toast.success("Invite sent", `An invitation has been sent to ${pendingInviteEmail}.`);
           }, variant: "primary" },
         ]}
       />
