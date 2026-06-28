@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { KeyRound, FolderKanban, Users, Rocket, CheckCircle, RotateCw, Plus } from "lucide-react";
+import { Rocket, CheckCircle, RotateCw, Plus } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
 import StatCard from "../../components/dashboard/StatCard";
@@ -43,7 +43,7 @@ export default function Overview() {
         </div>
       </DashboardCard>
 
-      <DashboardCard id="cli-snippet" className="mb-8">
+      <DashboardCard className="mb-8">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center">
             <span className="text-sm font-mono font-bold text-[#8E8E93]">&gt;_</span>
