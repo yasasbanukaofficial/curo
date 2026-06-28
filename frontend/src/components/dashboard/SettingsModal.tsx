@@ -26,7 +26,7 @@ import type {
 } from "../../types/settings";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { selectUser } from "../../features/auth/authSlice";
-import { useDisconnectOAuthMutation } from "../../features/auth/authApi";
+import { useDisconnectOAuthMutation, useVerifySessionQuery } from "../../features/auth/authApi";
 
 interface SettingsModalProps {
   open: boolean;
@@ -49,6 +49,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
   const [doDisconnect] = useDisconnectOAuthMutation();
+  const { refetch: refetchSession } = useVerifySessionQuery();
   const [tab, setTab] = useState<SettingsTab>(initialTab);
 
   useEffect(() => {
@@ -200,7 +201,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.github.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          try { await doDisconnect({ provider: "github" }).unwrap(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
+                          try { await doDisconnect({ provider: "github" }).unwrap(); refetchSession(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
                           catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
@@ -227,7 +228,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.google.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          try { await doDisconnect({ provider: "google" }).unwrap(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
+                          try { await doDisconnect({ provider: "google" }).unwrap(); refetchSession(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
                           catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
@@ -398,7 +399,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.github.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          try { await doDisconnect({ provider: "github" }).unwrap(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
+                          try { await doDisconnect({ provider: "github" }).unwrap(); refetchSession(); toast.success("GitHub disconnected", "Your GitHub account has been unlinked."); }
                           catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
@@ -430,7 +431,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.google.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          try { await doDisconnect({ provider: "google" }).unwrap(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
+                          try { await doDisconnect({ provider: "google" }).unwrap(); refetchSession(); toast.success("Google disconnected", "Your Google account has been unlinked."); }
                           catch (err: any) { toast.error("Failed to disconnect", err?.data?.msg || "Please try again."); }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"

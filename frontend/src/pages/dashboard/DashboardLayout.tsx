@@ -23,7 +23,7 @@ function DashboardInner() {
   const [inviteDetails, setInviteDetails] = useState<{ teamName: string; teamAvatar?: string; memberCount: number; role: string } | null>(null);
   const [mountResolved, setMountResolved] = useState(false);
 
-  const { data: sessionData } = useVerifySessionQuery();
+  const { data: sessionData, refetch: refetchSession } = useVerifySessionQuery();
   const [fetchInviteDetails] = useLazyGetInviteDetailsQuery();
   const [acceptInvite, { isLoading: isAccepting }] = useAcceptInviteExplicitMutation();
 
@@ -87,7 +87,11 @@ function DashboardInner() {
     if (!inviteToken) return;
     try {
       await acceptInvite({ token: inviteToken }).unwrap();
-    } catch {}
+    } catch {
+      navigate("/invite/expired", { replace: true });
+      return;
+    }
+    refetchSession();
     sessionStorage.removeItem("inviteToken");
     sessionStorage.removeItem("pendingInvite");
     setShowInviteModal(false);
