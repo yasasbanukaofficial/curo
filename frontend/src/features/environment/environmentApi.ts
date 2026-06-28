@@ -3,44 +3,48 @@ import type { Environment } from "../../types/environment";
 
 export const environmentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getEnvironments: builder.query<Environment[], void>({
-      query: () => "/environments/all",
+    getProjectEnvironments: builder.query<Environment[], string>({
+      query: (projectId) => `/projects/${projectId}/environments`,
       transformResponse: (response: { data: Environment[] }) => response.data,
-      providesTags: (result) => [
+      providesTags: (result, error, projectId) => [
         { type: "Environment", id: "LIST" },
+        { type: "Environment", id: projectId },
         ...(result ?? []).map((e) => ({ type: "Environment" as const, id: e._id })),
       ],
     }),
-    addEnvironment: builder.mutation<Environment, Partial<Environment>>({
-      query: (body) => ({
-        url: "/environments/create",
+    addProjectEnvironment: builder.mutation<Environment, { projectId: string; name: string }>({
+      query: ({ projectId, name }) => ({
+        url: `/projects/${projectId}/environments`,
         method: "POST",
-        body,
+        body: { name },
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (result, error, { projectId }) => [
         { type: "Environment", id: "LIST" },
-        ...(arg.projectId ? [{ type: "Project" as const, id: arg.projectId }] : []),
+        { type: "Environment", id: projectId },
+        { type: "Project", id: projectId },
       ],
     }),
-    updateEnvironment: builder.mutation<Environment, { id: string; body: Partial<Environment> }>({
-      query: ({ id, body }) => ({
-        url: `/environments/update/${id}`,
+    updateProjectEnvironment: builder.mutation<Environment, { projectId: string; environmentId: string; name: string }>({
+      query: ({ projectId, environmentId, name }) => ({
+        url: `/projects/${projectId}/environments/${environmentId}`,
         method: "PUT",
-        body,
+        body: { name },
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: "Environment", id: arg.id },
-        ...(arg.body.projectId ? [{ type: "Project" as const, id: arg.body.projectId }] : []),
+      invalidatesTags: (result, error, { projectId, environmentId }) => [
+        { type: "Environment", id: environmentId },
+        { type: "Environment", id: projectId },
+        { type: "Project", id: projectId },
       ],
     }),
-    removeEnvironment: builder.mutation<void, { id: string; projectId?: string }>({
-      query: ({ id }) => ({
-        url: `/environments/delete/${id}`,
+    removeProjectEnvironment: builder.mutation<void, { projectId: string; environmentId: string }>({
+      query: ({ projectId, environmentId }) => ({
+        url: `/projects/${projectId}/environments/${environmentId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (result, error, { projectId }) => [
         { type: "Environment", id: "LIST" },
-        ...(arg.projectId ? [{ type: "Project" as const, id: arg.projectId }] : []),
+        { type: "Environment", id: projectId },
+        { type: "Project", id: projectId },
       ],
     }),
   }),
@@ -49,8 +53,8 @@ export const environmentApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetEnvironmentsQuery,
-  useAddEnvironmentMutation,
-  useUpdateEnvironmentMutation,
-  useRemoveEnvironmentMutation,
+  useGetProjectEnvironmentsQuery,
+  useAddProjectEnvironmentMutation,
+  useUpdateProjectEnvironmentMutation,
+  useRemoveProjectEnvironmentMutation,
 } = environmentApi;

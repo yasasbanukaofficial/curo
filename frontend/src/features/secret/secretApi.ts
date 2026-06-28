@@ -3,47 +3,48 @@ import type { Secret } from "../../types/secret";
 
 export const secretApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSecrets: builder.query<Secret[], void>({
-      query: () => "/secrets/all",
+    getProjectSecrets: builder.query<Secret[], string>({
+      query: (projectId) => `/projects/${projectId}/secrets`,
       transformResponse: (response: { data: Secret[] }) => response.data,
-      providesTags: (result) => [
+      providesTags: (result, error, projectId) => [
         { type: "Secret", id: "LIST" },
+        { type: "Secret", id: projectId },
         ...(result ?? []).map((s) => ({ type: "Secret" as const, id: s._id })),
       ],
     }),
-    addSecret: builder.mutation<Secret, Partial<Secret>>({
-      query: (body) => ({
-        url: "/secrets/save",
+    addProjectSecret: builder.mutation<Secret, { projectId: string; body: Partial<Secret> }>({
+      query: ({ projectId, body }) => ({
+        url: `/projects/${projectId}/secrets`,
         method: "POST",
         body,
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (result, error, { projectId }) => [
         { type: "Secret", id: "LIST" },
-        { type: "Project", id: arg.projectId! },
-        ...(arg.environmentId ? [{ type: "Environment" as const, id: arg.environmentId }] : []),
+        { type: "Secret", id: projectId },
+        { type: "Project", id: projectId },
       ],
     }),
-    updateSecret: builder.mutation<Secret, { id: string; body: Partial<Secret> }>({
-      query: ({ id, body }) => ({
-        url: `/secrets/update/${id}`,
+    updateProjectSecret: builder.mutation<Secret, { projectId: string; secretId: string; body: Partial<Secret> }>({
+      query: ({ projectId, secretId, body }) => ({
+        url: `/projects/${projectId}/secrets/${secretId}`,
         method: "PUT",
         body,
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: "Secret", id: arg.id },
-        { type: "Project", id: arg.body.projectId! },
-        ...(arg.body.environmentId ? [{ type: "Environment" as const, id: arg.body.environmentId }] : []),
+      invalidatesTags: (result, error, { projectId, secretId }) => [
+        { type: "Secret", id: secretId },
+        { type: "Secret", id: projectId },
+        { type: "Project", id: projectId },
       ],
     }),
-    removeSecret: builder.mutation<void, { id: string; projectId?: string; environmentId?: string }>({
-      query: ({ id }) => ({
-        url: `/secrets/delete/${id}`,
+    removeProjectSecret: builder.mutation<void, { projectId: string; secretId: string }>({
+      query: ({ projectId, secretId }) => ({
+        url: `/projects/${projectId}/secrets/${secretId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (result, error, { projectId }) => [
         { type: "Secret", id: "LIST" },
-        ...(arg.projectId ? [{ type: "Project" as const, id: arg.projectId }] : []),
-        ...(arg.environmentId ? [{ type: "Environment" as const, id: arg.environmentId }] : []),
+        { type: "Secret", id: projectId },
+        { type: "Project", id: projectId },
       ],
     }),
   }),
@@ -51,4 +52,9 @@ export const secretApi = baseApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetSecretsQuery, useAddSecretMutation, useUpdateSecretMutation, useRemoveSecretMutation } = secretApi;
+export const {
+  useGetProjectSecretsQuery,
+  useAddProjectSecretMutation,
+  useUpdateProjectSecretMutation,
+  useRemoveProjectSecretMutation,
+} = secretApi;

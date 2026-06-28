@@ -37,8 +37,6 @@ const navSections = [
   {
     label: "Management",
     items: [
-      { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
-      { label: "Environments", icon: Layers3, path: "/dashboard/environments" },
       { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
       { label: "Audit Logs", icon: ScrollText, path: "/dashboard/audits" },
       { label: "Version History", icon: History, path: "/dashboard/versions" },
