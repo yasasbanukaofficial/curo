@@ -3,12 +3,12 @@ import { sendResponse } from "../util";
 import { AuthRequest } from "../middlewares";
 import { IProject, ISecret, IEnvironment } from "../types";
 import { projectService, secretService, environmentService } from "../services";
+import { TeamMemberModel } from "../models";
 
 export const getProjectById = async (req: AuthRequest, res: Response) => {
-  const { projectId } = req.params as { projectId: string };
-  const userId = req.userId!;
+  const projectId = req.params.projectId;
 
-    if (!projectId) {
+  if (!projectId) {
     return sendResponse(res, {
       success: false,
       status: 400,
@@ -17,7 +17,7 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const project = await projectService.getProjectById(userId, projectId);
+    const project = await projectService.getProjectById(projectId);
     if (!project) {
       return sendResponse(res, {
         success: false,
@@ -43,7 +43,14 @@ export const getAllProjects = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
 
   try {
-    const allProjects = await projectService.getAllProjects(userId);
+    const memberships = await TeamMemberModel.find({ userId, status: "active" }).lean();
+    const teamIds = memberships.map((m) => m.teamId.toString());
+
+    if (teamIds.length === 0) {
+      return sendResponse(res, { success: true, status: 200, data: [] });
+    }
+
+    const allProjects = await projectService.getAllProjects(teamIds);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -119,7 +126,6 @@ export const createProject = async (req: AuthRequest, res: Response) => {
 
 export const updateProject = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
-  const userId = req.userId!;
   const body = req.body;
 
   if (!projectId || !body) {
@@ -131,7 +137,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    await projectService.updateProject(userId, projectId, body);
+    await projectService.updateProject(projectId, body);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -155,7 +161,6 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
 export const addTeamToProject = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
   const { teamId } = req.body as { teamId: string };
-  const userId = req.userId!;
 
   if (!projectId || !teamId) {
     return sendResponse(res, {
@@ -166,7 +171,7 @@ export const addTeamToProject = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    await projectService.addTeamToProject(userId, projectId, teamId);
+    await projectService.addTeamToProject(projectId, teamId);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -185,7 +190,6 @@ export const addTeamToProject = async (req: AuthRequest, res: Response) => {
 
 export const removeTeamFromProject = async (req: AuthRequest, res: Response) => {
   const { projectId, teamId } = req.params as { projectId: string; teamId: string };
-  const userId = req.userId!;
 
   if (!projectId || !teamId) {
     return sendResponse(res, {
@@ -196,7 +200,7 @@ export const removeTeamFromProject = async (req: AuthRequest, res: Response) => 
   }
 
   try {
-    await projectService.removeTeamFromProject(userId, projectId, teamId);
+    await projectService.removeTeamFromProject(projectId, teamId);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -212,7 +216,6 @@ export const removeTeamFromProject = async (req: AuthRequest, res: Response) => 
 
 export const deleteProject = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
-  const userId = req.userId!;
 
   if (!projectId) {
     return sendResponse(res, {
@@ -223,7 +226,7 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    await projectService.deleteProject(userId, projectId);
+    await projectService.deleteProject(projectId);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -239,14 +242,13 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
 
 export const getAllProjectSecrets = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
-  const userId = req.userId!;
 
   if (!projectId) {
     return sendResponse(res, { success: false, status: 400, msg: "Project ID is required" });
   }
 
   try {
-    const secrets = await secretService.getProjectSecrets(userId, projectId);
+    const secrets = await secretService.getProjectSecrets(projectId);
     return sendResponse(res, { success: true, status: 200, data: secrets });
   } catch (error) {
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while loading secrets." });
@@ -280,7 +282,6 @@ export const createProjectSecret = async (req: AuthRequest, res: Response) => {
 
 export const updateProjectSecret = async (req: AuthRequest, res: Response) => {
   const { projectId, secretId } = req.params as { projectId: string; secretId: string };
-  const userId = req.userId!;
   const { environmentId, ...rest } = req.body;
 
   if (!secretId || !rest) {
@@ -288,7 +289,7 @@ export const updateProjectSecret = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    await secretService.updateProjectSecret(userId, projectId, secretId, { ...rest, environmentId: environmentId || undefined });
+    await secretService.updateProjectSecret(projectId, secretId, { ...rest, environmentId: environmentId || undefined });
     return sendResponse(res, { success: true, status: 200, msg: "Secret updated successfully" });
   } catch (error: any) {
     if (error.message === "SECRET_NOT_FOUND") {
@@ -300,14 +301,13 @@ export const updateProjectSecret = async (req: AuthRequest, res: Response) => {
 
 export const deleteProjectSecret = async (req: AuthRequest, res: Response) => {
   const { projectId, secretId } = req.params as { projectId: string; secretId: string };
-  const userId = req.userId!;
 
   if (!secretId) {
     return sendResponse(res, { success: false, status: 400, msg: "Secret ID is required" });
   }
 
   try {
-    await secretService.deleteProjectSecret(userId, projectId, secretId);
+    await secretService.deleteProjectSecret(projectId, secretId);
     return sendResponse(res, { success: true, status: 200, msg: "Secret deleted successfully" });
   } catch (error: any) {
     if (error.message === "SECRET_NOT_FOUND") {
@@ -319,14 +319,13 @@ export const deleteProjectSecret = async (req: AuthRequest, res: Response) => {
 
 export const getAllProjectEnvironments = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
-  const userId = req.userId!;
 
   if (!projectId) {
     return sendResponse(res, { success: false, status: 400, msg: "Project ID is required" });
   }
 
   try {
-    const environments = await environmentService.getProjectEnvironments(userId, projectId);
+    const environments = await environmentService.getProjectEnvironments(projectId);
     return sendResponse(res, { success: true, status: 200, data: environments });
   } catch (error) {
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while loading environments." });
@@ -362,7 +361,6 @@ export const createProjectEnvironment = async (req: AuthRequest, res: Response) 
 
 export const updateProjectEnvironment = async (req: AuthRequest, res: Response) => {
   const { projectId, environmentId } = req.params as { projectId: string; environmentId: string };
-  const userId = req.userId!;
   const body = req.body;
 
   if (!environmentId || !body) {
@@ -370,7 +368,7 @@ export const updateProjectEnvironment = async (req: AuthRequest, res: Response) 
   }
 
   try {
-    await environmentService.updateProjectEnvironment(userId, projectId, environmentId, body);
+    await environmentService.updateProjectEnvironment(projectId, environmentId, body);
     return sendResponse(res, { success: true, status: 200, msg: "Environment updated successfully" });
   } catch (error: any) {
     if (error.message === "ENVIRONMENT_NOT_FOUND") {
@@ -382,14 +380,13 @@ export const updateProjectEnvironment = async (req: AuthRequest, res: Response) 
 
 export const deleteProjectEnvironment = async (req: AuthRequest, res: Response) => {
   const { projectId, environmentId } = req.params as { projectId: string; environmentId: string };
-  const userId = req.userId!;
 
   if (!environmentId) {
     return sendResponse(res, { success: false, status: 400, msg: "Environment ID is required" });
   }
 
   try {
-    await environmentService.deleteProjectEnvironment(userId, projectId, environmentId);
+    await environmentService.deleteProjectEnvironment(projectId, environmentId);
     return sendResponse(res, { success: true, status: 200, msg: "Environment deleted successfully" });
   } catch (error: any) {
     if (error.message === "ENVIRONMENT_NOT_FOUND") {

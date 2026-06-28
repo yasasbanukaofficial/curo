@@ -88,9 +88,9 @@ export const environmentService = {
     }
   },
 
-  getProjectEnvironments: async (userId: string, projectId: string): Promise<IEnvironment[]> => {
+  getProjectEnvironments: async (projectId: string): Promise<IEnvironment[]> => {
     try {
-      const resp = await EnvironmentModel.find({ userId, projectId }).sort({ createdAt: -1 });
+      const resp = await EnvironmentModel.find({ projectId }).sort({ createdAt: -1 });
       return resp.map((envDoc) => ({
         _id: envDoc._id,
         name: envDoc.name,
@@ -120,14 +120,14 @@ export const environmentService = {
   },
 
   updateProjectEnvironment: async (
-    userId: string, projectId: string, environmentId: string, data: Partial<IEnvironment>,
+    projectId: string, environmentId: string, data: Partial<IEnvironment>,
   ): Promise<boolean> => {
     if (!environmentId) throw new Error("ENVIRONMENT_ID_NOT_EXISTING");
     if (!data.name) throw new Error("INVALID_PAYLOAD");
 
     try {
       const existing = await EnvironmentModel.findOneAndUpdate(
-        { _id: environmentId, userId, projectId },
+        { _id: environmentId, projectId },
         { $set: { name: data.name } },
         { returnDocument: "after" },
       );
@@ -140,10 +140,10 @@ export const environmentService = {
   },
 
   deleteProjectEnvironment: async (
-    userId: string, projectId: string, environmentId: string,
+    projectId: string, environmentId: string,
   ): Promise<boolean> => {
     try {
-      const deleted = await EnvironmentModel.findOneAndDelete({ _id: environmentId, userId, projectId });
+      const deleted = await EnvironmentModel.findOneAndDelete({ _id: environmentId, projectId });
       if (!deleted) throw new Error("ENVIRONMENT_NOT_FOUND");
       return true;
     } catch (error) {
