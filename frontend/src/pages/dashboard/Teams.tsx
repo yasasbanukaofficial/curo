@@ -19,6 +19,7 @@ import {
   Save,
   ToggleLeft,
   ToggleRight,
+  Info,
 } from "lucide-react";
 import DashboardCard from "../../components/dashboard/DashboardCard";
 import DashboardButton from "../../components/dashboard/DashboardButton";
@@ -34,9 +35,15 @@ import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
 import {
   useGetTeamsQuery,
+  useCheckEmailsMutation,
   useAddTeamMutation,
   useUpdateTeamMutation,
   useRemoveTeamMutation,
+  useGetTeamMembersQuery,
+  useGetTeamInvitesQuery,
+  useInviteMemberMutation,
+  useRevokeInviteMutation,
+  useRemoveMemberToInviteMutation,
 } from "../../features/team/teamApi";
 import { useGetProjectsQuery } from "../../features/project/projectApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -147,6 +154,11 @@ export default function Teams() {
   const [addTeam] = useAddTeamMutation();
   const [updateTeam] = useUpdateTeamMutation();
   const [removeTeam] = useRemoveTeamMutation();
+  const [inviteMember] = useInviteMemberMutation();
+  const [revokeInvite] = useRevokeInviteMutation();
+  const { data: teamInvites = [], refetch: refetchInvites } = useGetTeamInvitesQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
+  const { data: teamMembers = [], refetch: refetchMembers } = useGetTeamMembersQuery(selectedTeam?._id ?? "", { skip: !selectedTeam });
+  const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m) => m.email === inv.email));
   const { data: allProjects = [] } = useGetProjectsQuery();
   const teamProjects = selectedTeam
     ? allProjects.filter((p) => (selectedTeam.projects ?? []).includes(p._id))
@@ -166,46 +178,89 @@ export default function Teams() {
   const [confirmInviteRevoke, setConfirmInviteRevoke] = useState<string | null>(null);
   const [enforce2fa, setEnforce2fa] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
+  const [checkEmails] = useCheckEmailsMutation();
+  const [isCheckingEmails, setIsCheckingEmails] = useState(false);
+  const [showUnregisteredConfirm, setShowUnregisteredConfirm] = useState(false);
+  const [unregisteredList, setUnregisteredList] = useState<{ email: string; role: TeamRole }[]>([]);
+  const [showInviteUnregisteredConfirm, setShowInviteUnregisteredConfirm] = useState(false);
+  const [pendingInviteEmail, setPendingInviteEmail] = useState("");
+
+  const executeCreateTeam = async (values: typeof createFormik.initialValues, resetForm: () => void) => {
+    try {
+      await addTeam({
+        name: values.name,
+        slug: values.slug,
+        billingEmail: values.billingEmail || undefined,
+        allowedDomains: values.allowedDomains ? values.allowedDomains.split(",").map((d) => d.trim()).filter(Boolean) : [],
+        plan: createPlan,
+        emails: createMembers.map((m) => ({ email: m.email, role: m.role })),
+      }).unwrap();
+      setShowCreateModal(false);
+      resetForm();
+      setCreatePlan("starter");
+      setCreateMembers([]);
+      setCreateMemberEmail("");
+      setCreateMemberRole("developer");
+      toast.success("Team created", `${values.name} has been created.`);
+    } catch (err: any) {
+      toast.error("Failed to create team", err?.data?.msg || "Something went wrong. Please try again.");
+    }
+  };
 
   const createFormik = useFormik({
     initialValues: { name: "", slug: "", billingEmail: "", allowedDomains: "" },
     validate: validateZod(createTeamSchema),
     onSubmit: async (values, { setSubmitting, resetForm }) => {
-      try {
-        await addTeam({
-          name: values.name,
-          slug: values.slug,
-          billingEmail: values.billingEmail || undefined,
-          allowedDomains: values.allowedDomains ? values.allowedDomains.split(",").map((d) => d.trim()).filter(Boolean) : [],
-          plan: createPlan,
-        }).unwrap();
-        setSubmitting(false);
-        setShowCreateModal(false);
-        resetForm();
-        setCreatePlan("starter");
-        setCreateMembers([]);
-        setCreateMemberEmail("");
-        setCreateMemberRole("developer");
-        toast.success("Team created", `${values.name} has been created.`);
-      } catch (err: any) {
-        setSubmitting(false);
-        toast.error("Failed to create team", err?.data?.msg || "Something went wrong. Please try again.");
+      if (createMembers.length > 0) {
+        setIsCheckingEmails(true);
+        try {
+          const result = await checkEmails({ emails: createMembers.map((m) => m.email) }).unwrap();
+          if (result.unregistered.length > 0) {
+            const unreg = createMembers.filter((m) => result.unregistered.includes(m.email));
+            setUnregisteredList(unreg);
+            setShowUnregisteredConfirm(true);
+            setSubmitting(false);
+            setIsCheckingEmails(false);
+            return;
+          }
+        } catch {
+          setSubmitting(false);
+          setIsCheckingEmails(false);
+          toast.error("Failed to check emails", "Please try again.");
+          return;
+        }
+        setIsCheckingEmails(false);
       }
+
+      await executeCreateTeam(values, resetForm);
+      setSubmitting(false);
     },
   });
 
   const inviteFormik = useFormik({
     initialValues: { email: "" },
     validate: validateZod(inviteMemberSchema),
-    onSubmit: (values, { setSubmitting, resetForm }) => {
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
       if (!selectedTeam) return;
-      const newInvite = { id: `inv_${Date.now()}`, email: values.email, role: inviteRole, expiresAt: "30 days" };
-      const updated = { ...selectedTeam, invites: [...(selectedTeam.invites || []), newInvite] };
-      dispatch(setSelectedTeam(updated));
-      setSubmitting(false);
-      setShowInviteModal(false);
-      resetForm();
-      setInviteRole("developer");
+      try {
+        const result = await checkEmails({ emails: [values.email] }).unwrap();
+        if (result.unregistered.length > 0) {
+          setPendingInviteEmail(result.unregistered[0]);
+          setShowInviteUnregisteredConfirm(true);
+          setSubmitting(false);
+          return;
+        }
+        await inviteMember({ teamId: selectedTeam._id, email: values.email, role: inviteRole }).unwrap();
+        refetchInvites();
+        setSubmitting(false);
+        setShowInviteModal(false);
+        resetForm();
+        setInviteRole("developer");
+        toast.success("Invite sent", `An invitation has been sent to ${values.email}.`);
+      } catch (err: any) {
+        setSubmitting(false);
+        toast.error("Failed to invite", err?.data?.msg || "Something went wrong. Please try again.");
+      }
     },
   });
 
@@ -253,24 +308,37 @@ export default function Teams() {
     setConfirmMemberRemove(memberId);
   }
 
-  function confirmRemoveMember() {
+  const [removeTeamMember] = useRemoveMemberToInviteMutation();
+
+  async function confirmRemoveMember() {
     if (!selectedTeam || !confirmMemberRemove) return;
-    const updated = { ...selectedTeam, members: (selectedTeam.members ?? []).filter((m) => m._id !== confirmMemberRemove), memberCount: selectedTeam.memberCount - 1 };
-    dispatch(setSelectedTeam(updated));
-    setConfirmMemberRemove(null);
-    toast.success("Member removed", "Team member has been removed successfully.");
+    try {
+      await removeTeamMember({ teamId: selectedTeam._id, memberId: confirmMemberRemove }).unwrap();
+      refetchMembers();
+      refetchInvites();
+      setConfirmMemberRemove(null);
+      toast.success("Member removed", "Team member has been removed successfully.");
+    } catch (err: any) {
+      setConfirmMemberRemove(null);
+      toast.error("Failed to remove member", err?.data?.msg || "Something went wrong. Please try again.");
+    }
   }
 
   function handleRevokeInvite(inviteId: string) {
     setConfirmInviteRevoke(inviteId);
   }
 
-  function confirmRevokeInvite() {
+  async function confirmRevokeInvite() {
     if (!selectedTeam || !confirmInviteRevoke) return;
-    const updated = { ...selectedTeam, invites: (selectedTeam.invites ?? []).filter((i) => i._id !== confirmInviteRevoke) };
-    dispatch(setSelectedTeam(updated));
-    setConfirmInviteRevoke(null);
-    toast.success("Invite revoked", "The invitation has been revoked.");
+    try {
+      await revokeInvite({ teamId: selectedTeam._id, inviteId: confirmInviteRevoke }).unwrap();
+      refetchInvites();
+      setConfirmInviteRevoke(null);
+      toast.success("Invite revoked", "The invitation has been revoked.");
+    } catch (err: any) {
+      setConfirmInviteRevoke(null);
+      toast.error("Failed to revoke", err?.data?.msg || "Something went wrong. Please try again.");
+    }
   }
 
   function handleToggleProject(projectId: string) {
@@ -345,13 +413,13 @@ export default function Teams() {
 
               <DashboardCard>
                 <div className="flex items-center justify-between mb-5">
-                  <SectionHeader title="Members" description={`${(selectedTeam.members ?? []).length} members in this team.`} />
+                  <SectionHeader title="Members" description={`${teamMembers.length} members in this team.`} />
                   <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
                     <UserPlus className="w-3.5 h-3.5" />Invite
                   </DashboardButton>
                 </div>
                 <div className="space-y-1">
-                  {(selectedTeam.members ?? []).map((m: any) => (
+                  {teamMembers.map((m: any) => (
                     <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{m.name?.charAt(0) || "?"}</div>
@@ -367,13 +435,13 @@ export default function Teams() {
                 </div>
               </DashboardCard>
 
-              {selectedTeam.invites && selectedTeam.invites.length > 0 && (
+              {pendingInvites.length > 0 && (
                 <DashboardCard>
-                  <SectionHeader title="Pending Invites" description={`${selectedTeam.invites.length} pending invitation${selectedTeam.invites.length > 1 ? "s" : ""}.`} />
+                  <SectionHeader title="Pending Invites" description={`${pendingInvites.length} pending invitation${pendingInvites.length > 1 ? "s" : ""}.`} />
                   <div className="space-y-1">
-                    {selectedTeam.invites.map((inv: any) => (
+                    {pendingInvites.map((inv) => (
                       <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                        <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#8E8E93]" /><div><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{inv.email}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Expires {inv.expiresAt}</p></div></div>
+                        <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#8E8E93]" /><div><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{inv.email}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Expires {new Date(inv.expiresAt).toLocaleDateString()}</p></div></div>
                         <div className="flex items-center gap-2"><RoleBadge role={inv.role} /><DashboardButton onClick={() => handleRevokeInvite(inv._id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton></div>
                       </div>
                     ))}
@@ -525,7 +593,7 @@ export default function Teams() {
         </>
       )}
 
-      <Modal open={showCreateModal} size="xl" onClose={() => { setShowCreateModal(false); createFormik.resetForm(); setCreatePlan("starter"); setCreateMembers([]); setCreateMemberEmail(""); setCreateMemberRole("developer"); setCreateMemberError(""); }} title="Create Team" description="Set up a new team and invite members to collaborate on secrets." submitLabel="Create Team" submitDisabled={createFormik.isSubmitting} loading={createFormik.isSubmitting} onSubmit={() => createFormik.handleSubmit()}>
+      <Modal open={showCreateModal} size="xl" onClose={() => { setShowCreateModal(false); createFormik.resetForm(); setCreatePlan("starter"); setCreateMembers([]); setCreateMemberEmail(""); setCreateMemberRole("developer"); setCreateMemberError(""); }} title="Create Team" description="Set up a new team and invite members to collaborate on secrets." submitLabel="Create Team" submitDisabled={createFormik.isSubmitting || isCheckingEmails} loading={createFormik.isSubmitting || isCheckingEmails} onSubmit={() => createFormik.handleSubmit()}>
         <form onSubmit={createFormik.handleSubmit} noValidate>
           <div className="space-y-5">
             <div>
@@ -667,6 +735,74 @@ export default function Teams() {
         buttons={[
           { label: "Cancel", onClick: () => setConfirmInviteRevoke(null), variant: "secondary" },
           { label: "Revoke", onClick: confirmRevokeInvite, variant: "destructive" },
+        ]}
+      />
+
+      <AlertModal
+        open={showUnregisteredConfirm}
+        onClose={() => { setShowUnregisteredConfirm(false); setUnregisteredList([]); }}
+        variant="info"
+        title="Unregistered Users"
+        message={
+          <div className="space-y-3">
+            <p className="text-sm text-[#636363]">These users don't have an account yet. They will receive an email invitation to sign up. Do you want to continue?</p>
+            <div className="space-y-1">
+              {unregisteredList.map((u, i) => (
+                <div key={i} className="flex items-center justify-between py-2 px-3 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-[#FF9F0A]" />
+                    <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{u.email}</span>
+                  </div>
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md capitalize ${roleStyles[u.role]}`}>{u.role}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        }
+        buttons={[
+          { label: "No, go back", onClick: () => { setShowUnregisteredConfirm(false); setUnregisteredList([]); }, variant: "secondary" },
+          { label: "Yes, send invite", onClick: () => {
+            setShowUnregisteredConfirm(false);
+            setUnregisteredList([]);
+            executeCreateTeam(createFormik.values, createFormik.resetForm);
+          }, variant: "primary" },
+        ]}
+      />
+
+      <AlertModal
+        open={showInviteUnregisteredConfirm}
+        onClose={() => { setShowInviteUnregisteredConfirm(false); setPendingInviteEmail(""); }}
+        variant="info"
+        title="Unregistered User"
+        message={
+          <div className="space-y-3">
+            <p className="text-sm text-[#636363]">This user doesn't have an account yet. They will receive an email invitation to sign up. Do you want to continue?</p>
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-[#FF9F0A]" />
+                <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{pendingInviteEmail}</span>
+              </div>
+            </div>
+          </div>
+        }
+        buttons={[
+          { label: "Cancel", onClick: () => { setShowInviteUnregisteredConfirm(false); setPendingInviteEmail(""); }, variant: "secondary" },
+          { label: "Send invite", onClick: async () => {
+            if (!selectedTeam) return;
+            setShowInviteUnregisteredConfirm(false);
+            try {
+              await inviteMember({ teamId: selectedTeam._id, email: pendingInviteEmail, role: inviteRole }).unwrap();
+              refetchInvites();
+              setShowInviteModal(false);
+              setPendingInviteEmail("");
+              inviteFormik.resetForm();
+              setInviteRole("developer");
+              toast.success("Invite sent", `An invitation has been sent to ${pendingInviteEmail}.`);
+            } catch (err: any) {
+              setPendingInviteEmail("");
+              toast.error("Failed to invite", err?.data?.msg || "Something went wrong. Please try again.");
+            }
+          }, variant: "primary" },
         ]}
       />
     </div>

@@ -1,5 +1,4 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { User } from "../../types/user";
 
 interface AuthResponse {
@@ -23,6 +22,7 @@ interface RegisterRequest {
 interface VerifyOtpRequest {
   otp: string;
   token?: string;
+  inviteToken?: string;
 }
 
 interface ForgotPasswordRequest {
@@ -39,9 +39,7 @@ interface ChangePasswordRequest {
   newPassword: string;
 }
 
-export const authApi = createApi({
-  reducerPath: "authApi",
-  baseQuery: baseQueryWithReauth,
+export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     verifySession: builder.query<{ data: User }, void>({
       query: () => ({ url: "/auth/me", method: "GET" }),
@@ -76,7 +74,12 @@ export const authApi = createApi({
     refreshToken: builder.mutation<AuthResponse, void>({
       query: () => ({ url: "/auth/refresh", method: "POST" }),
     }),
+    markOnboardingComplete: builder.mutation<AuthResponse, { skipped?: boolean }>({
+      query: (body) => ({ url: "/auth/onboarding-complete", method: "PATCH", body }),
+    }),
   }),
+
+  overrideExisting: false,
 });
 
 export const {
@@ -91,4 +94,5 @@ export const {
   useLogoutMutation,
   useDisconnectOAuthMutation,
   useRefreshTokenMutation,
+  useMarkOnboardingCompleteMutation,
 } = authApi;

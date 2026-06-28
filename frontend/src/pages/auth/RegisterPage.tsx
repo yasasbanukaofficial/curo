@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useFormik } from "formik";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
@@ -11,8 +12,17 @@ import type { RegisterFormValues } from "../../types/auth";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [register] = useRegisterMutation();
   const toast = useToast();
+
+  useEffect(() => {
+    const inviteToken = searchParams.get("invite");
+    if (inviteToken) {
+      sessionStorage.setItem("inviteToken", inviteToken);
+      sessionStorage.setItem("pendingInvite", "true");
+    }
+  }, [searchParams]);
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: {

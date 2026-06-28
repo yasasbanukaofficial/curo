@@ -97,7 +97,7 @@ export default function Environments() {
   async function handleDeleteEnvironment() {
     if (!selectedEnv) return;
     try {
-      await removeEnvironment(selectedEnv._id).unwrap();
+      await removeEnvironment({ id: selectedEnv._id, projectId: selectedEnv.projectId }).unwrap();
       dispatch(setSelectedEnvironment(null));
       setShowDeleteModal(false);
       toast.success("Environment deleted", `${selectedEnv.name} has been removed.`);

@@ -245,3 +245,9 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
   const result = await authService.changePassword(req.userId!, req.body.currentPassword, req.body.newPassword);
   return sendResponse(res, result);
 };
+
+export const markOnboardingComplete = async (req: AuthRequest, res: Response) => {
+  const { skipped } = req.body;
+  const result = await authService.markOnboardingComplete(req.userId!, skipped);
+  return sendResponse(res, result);
+};

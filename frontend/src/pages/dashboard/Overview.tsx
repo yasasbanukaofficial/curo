@@ -33,12 +33,26 @@ export default function Overview() {
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-3">
-            <DashboardButton onClick={() => navigate("/dashboard/secrets", { state: { openCreateSecret: true } })} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+            <DashboardButton id="btn-add-secret" onClick={() => navigate("/dashboard/secrets", { state: { openCreateSecret: true } })} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
               Add Secret
             </DashboardButton>
-            <DashboardButton onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
+            <DashboardButton id="btn-new-project" onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
               New Project
             </DashboardButton>
+          </div>
+        </div>
+      </DashboardCard>
+
+      <DashboardCard id="cli-snippet" className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center">
+            <span className="text-sm font-mono font-bold text-[#8E8E93]">&gt;_</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Pull secrets with the CLI</p>
+            <code className="text-[11px] text-[#8E8E93] dark:text-[#666] font-mono bg-[#F5F5F7] dark:bg-[#1A1A1A] px-2 py-0.5 rounded mt-1 inline-block">
+              npx curo pull
+            </code>
           </div>
         </div>
       </DashboardCard>
@@ -57,11 +71,11 @@ export default function Overview() {
                 Create your first secret or project to get started with Curo.
               </p>
               <div className="flex items-center gap-3">
-                <DashboardButton onClick={() => navigate("/dashboard/secrets", { state: { openCreateSecret: true } })} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+                <DashboardButton id="btn-add-secret" onClick={() => navigate("/dashboard/secrets", { state: { openCreateSecret: true } })} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
                   <Plus className="w-4 h-4" />
                   Add Secret
                 </DashboardButton>
-                <DashboardButton onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
+                <DashboardButton id="btn-new-project" onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
                   <Plus className="w-4 h-4" />
                   New Project
                 </DashboardButton>

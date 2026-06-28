@@ -7,5 +7,6 @@ export interface ITeamInvite {
   role: TeamRole;
   token: string;
   expiresAt: Date;
+  invitedToSignup: boolean;
   createdAt: Date;
 }

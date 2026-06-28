@@ -1,11 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { Secret } from "../../types/secret";
 
-export const secretApi = createApi({
-  reducerPath: "secretApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ["Secret", "Project", "Environment"],
+export const secretApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getSecrets: builder.query<Secret[], void>({
       query: () => "/secrets/all",
@@ -39,14 +35,20 @@ export const secretApi = createApi({
         ...(arg.body.environmentId ? [{ type: "Environment" as const, id: arg.body.environmentId }] : []),
       ],
     }),
-    removeSecret: builder.mutation<void, string>({
-      query: (id) => ({
+    removeSecret: builder.mutation<void, { id: string; projectId?: string; environmentId?: string }>({
+      query: ({ id }) => ({
         url: `/secrets/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: [{ type: "Secret", id: "LIST" }],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Secret", id: "LIST" },
+        ...(arg.projectId ? [{ type: "Project" as const, id: arg.projectId }] : []),
+        ...(arg.environmentId ? [{ type: "Environment" as const, id: arg.environmentId }] : []),
+      ],
     }),
   }),
+
+  overrideExisting: false,
 });
 
 export const { useGetSecretsQuery, useAddSecretMutation, useUpdateSecretMutation, useRemoveSecretMutation } = secretApi;

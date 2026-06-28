@@ -262,6 +262,8 @@ export const authService = {
         googleId: user.googleId,
         githubId: user.githubId,
         emailVerified: user.emailVerified,
+        onboardingComplete: user.onboardingComplete,
+        onboardingSkipped: user.onboardingSkipped,
         createdAt: user.createdAt,
       },
     };
@@ -315,6 +317,7 @@ export const authService = {
       $push: { refreshTokens: refreshToken },
       $unset: { emailVerificationOTP: "", emailVerificationToken: "", emailVerificationExpires: "" },
     });
+
     return {
       success: true,
       status: 200,
@@ -514,6 +517,14 @@ export const authService = {
       $set: { refreshTokens: [] },
     });
     return { success: true, status: 200, msg: "Password changed successfully" };
+  },
+
+  markOnboardingComplete: async (userId: string, skipped?: boolean) => {
+    const update = skipped
+      ? { onboardingSkipped: true }
+      : { onboardingComplete: true };
+    await UserModel.findByIdAndUpdate(userId, update);
+    return { success: true, status: 200, msg: "Onboarding completed" };
   },
 };
 

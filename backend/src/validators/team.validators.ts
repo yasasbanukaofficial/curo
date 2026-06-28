@@ -14,6 +14,10 @@ export const createTeamSchema = z.object({
   subscriptionStatus: subscriptionStatusEnum.optional(),
   enforce2fa: z.boolean().optional(),
   allowedDomains: z.array(z.string().trim().toLowerCase()).optional(),
+  emails: z.array(z.object({
+    email: z.string().email("Invalid email address").trim().toLowerCase(),
+    role: teamRoleEnum.optional(),
+  })).optional(),
 });
 
 export const updateTeamSchema = z.object({

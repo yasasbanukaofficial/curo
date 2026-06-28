@@ -28,6 +28,10 @@ const _teamInviteSchema = new Schema<ITeamInvite>(
       type: Date,
       required: [true, "Expiration date is required"],
     },
+    invitedToSignup: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

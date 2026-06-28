@@ -66,7 +66,10 @@ export default function VerifyEmailPage() {
       return;
     }
     try {
-      const result = await verifyOtp({ otp: code, token: token || undefined }).unwrap();
+      const result = await verifyOtp({
+        otp: code,
+        token: token || undefined,
+      }).unwrap();
       if (result.success && result.data) {
         dispatch(setAuthenticated({
           user: {

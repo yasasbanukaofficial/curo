@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { sendResponse } from "../util";
 import { AuthRequest } from "../middlewares";
 import { teamService } from "../services";
@@ -31,6 +31,21 @@ export const getAllTeams = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, { success: true, status: 200, data: teams });
   } catch (error) {
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while loading your teams. Please try again." });
+  }
+};
+
+export const checkEmails = async (req: AuthRequest, res: Response) => {
+  const { emails } = req.body;
+
+  if (!emails || !Array.isArray(emails) || emails.length === 0) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide an array of emails" });
+  }
+
+  try {
+    const result = await teamService.checkEmails(emails);
+    return sendResponse(res, { success: true, status: 200, data: result });
+  } catch (error) {
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while checking emails. Please try again." });
   }
 };
 
@@ -275,6 +290,73 @@ export const revokeInvite = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, { success: false, status: 404, msg: "Invitation not found" });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while revoking the invitation. Please try again." });
+  }
+};
+
+export const acceptInviteFlow = async (req: AuthRequest, res: Response) => {
+  const { token } = req.params as { token: string };
+
+  if (!token) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide an invitation token" });
+  }
+
+  try {
+    const result = await teamService.acceptInviteFlow(token);
+    return sendResponse(res, { success: true, status: 200, data: result });
+  } catch (error: any) {
+    if (error.message === "INVITE_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Invitation not found or is invalid" });
+    }
+    if (error.message === "INVITE_EXPIRED") {
+      return sendResponse(res, { success: false, status: 410, msg: "This invitation has expired" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong. Please try again." });
+  }
+};
+
+export const getInviteDetails = async (req: Request, res: Response) => {
+  const { token } = req.params as { token: string };
+
+  if (!token) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide an invitation token" });
+  }
+
+  try {
+    const result = await teamService.getInviteDetailsByToken(token);
+    return sendResponse(res, { success: true, status: 200, data: result });
+  } catch (error: any) {
+    if (error.message === "INVITE_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Invitation not found or is invalid" });
+    }
+    if (error.message === "INVITE_EXPIRED") {
+      return sendResponse(res, { success: false, status: 410, msg: "This invitation has expired" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong. Please try again." });
+  }
+};
+
+export const acceptInviteExplicit = async (req: AuthRequest, res: Response) => {
+  const { token } = req.body as { token: string };
+  const userId = req.userId!;
+
+  if (!token) {
+    return sendResponse(res, { success: false, status: 400, msg: "Please provide an invitation token" });
+  }
+
+  try {
+    await teamService.acceptInvite(token, userId);
+    return sendResponse(res, { success: true, status: 200, msg: "Invitation accepted successfully" });
+  } catch (error: any) {
+    if (error.message === "INVITE_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Invitation not found or is invalid" });
+    }
+    if (error.message === "INVITE_EXPIRED") {
+      return sendResponse(res, { success: false, status: 410, msg: "This invitation has expired" });
+    }
+    if (error.message === "ALREADY_MEMBER") {
+      return sendResponse(res, { success: false, status: 409, msg: "You are already a member of this team" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while accepting the invitation. Please try again." });
   }
 };
 

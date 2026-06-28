@@ -11,9 +11,4 @@ export const oauth2Client = new google.auth.OAuth2(
   GOOGLE_REDIRECT_URL,
 );
 
-export const GOOGLE_SCOPES = [
-  "openid",
-  "email",
-  "profile",
-  "https://www.googleapis.com/auth/calendar",
-];
+export const GOOGLE_SCOPES = ["openid", "email", "profile"];

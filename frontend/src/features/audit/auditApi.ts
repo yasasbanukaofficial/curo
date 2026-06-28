@@ -1,11 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { Audit } from "../../types/audit";
 
-export const auditApi = createApi({
-  reducerPath: "auditApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ["Audit"],
+export const auditApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAudits: builder.query<Audit[], void>({
       query: () => "/audits/all",
@@ -13,6 +9,8 @@ export const auditApi = createApi({
       providesTags: ["Audit"],
     }),
   }),
+
+  overrideExisting: false,
 });
 
 export const {

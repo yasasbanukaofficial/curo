@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { X, AlertTriangle, Info, CheckCircle, XCircle } from "lucide-react";
 import DashboardButton from "./DashboardButton";
 
@@ -18,7 +19,7 @@ interface AlertModalProps {
   onClose: () => void;
   variant?: AlertVariant;
   title: string;
-  message?: string;
+  message?: ReactNode;
   buttons?: AlertButton[];
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -101,9 +102,9 @@ export default function AlertModal({
                 {title}
               </h2>
               {message && (
-                <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-1 leading-relaxed">
+                <div className="text-sm text-[#8E8E93] dark:text-[#666] mt-1 leading-relaxed">
                   {message}
-                </p>
+                </div>
               )}
             </div>
           </div>

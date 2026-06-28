@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, initiateGoogleAuth, handleGoogleCallback, initiateGithubAuth, handleGithubCallback, refreshToken, getCurrentUser, logoutUser, verifyEmailOTP, verifyEmailToken, resendVerification, forgotPassword, resetPassword, changePassword, disconnectOAuth } from "../controller";
+import { registerUser, loginUser, initiateGoogleAuth, handleGoogleCallback, initiateGithubAuth, handleGithubCallback, refreshToken, getCurrentUser, logoutUser, verifyEmailOTP, verifyEmailToken, resendVerification, forgotPassword, resetPassword, changePassword, disconnectOAuth, markOnboardingComplete } from "../controller";
 import { authenticate, validate } from "../middlewares";
 import { loginSchema, refreshTokenSchema, registerSchema, verifyOtpSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validators";
 
@@ -23,5 +23,6 @@ router.get("/google/callback", handleGoogleCallback);
 router.get("/github", initiateGithubAuth);
 router.get("/github/connect", initiateGithubAuth);
 router.get("/github/callback", handleGithubCallback);
+router.patch("/onboarding-complete", authenticate, markOnboardingComplete);
 
 export default router;

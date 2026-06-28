@@ -1,11 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "../../api/baseQuery";
+import { baseApi } from "../../api/baseApi";
 import type { Environment } from "../../types/environment";
 
-export const environmentApi = createApi({
-  reducerPath: "environmentApi",
-  baseQuery: baseQueryWithReauth,
-  tagTypes: ["Environment", "Project"],
+export const environmentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getEnvironments: builder.query<Environment[], void>({
       query: () => "/environments/all",
@@ -37,14 +33,19 @@ export const environmentApi = createApi({
         ...(arg.body.projectId ? [{ type: "Project" as const, id: arg.body.projectId }] : []),
       ],
     }),
-    removeEnvironment: builder.mutation<void, string>({
-      query: (id) => ({
+    removeEnvironment: builder.mutation<void, { id: string; projectId?: string }>({
+      query: ({ id }) => ({
         url: `/environments/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: [{ type: "Environment", id: "LIST" }],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Environment", id: "LIST" },
+        ...(arg.projectId ? [{ type: "Project" as const, id: arg.projectId }] : []),
+      ],
     }),
   }),
+
+  overrideExisting: false,
 });
 
 export const {

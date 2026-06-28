@@ -8,6 +8,7 @@ export const registerSchema = z.object({
     .max(50, "Name must be at most 50 characters"),
   email: z.string().email("Invalid email address").trim().toLowerCase(),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  inviteToken: z.string().optional(),
 });
 
 export const loginSchema = z.object({

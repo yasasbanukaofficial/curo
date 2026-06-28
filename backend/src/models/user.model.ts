@@ -82,6 +82,14 @@ const _userSchema = new Schema<IUser>(
       type: Date,
       required: false,
     },
+    onboardingComplete: {
+      type: Boolean,
+      default: false,
+    },
+    onboardingSkipped: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
