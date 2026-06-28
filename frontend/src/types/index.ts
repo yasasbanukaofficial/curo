@@ -3,7 +3,6 @@ export type { Project, ProjectOption } from "./project";
 export type { Secret } from "./secret";
 export type { Environment } from "./environment";
 
-export type { Audit } from "./audit";
 export type { Team, TeamPlan, SubscriptionStatus } from "./team";
 export type { TeamMember, TeamRole, MemberStatus } from "./teamMember";
 export type { TeamInvite } from "./teamInvite";

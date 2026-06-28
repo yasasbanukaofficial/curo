@@ -9,8 +9,8 @@ export const _projectSchema = new Schema<IProject>({
   },
   description: {
     type: String,
-    required: [true, "Description is required"],
-    minLength: [2, "Description is too short"],
+    required: false,
+    trim: true,
   },
   projectLink: {
     type: String,

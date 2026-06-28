@@ -17,7 +17,7 @@ interface CreateProjectModalProps {
 
 const createProjectSchema = z.object({
   projectName: z.string().trim().min(2, "Project name must be at least 2 characters").max(100, "Project name is too long"),
-  description: z.string().trim().min(2, "Description must be at least 2 characters").max(500, "Description is too long"),
+  description: z.string().trim().max(500, "Description is too long").optional().or(z.literal("")),
   team: z.string().optional(),
   projectLink: z
     .string()
@@ -115,7 +115,6 @@ export default function CreateProjectModal({ open, onClose, onSubmit, teams = []
           onChange={(v) => formik.setFieldValue("description", v)}
           error={formik.touched.description ? formik.errors.description : undefined}
           touched={!!formik.touched.description}
-          required
           rows={4}
         />
       </form>

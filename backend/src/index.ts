@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { AuthRouter, ProjectRouter, AuditRouter, TeamRouter } from "./routes/index";
+import { AuthRouter, ProjectRouter, TeamRouter } from "./routes/index";
 import cookieParser from "cookie-parser";
 import { FRONTEND_URL, PORT, MONGODB_URL, API_VER } from "./config/env";
 
@@ -37,7 +37,6 @@ const DB_URL = MONGODB_URL as string;
 app.use(`/api/${API_VER}/auth`, AuthRouter);
 app.use(`/api/${API_VER}/projects`, ProjectRouter);
 
-app.use(`/api/${API_VER}/audits`, AuditRouter);
 app.use(`/api/${API_VER}/teams`, TeamRouter);
 
 app.get("/", (req, res) => {
