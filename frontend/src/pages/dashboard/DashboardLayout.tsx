@@ -30,7 +30,7 @@ function DashboardInner() {
   const user = sessionData?.data;
   const shouldShowTour = user && !user.onboardingComplete && !user.onboardingSkipped;
 
-  useTour({ shouldShow: shouldShowTour && !showInviteModal && mountResolved });
+  useTour({ shouldShow: shouldShowTour && !showInviteModal && mountResolved, onComplete: refetchSession });
 
   const mountStarted = useRef(false);
 
