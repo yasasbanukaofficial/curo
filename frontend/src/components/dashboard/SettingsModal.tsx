@@ -1,33 +1,25 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useFormik } from "formik";
 import {
   X, Sun, Moon, Check, CreditCard, Settings as SettingsIcon, UserCircle,
-  User, Mail, Calendar, KeyRound, Trash2, AlertTriangle,
+  User, Mail, Calendar, KeyRound, Trash2, AlertTriangle, Send,
 } from "lucide-react";
 import { useTheme } from "../../pages/dashboard/DashboardLayout";
 import { GitHubIcon } from "../ui/Icons";
 import DashboardButton from "./DashboardButton";
-import FormInput from "./FormInput";
-import FormField from "./FormField";
-import Modal from "./Modal";
 import AlertModal from "./AlertModal";
 import { useToast } from "./Toast";
 import LoadingSpinner from "./LoadingSpinner";
-import {
-  settingsProfileSchema,
-  changePasswordSchema,
-  validateZod,
-} from "../../types/settings";
-import type {
-  SettingsProfileValues,
-  ChangePasswordValues,
-  SettingsTab,
-} from "../../types/settings";
+import type { SettingsTab } from "../../types/settings";
 import {
   useVerifySessionQuery,
+  useUpdateProfileMutation,
+  useSendPasswordResetLinkMutation,
   useDisconnectOAuthMutation,
+  useDeleteAccountMutation,
   clearCredentials,
+  setCredentials,
+  baseApi,
 } from "../../store";
 import { useAppDispatch } from "../../app/store";
 
@@ -51,15 +43,20 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const toast = useToast();
   const { theme, toggle } = useTheme();
   const { data: userData } = useVerifySessionQuery();
+  const [updateProfile] = useUpdateProfileMutation();
+  const [sendPasswordResetLink, { isLoading: isSendingReset }] = useSendPasswordResetLinkMutation();
   const [disconnectOAuth] = useDisconnectOAuthMutation();
+  const [deleteAccount] = useDeleteAccountMutation();
   const user = (userData as any) ?? null;
   const [tab, setTab] = useState<SettingsTab>(initialTab);
 
   useEffect(() => {
-    if (open) setTab(initialTab);
+    setTab(initialTab);
   }, [open, initialTab]);
-  const [editMode, setEditMode] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const connectedAccounts = useMemo(() => ({
@@ -67,45 +64,61 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
     github: { connected: user?.provider.includes("github") ?? false },
   }), [user?.provider]);
 
-  const profileFormik = useFormik<SettingsProfileValues>({
-    initialValues: { name: user?.name || "", email: user?.email || "" },
-    enableReinitialize: true,
-    validate: validateZod(settingsProfileSchema),
-    onSubmit: (_values, { setSubmitting }) => {
-      setTimeout(() => {
-        setSubmitting(false);
-        setEditMode(false);
-        toast.success("Profile saved", "Your profile has been updated successfully.");
-      }, 1000);
-    },
-  });
-
-  const passwordFormik = useFormik<ChangePasswordValues>({
-    initialValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
-    validate: validateZod(changePasswordSchema),
-    onSubmit: (_values, { setSubmitting, resetForm }) => {
-      setTimeout(() => {
-        setSubmitting(false);
-        setShowPasswordModal(false);
-        resetForm();
-        toast.success("Password updated", "Your password has been changed successfully.");
-      }, 1000);
-    },
-  });
+  function handleStartEdit() {
+    setProfileName(user?.name || "");
+    setIsEditingProfile(true);
+  }
 
   function handleCancelEdit() {
-    setEditMode(false);
-    profileFormik.resetForm({ values: { name: user?.name || "", email: user?.email || "" } });
+    setIsEditingProfile(false);
+    setProfileName("");
   }
 
-  function handleOpenPasswordModal() {
-    passwordFormik.resetForm();
-    setShowPasswordModal(true);
+  async function handleSaveProfile() {
+    if (!profileName.trim()) return;
+    setIsSavingProfile(true);
+    try {
+      const updatedUser = await updateProfile({ name: profileName.trim() }).unwrap();
+      dispatch(setCredentials({ user: updatedUser }));
+      setIsEditingProfile(false);
+      toast.success("Profile saved", "Your profile has been updated successfully.");
+    } catch (err: any) {
+      toast.error(err?.data?.msg || "Failed to update profile");
+    } finally {
+      setIsSavingProfile(false);
+    }
   }
 
-  function handleDeleteAccount() {
-    setShowDeleteModal(false);
-    onClose();
+  function handleOpenPasswordReset() {
+    setShowPasswordReset(true);
+  }
+
+  function handleCancelPasswordReset() {
+    setShowPasswordReset(false);
+  }
+
+  async function handleSendResetLink() {
+    try {
+      await sendPasswordResetLink().unwrap();
+      setShowPasswordReset(false);
+      toast.success("Reset link sent", "Check your email for the password reset link.");
+    } catch (err: any) {
+      toast.error(err?.data?.msg || "Failed to send reset link");
+    }
+  }
+
+  async function handleDeleteAccount() {
+    try {
+      await deleteAccount().unwrap();
+      setShowDeleteModal(false);
+      onClose();
+      dispatch(baseApi.util.resetApiState());
+      dispatch(clearCredentials());
+      navigate("/login", { replace: true });
+    } catch {
+      setShowDeleteModal(false);
+      toast.error("Failed to delete account. Please try again.");
+    }
   }
 
   if (!open) return null;
@@ -308,15 +321,17 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                 <div className="space-y-4">
                   <div>
                     <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Name</label>
-                    {editMode ? (
-                      <FormInput
-                        value={profileFormik.values.name}
-                        onChange={(v) => profileFormik.setFieldValue("name", v)}
-                        onBlur={profileFormik.handleBlur}
-                        placeholder="Your name"
-                        error={profileFormik.touched.name && profileFormik.errors.name ? profileFormik.errors.name : undefined}
-                        icon={<User className="w-4 h-4 text-[#8E8E93]" />}
-                      />
+                    {isEditingProfile ? (
+                      <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl border border-black/[0.06] dark:border-white/10">
+                        <User className="w-4 h-4 text-[#8E8E93] shrink-0" />
+                        <input
+                          type="text"
+                          value={profileName}
+                          onChange={(e) => setProfileName(e.target.value)}
+                          className="flex-1 bg-transparent text-sm text-[#1D1D1F] dark:text-[#E5E5E5] outline-none"
+                          autoFocus
+                        />
+                      </div>
                     ) : (
                       <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
                         <User className="w-4 h-4 text-[#8E8E93]" />
@@ -327,27 +342,15 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Email</label>
-                    {editMode ? (
-                      <FormInput
-                        type="email"
-                        value={profileFormik.values.email}
-                        onChange={(v) => profileFormik.setFieldValue("email", v)}
-                        onBlur={profileFormik.handleBlur}
-                        placeholder="you@example.com"
-                        error={profileFormik.touched.email && profileFormik.errors.email ? profileFormik.errors.email : undefined}
-                        icon={<Mail className="w-4 h-4 text-[#8E8E93]" />}
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
-                        <Mail className="w-4 h-4 text-[#8E8E93]" />
-                        <span>{user?.email || ""}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-3 text-sm text-[#8E8E93] dark:text-[#666]">
+                      <Mail className="w-4 h-4 text-[#8E8E93]" />
+                      <span>{user?.email || ""}</span>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Member Since</label>
-                    <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#8E8E93] dark:text-[#666]">
+                    <div className="flex items-center gap-3 text-sm text-[#8E8E93] dark:text-[#666]">
                       <Calendar className="w-4 h-4 text-[#8E8E93]" />
                       <span>{user?.createdAt ? formatDate(user.createdAt) : ""}</span>
                     </div>
@@ -363,35 +366,35 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                   </div>
                 </div>
 
-                <form onSubmit={profileFormik.handleSubmit} noValidate>
-                  <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                    {editMode ? (
-                      <>
-                        <DashboardButton
-                          type="submit"
-                          disabled={profileFormik.isSubmitting}
-                          className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {profileFormik.isSubmitting ? <LoadingSpinner size={16} /> : <User className="w-4 h-4" />}
-                          Save Changes
-                        </DashboardButton>
-                        <DashboardButton
-                          onClick={handleCancelEdit}
-                          className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
-                        >
-                          Cancel
-                        </DashboardButton>
-                      </>
-                    ) : (
-                      <DashboardButton
-                        onClick={() => setEditMode(true)}
-                        className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
+                  {isEditingProfile ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleSaveProfile}
+                        disabled={isSavingProfile || !profileName.trim()}
+                        className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Edit Profile
-                      </DashboardButton>
-                    )}
-                  </div>
-                </form>
+                        {isSavingProfile ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-transparent border border-black/10 dark:border-white/10 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleStartEdit}
+                      className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                    >
+                      Edit Profile
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -471,21 +474,53 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
 
               <div>
                 <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-4">Change Password</h3>
-                <div className="p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Password</p>
-                      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">Choose a strong, unique password with at least 8 characters.</p>
+                {showPasswordReset ? (
+                  <div className="p-5 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl space-y-4">
+                    <div className="flex items-start gap-3">
+                      <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Reset via email</p>
+                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
+                          To protect your account, we'll send a secure password reset link to your registered email address (<span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{user?.email}</span>).
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <DashboardButton
+                        onClick={handleSendResetLink}
+                        disabled={isSendingReset}
+                        className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSendingReset ? <LoadingSpinner size={16} /> : <Send className="w-4 h-4" />}
+                        Send Reset Link
+                      </DashboardButton>
+                      <DashboardButton
+                        onClick={handleCancelPasswordReset}
+                        className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
+                      >
+                        Cancel
+                      </DashboardButton>
                     </div>
                   </div>
-                </div>
-                <div className="mt-5">
-                  <DashboardButton onClick={handleOpenPasswordModal} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
-                    <KeyRound className="w-4 h-4" />
-                    Change Password
-                  </DashboardButton>
-                </div>
+                ) : (
+                  <>
+                    <div className="p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Password</p>
+                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">Choose a strong, unique password with at least 8 characters.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-5">
+                      <DashboardButton onClick={handleOpenPasswordReset} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
+                        <KeyRound className="w-4 h-4" />
+                        Change Password
+                      </DashboardButton>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="rounded-2xl border border-[#FF3B30]/20 dark:border-[#FF3B30]/20 p-5">
@@ -551,60 +586,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
           )}
         </div>
       </div>
-
-      <Modal
-        open={showPasswordModal}
-        onClose={() => { setShowPasswordModal(false); passwordFormik.resetForm(); }}
-        title="Change Password"
-        description="Enter your current password and choose a new one."
-        submitLabel="Update Password"
-        submitDisabled={passwordFormik.isSubmitting}
-        loading={passwordFormik.isSubmitting}
-        onSubmit={() => passwordFormik.handleSubmit()}
-      >
-        <div className="space-y-4">
-          <FormField
-            label="Current Password"
-            name="currentPassword"
-            type="password"
-            placeholder="Enter current password"
-            value={passwordFormik.values.currentPassword}
-            onChange={(v) => passwordFormik.setFieldValue("currentPassword", v)}
-            onBlur={passwordFormik.handleBlur}
-            error={passwordFormik.touched.currentPassword ? passwordFormik.errors.currentPassword : undefined}
-            touched={!!passwordFormik.touched.currentPassword}
-          />
-          <FormField
-            label="New Password"
-            name="newPassword"
-            type="password"
-            placeholder="Enter new password (min. 8 characters)"
-            value={passwordFormik.values.newPassword}
-            onChange={(v) => passwordFormik.setFieldValue("newPassword", v)}
-            onBlur={passwordFormik.handleBlur}
-            error={passwordFormik.touched.newPassword ? passwordFormik.errors.newPassword : undefined}
-            touched={!!passwordFormik.touched.newPassword}
-          />
-          <FormField
-            label="Confirm New Password"
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm new password"
-            value={passwordFormik.values.confirmPassword}
-            onChange={(v) => passwordFormik.setFieldValue("confirmPassword", v)}
-            onBlur={passwordFormik.handleBlur}
-            error={passwordFormik.touched.confirmPassword ? passwordFormik.errors.confirmPassword : undefined}
-            touched={!!passwordFormik.touched.confirmPassword}
-          />
-        </div>
-
-        {passwordFormik.errors.confirmPassword && passwordFormik.touched.confirmPassword && (
-          <div className="flex items-center gap-1.5 mt-4 text-[11px] text-[#FF3B30] font-medium">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            {passwordFormik.errors.confirmPassword}
-          </div>
-        )}
-      </Modal>
 
       <AlertModal
         open={showDeleteModal}

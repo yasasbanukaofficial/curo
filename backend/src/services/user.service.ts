@@ -38,14 +38,15 @@ export const userService = {
             ])
           : [0, 0];
         const tid = project.teamId?.toString() || null;
+        const p = project as any;
         return {
-          _id: project._id,
-          projectName: project.projectName,
+          _id: p._id,
+          projectName: p.projectName,
           teamId: tid,
           teamName: tid ? teamMap.get(tid) || null : null,
           secretCount: sc,
           environmentCount: ec,
-          updatedAt: project.updatedAt || undefined,
+          updatedAt: p.updatedAt || undefined,
         };
       }),
     );

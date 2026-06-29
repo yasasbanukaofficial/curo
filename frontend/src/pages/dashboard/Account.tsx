@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { useFormik } from "formik";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useFormik } from "formik";
 import {
   User,
   Mail,
@@ -8,7 +8,7 @@ import {
   KeyRound,
   Trash2,
   AlertTriangle,
-  CheckCircle,
+  Send,
 } from "lucide-react";
 import { GitHubIcon } from "../../components/ui/Icons";
 import DashboardCard from "../../components/dashboard/DashboardCard";
@@ -16,25 +16,23 @@ import DashboardButton from "../../components/dashboard/DashboardButton";
 import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import SectionHeader from "../../components/dashboard/SectionHeader";
 import FormInput from "../../components/dashboard/FormInput";
-import FormField from "../../components/dashboard/FormField";
-import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
 import { ProviderBadge } from "../../components/dashboard/Badges";
 import { useToast } from "../../components/dashboard/Toast";
 import {
   settingsProfileSchema,
-  changePasswordSchema,
   validateZod,
 } from "../../types/settings";
 import type {
   SettingsProfileValues,
-  ChangePasswordValues,
 } from "../../types/settings";
 import {
   useVerifySessionQuery,
-  useChangePasswordMutation,
+  useUpdateProfileMutation,
+  useSendPasswordResetLinkMutation,
   useDisconnectOAuthMutation,
   clearCredentials,
+  setCredentials,
 } from "../../store";
 import { useAppDispatch } from "../../app/store";
 
@@ -49,7 +47,8 @@ function formatDate(iso: string) {
 export default function Account() {
   const toast = useToast();
   const { data: userData, isLoading: sessionLoading } = useVerifySessionQuery();
-  const [changePassword] = useChangePasswordMutation();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [sendPasswordResetLink, { isLoading: isSendingReset }] = useSendPasswordResetLinkMutation();
   const [disconnectOAuth] = useDisconnectOAuthMutation();
 
   const user = userData as {
@@ -65,68 +64,77 @@ export default function Account() {
   } | undefined;
 
   const [editMode, setEditMode] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  if (sessionLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size={28} />
-      </div>
-    );
-  }
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const connectedAccounts = useMemo(() => ({
     google: { connected: user?.provider.includes("google") ?? false },
     github: { connected: user?.provider.includes("github") ?? false },
   }), [user?.provider]);
 
+  const formInitialValues = useMemo(
+    () => ({ name: user?.name || "" }),
+    [],
+  );
+
+  const editStartValuesRef = useRef<SettingsProfileValues>(formInitialValues);
+
   const profileFormik = useFormik<SettingsProfileValues>({
-    initialValues: { name: user?.name || "", email: user?.email || "" },
-    enableReinitialize: true,
+    initialValues: formInitialValues,
     validate: validateZod(settingsProfileSchema),
-    onSubmit: (_values, { setSubmitting }) => {
-      setTimeout(() => {
+    enableReinitialize: false,
+    onSubmit: async (values, { setSubmitting }) => {
+      if (values.name === (editStartValuesRef.current.name || "")) {
+        setEditMode(false);
         setSubmitting(false);
+        return;
+      }
+      try {
+        const updatedUser = await updateProfile({ name: values.name }).unwrap();
+        dispatch(setCredentials({ user: updatedUser }));
         setEditMode(false);
         toast.success("Profile saved", "Your profile has been updated successfully.");
-      }, 1000);
-    },
-  });
-
-  const passwordFormik = useFormik<ChangePasswordValues>({
-    initialValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
-    validate: validateZod(changePasswordSchema),
-    onSubmit: async (values, { setSubmitting, resetForm }) => {
-      try {
-        await changePassword({ currentPassword: values.currentPassword, newPassword: values.newPassword }).unwrap();
-        setShowPasswordModal(false);
-        resetForm();
-        toast.success("Password updated", "Your password has been changed successfully.");
       } catch (err: any) {
-        toast.error(err?.data?.msg || "Failed to change password");
+        toast.error(err?.data?.msg || "Failed to update profile");
       } finally {
         setSubmitting(false);
       }
     },
   });
 
-  function handleCancelEdit() {
-    setEditMode(false);
-    profileFormik.resetForm({ values: { name: user?.name || "", email: user?.email || "" } });
+  function handleStartEdit() {
+    editStartValuesRef.current = { name: profileFormik.values.name };
+    setEditMode(true);
   }
 
-  function handleOpenPasswordModal() {
-    passwordFormik.resetForm();
-    setShowPasswordModal(true);
+  function handleCancelEdit() {
+    setEditMode(false);
+    profileFormik.resetForm({ values: { ...editStartValuesRef.current } });
+  }
+
+  function handleOpenPasswordReset() {
+    setShowPasswordReset(true);
+  }
+
+  function handleCancelPasswordReset() {
+    setShowPasswordReset(false);
+  }
+
+  async function handleSendResetLink() {
+    try {
+      await sendPasswordResetLink().unwrap();
+      setShowPasswordReset(false);
+      toast.success("Reset link sent", "Check your email for the password reset link.");
+    } catch (err: any) {
+      toast.error(err?.data?.msg || "Failed to send reset link");
+    }
   }
 
   function handleDeleteAccount() {
     setShowDeleteModal(false);
   }
-
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   async function handleDisconnectGoogle() {
     try {
@@ -145,6 +153,14 @@ export default function Account() {
     } catch (err: any) {
       toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
     }
+  }
+
+  if (sessionLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size={28} />
+      </div>
+    );
   }
 
   return (
@@ -190,22 +206,10 @@ export default function Account() {
                 <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">
                   Email
                 </label>
-                {editMode ? (
-                  <FormInput
-                    type="email"
-                    value={profileFormik.values.email}
-                    onChange={(v) => profileFormik.setFieldValue("email", v)}
-                    onBlur={profileFormik.handleBlur}
-                    placeholder="you@example.com"
-                    error={profileFormik.touched.email && profileFormik.errors.email ? profileFormik.errors.email : undefined}
-                    icon={<Mail className="w-4 h-4 text-[#8E8E93]" />}
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
-                    <Mail className="w-4 h-4 text-[#8E8E93]" />
-                    <span>{user?.email || ""}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#8E8E93] dark:text-[#666]">
+                  <Mail className="w-4 h-4 text-[#8E8E93]" />
+                  <span>{user?.email || ""}</span>
+                </div>
               </div>
 
               <div>
@@ -236,17 +240,18 @@ export default function Account() {
                   <>
                     <DashboardButton
                       type="submit"
-                      disabled={profileFormik.isSubmitting}
+                      disabled={profileFormik.isSubmitting || isUpdating}
                       className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {profileFormik.isSubmitting ? (
+                      {profileFormik.isSubmitting || isUpdating ? (
                         <LoadingSpinner size={16} />
                       ) : (
-                        <CheckCircle className="w-4 h-4" />
+                        <User className="w-4 h-4" />
                       )}
                       Save Changes
                     </DashboardButton>
                     <DashboardButton
+                      type="button"
                       onClick={handleCancelEdit}
                       className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
                     >
@@ -255,14 +260,13 @@ export default function Account() {
                   </>
                 ) : (
                   <DashboardButton
-                    onClick={() => setEditMode(true)}
+                    type="button"
+                    onClick={handleStartEdit}
                     className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
                   >
                     Edit Profile
                   </DashboardButton>
                 )}
-
-
               </div>
             </form>
           </DashboardCard>
@@ -351,27 +355,58 @@ export default function Account() {
               description="Update your account password regularly to keep your account secure."
             />
 
-            <div className="p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl">
-              <div className="flex items-start gap-3">
-                <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Password</p>
-                  <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
-                    Choose a strong, unique password with at least 8 characters.
-                  </p>
+            {showPasswordReset ? (
+              <div className="p-5 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl space-y-4">
+                <div className="flex items-start gap-3">
+                  <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Reset via email</p>
+                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
+                      To protect your account, we'll send a secure password reset link to your registered email address (<span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{user?.email}</span>).
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <DashboardButton
+                    onClick={handleSendResetLink}
+                    disabled={isSendingReset}
+                    className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSendingReset ? <LoadingSpinner size={16} /> : <Send className="w-4 h-4" />}
+                    Send Reset Link
+                  </DashboardButton>
+                  <DashboardButton
+                    onClick={handleCancelPasswordReset}
+                    className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
+                  >
+                    Cancel
+                  </DashboardButton>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-5">
-              <DashboardButton
-                onClick={handleOpenPasswordModal}
-                className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]"
-              >
-                <KeyRound className="w-4 h-4" />
-                Change Password
-              </DashboardButton>
-            </div>
+            ) : (
+              <>
+                <div className="p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Password</p>
+                      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
+                        Choose a strong, unique password with at least 8 characters.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <DashboardButton
+                    onClick={handleOpenPasswordReset}
+                    className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    Change Password
+                  </DashboardButton>
+                </div>
+              </>
+            )}
           </DashboardCard>
 
           <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
@@ -405,62 +440,6 @@ export default function Account() {
           </DashboardCard>
         </div>
       </div>
-
-      <Modal
-        open={showPasswordModal}
-        onClose={() => { setShowPasswordModal(false); passwordFormik.resetForm(); }}
-        title="Change Password"
-        description="Enter your current password and choose a new one."
-        submitLabel="Update Password"
-        submitDisabled={passwordFormik.isSubmitting}
-        loading={passwordFormik.isSubmitting}
-        onSubmit={() => passwordFormik.handleSubmit()}
-      >
-        <div className="space-y-4">
-          <FormField
-            label="Current Password"
-            name="currentPassword"
-            type="password"
-            placeholder="Enter current password"
-            value={passwordFormik.values.currentPassword}
-            onChange={(v) => passwordFormik.setFieldValue("currentPassword", v)}
-            onBlur={passwordFormik.handleBlur}
-            error={passwordFormik.touched.currentPassword ? passwordFormik.errors.currentPassword : undefined}
-            touched={!!passwordFormik.touched.currentPassword}
-          />
-          <FormField
-            label="New Password"
-            name="newPassword"
-            type="password"
-            placeholder="Enter new password (min. 8 characters)"
-            value={passwordFormik.values.newPassword}
-            onChange={(v) => passwordFormik.setFieldValue("newPassword", v)}
-            onBlur={passwordFormik.handleBlur}
-            error={passwordFormik.touched.newPassword ? passwordFormik.errors.newPassword : undefined}
-            touched={!!passwordFormik.touched.newPassword}
-          />
-          <FormField
-            label="Confirm New Password"
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm new password"
-            value={passwordFormik.values.confirmPassword}
-            onChange={(v) => passwordFormik.setFieldValue("confirmPassword", v)}
-            onBlur={passwordFormik.handleBlur}
-            error={passwordFormik.touched.confirmPassword ? passwordFormik.errors.confirmPassword : undefined}
-            touched={!!passwordFormik.touched.confirmPassword}
-          />
-        </div>
-
-        {passwordFormik.errors.confirmPassword && passwordFormik.touched.confirmPassword && (
-          <div className="flex items-center gap-1.5 mt-4 text-[11px] text-[#FF3B30] font-medium">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            {passwordFormik.errors.confirmPassword}
-          </div>
-        )}
-
-
-      </Modal>
 
       <AlertModal
         open={showDeleteModal}

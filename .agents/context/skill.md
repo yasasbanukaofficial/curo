@@ -75,14 +75,14 @@ src/
 - **Session check**: `GET /auth/me` (via `useVerifySessionQuery`) — called by `ProtectedRoute` in App.tsx on mount; dispatches `setCredentials` on success, redirects to `/login` on failure.
 - **Logout**: `POST /auth/logout` — clears cookies + `clearCredentials`.
 - **401 interceptor** (`src/api/axiosClient.ts`): On 401, attempts `POST /auth/refresh` (browser sends `refreshtoken` cookie automatically). If refresh succeeds, retries original request. If refresh fails, dispatches `clearCredentials` and redirects to `/login`. Concurrent 401s are queued and replayed after refresh.
-- **Delete Account**: `DELETE /auth/account` — cascades deletion (secrets → environments → projects → team members → team for owned teams; single TeamMember removal for non-owner memberships). Frontend shows Danger Zone in Settings.tsx with "type DELETE" confirmation modal, then dispatches `clearCredentials` + `baseApi.util.resetApiState()` + navigates to `/login`.
+- **Delete Account**: `DELETE /auth/account` — cascades deletion respecting **ownership** (not membership). Determines owned teams via `TeamModel.ownerId` (not `TeamMemberModel.role === "owner"`). Deletes owned teams + all their resources (projects, secrets, environments, members, invites). Deletes personal projects (userId match, no teamId). For non-owner memberships, only removes the TeamMember record. Never touches resources the user doesn't own. Frontend shows Danger Zone in SettingsModal.tsx Account tab with AlertModal confirmation, then calls `useDeleteAccountMutation`, dispatches `clearCredentials` + `baseApi.util.resetApiState()`, and navigates to `/login`.
 
 ### Cache Leak Prevention
 RTK Query caches ALL previous users' data in the Redux store. When user B logs in on the same browser session, they briefly see user A's cached data before their own fetches complete. To prevent this:
 
 - **On login success** (`LoginPage.tsx`): `dispatch(baseApi.util.resetApiState())` + `sessionStorage.removeItem("activeTeamId")`
 - **On logout** (`Sidebar.tsx`): `dispatch(clearCredentials())` + `sessionStorage.removeItem("activeTeamId")` + `dispatch(baseApi.util.resetApiState())`
-- **On delete account** (`Settings.tsx`): Same pattern after mutation success.
+- **On delete account** (`SettingsModal.tsx`): Same pattern after `useDeleteAccountMutation().unwrap()` — `resetApiState()` + `clearCredentials()` + `navigate("/login", { replace: true })`. On error, shows toast without navigating.
 - `baseApi` is re-exported from `src/store/index.ts` so components can import it from `"../../store"`.
 
 ### Route Guards
@@ -114,6 +114,38 @@ The full invite-to-join flow is:
 
 ### Team creation with members
 When creating a team with member emails (`POST /teams/check-emails` first), the frontend calls `checkEmails` API to separate registered from unregistered users. Only unregistered users trigger the confirmation modal. All users (registered or unregistered) receive an invitation email with a link.
+
+## Password Reset Flow
+
+There are two paths to trigger a password reset:
+
+### 1. Settings (authenticated) — `sendPasswordResetLink`
+Located in `SettingsModal.tsx` and `Account.tsx` under "Change Password" section. Uses `useSendPasswordResetLinkMutation`:
+1. User clicks "Change Password" → sees confirmation panel with their email
+2. Clicks "Send Reset Link" → calls `POST /auth/send-reset-link`
+3. Backend generates `crypto.randomBytes(32).toString("hex")`, SHA-256 hashes it via `tokenHash.gen()`, stores `{ resetPasswordToken: hashedToken, resetPasswordExpires: Date.now() + 15min }` on the user document, sends email with raw token in the link
+4. Shows success toast — "Check your email for the password reset link."
+
+### 2. Forgot Password (unauthenticated) — `forgotPassword`
+Implemented in `ForgotPasswordPage.tsx`:
+1. User enters email on `/forgot-password`, submits form
+2. Calls `POST /auth/forgot-password` with `{ email }`
+3. Same token generation as above (hashed + stored + emailed)
+4. Shows success state with "Check your email" message — user navigates to email client
+
+### Email link → Reset Password page
+The email contains a link to `{FRONTEND_URL}/reset-password?token={rawToken}`:
+1. `ResetPasswordPage.tsx` reads `token` from URL search params
+2. On load, calls `useVerifyResetTokenQuery(token)` → `GET /auth/reset-password/:token`
+   - Backend hashes the incoming token and looks up a user with matching `resetPasswordToken` and `resetPasswordExpires > now()`
+   - If valid (200) → shows password form; if invalid/expired (400) → shows error UI with "Request new link" button
+3. User enters new password + confirm → calls `useResetPasswordMutation` → `POST /auth/reset-password`
+4. On success → navigates to `/login`
+
+### Token hashing
+- Utility: `backend/src/util/hash.ts` — `tokenHash.gen()` uses `crypto.createHash("sha256").update(token).digest("hex")`
+- The raw token is sent in the email link, never stored. The DB only contains the SHA-256 hash.
+- This applies to both `sendPasswordResetLink`, `forgotPassword`, and `verifyResetToken`/`resetPassword` operations.
 
 ## Role-Based Access Control
 
@@ -159,6 +191,14 @@ If `activeTeamId` is null (no team selected), defaults to `"owner"` so users hav
 
 ### Route Design (Frontend)
 ```
+/login                                        → Login page
+/register                                     → Register page
+/forgot-password                              → Forgot password (email form)
+/reset-password                               → Reset password (token in ?token= param, outside PublicRoute so authenticated users can access)
+/invite/accept/:token                         → Invite acceptance
+/auth/callback                                → OAuth callback hub
+```
+```
 /dashboard                                    → redirect to /dashboard/overview
 /dashboard/overview                           → Overview page (global stats)
 /dashboard/projects                           → project list (all modes)
@@ -187,7 +227,8 @@ Project routes no longer include `:teamId` prefix. Changed from `/dashboard/team
 - Guard condition: `!urlProjectId || (!projectByIdError && !!projectById)` — only shows not-found when data has loaded and project is confirmed missing
 
 ### Sidebar Navigation
-- Three static items always shown regardless of route:
+- **Top section** — `ProjectSwitcher` is a single "Create new project" button (always visible). Clicking navigates to `/dashboard/projects` with `state: { openNewProject: true }` which opens the create modal. No project-switching dropdown.
+- **Three nav items** always shown regardless of route:
   - **Overview** → `/dashboard`
   - **Teams** → `/dashboard/teams/{teamId}` (auto-selects first team or sessionStorage)
   - **Projects** → `/dashboard/projects`
@@ -313,6 +354,9 @@ When deleting:
 | POST | `/logout` | Yes | — |
 | GET | `/me` | Yes | — |
 | PUT | `/change-password` | Yes | `{ currentPassword, newPassword }` |
+| PUT | `/profile` | Yes | `{ name }` — updates user's display name |
+| POST | `/send-reset-link` | Yes | (empty) — sends email with SHA-256 hashed token, 15-min expiry |
+| GET | `/reset-password/:token` | No | Verifies hashed token is valid and not expired |
 | POST | `/disconnect-oauth` | Yes | `{ provider }` |
 | DELETE | `/account` | Yes | — |
 | POST | `/verify-email/otp` | No | `{ otp }` |
@@ -406,6 +450,7 @@ All "all" endpoints are scoped to the authenticated user:
 - Submit calls mutation → `.unwrap()` → show toast → close modal/reset form.
 - Catch block: `showError(err?.data?.msg || "Fallback message")`.
 - **Settings forms**: Use `enableReinitialize: true` with `initialValues` pulled directly from the selected entity (`selectedTeam`, `selectedProject`). This auto-fills fields when navigating to the settings tab, without needing manual `setValues()` calls.
+- **Profile editing exception** (`SettingsModal.tsx`, `Account.tsx`): Uses simple `useState` + plain `<button>`/`<input>` instead of Formik. Three state vars: `isEditingProfile`, `profileName`, `isSavingProfile`. The name field toggles between a read-only `<span>` and an editable `<input>`. Email/Member Since/Providers are always read-only display fields. All non-submit buttons explicitly have `type="button"` to prevent accidental form submission. Save/Cancel buttons are plain `<button>` elements with `font-button` class — no `DashboardButton` wrapper.
 - **Create vs Edit schemas**: When a form has different validation rules for create vs edit (e.g., secret name/key required on create but optional on edit), use separate Zod schemas. Switch dynamically in `useFormik`:
   ```ts
   validate: (values) => validateZod(editingSecret ? editSecretSchema : createSecretSchema)(values),
@@ -440,7 +485,7 @@ error("Title", "Error details");
 - **Single teamId per project**: A project has at most one team. Assigning a new team replaces the old one (removes from old team's projects array, adds to new team's).
 - **Cache clearing on auth change**: `resetApiState()` is called on login, logout, and delete account to prevent stale data from a previous user leaking to the current user.
 - **sessionStorage cleared on auth change**: `activeTeamId` and `inviteToken` are removed on login/logout/delete-account to prevent cross-session contamination.
-- **Account deletion**: Uses cascade deletion in `auth.service.ts` — secrets → environments → projects → team members → team for owned teams. Non-owner memberships just remove the membership record. All cookies cleared.
+- **Account deletion**: Uses cascade deletion in `auth.service.ts` that respects ownership. Owned teams are identified via `TeamModel.ownerId` (not `TeamMemberModel.role`). For each owned team: deletes all projects + nested secrets/environments, team members, invites, then the team itself. Deletes personal projects (userId match, no teamId). Non-owner memberships only remove the TeamMember record. Never deletes resources belonging to other users. Safe deletion order prevents orphaned documents. All cookies cleared on frontend via `clearCredentials()`.
 - **Overview stats from single endpoint**: `GET /users/overview/stats` returns all counts + recent items in one call, avoiding multiple `/all` requests.
 - **Secret key privacy**: When editing a secret, `openEditSecret` sets `secKey` to `""` so the current value is never exposed in the form. The edit schema makes `secKey` optional, and the backend only re-encrypts if a new value is provided.
 - **Secret values never shown**: No reveal toggle or copy button exists. Values are permanently masked.

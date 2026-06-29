@@ -241,6 +241,21 @@ export const resetPassword = async (req: Request, res: Response) => {
   return sendResponse(res, result);
 };
 
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  const result = await authService.updateProfile(req.userId!, req.body);
+  return sendResponse(res, result);
+};
+
+export const verifyResetToken = async (req: Request, res: Response) => {
+  const result = await authService.verifyResetToken(req.params.token);
+  return sendResponse(res, result);
+};
+
+export const sendPasswordResetLink = async (req: AuthRequest, res: Response) => {
+  const result = await authService.sendPasswordResetLink(req.userId!);
+  return sendResponse(res, result);
+};
+
 export const changePassword = async (req: AuthRequest, res: Response) => {
   const result = await authService.changePassword(req.userId!, req.body.currentPassword, req.body.newPassword);
   return sendResponse(res, result);
