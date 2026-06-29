@@ -30,6 +30,22 @@ export const authEndpoints = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/disconnect-oauth", method: "POST", body }),
       invalidatesTags: [{ type: "User", id: "ME" }],
     }),
+    updateProfile: builder.mutation<any, { name: string }>({
+      query: (body) => ({ url: "/auth/profile", method: "PUT", body }),
+      invalidatesTags: [{ type: "User", id: "ME" }],
+    }),
+    sendPasswordResetLink: builder.mutation<void, void>({
+      query: () => ({ url: "/auth/send-reset-link", method: "POST" }),
+    }),
+    verifyResetToken: builder.query<any, string>({
+      query: (token) => ({ url: `/auth/reset-password/${token}`, method: "GET" }),
+    }),
+    forgotPassword: builder.mutation<any, { email: string }>({
+      query: (body) => ({ url: "/auth/forgot-password", method: "POST", body }),
+    }),
+    resetPassword: builder.mutation<any, { token: string; password: string }>({
+      query: (body) => ({ url: "/auth/reset-password", method: "POST", body }),
+    }),
     deleteAccount: builder.mutation<void, void>({
       query: () => ({ url: "/auth/account", method: "DELETE" }),
     }),
@@ -44,6 +60,11 @@ export const {
   useResendOtpMutation,
   useLogoutMutation,
   useChangePasswordMutation,
+  useUpdateProfileMutation,
+  useSendPasswordResetLinkMutation,
+  useVerifyResetTokenQuery,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
   useDisconnectOAuthMutation,
   useDeleteAccountMutation,
 } = authEndpoints;

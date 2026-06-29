@@ -15,7 +15,6 @@ export interface UserProfile {
 
 export interface SettingsProfileValues {
   name: string;
-  email: string;
 }
 
 export interface ChangePasswordValues {
@@ -30,7 +29,6 @@ export const settingsProfileSchema = z.object({
     .trim()
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name must be at most 50 characters"),
-  email: z.string().email("Invalid email address").trim().toLowerCase(),
 });
 
 export const changePasswordSchema = z

@@ -75,14 +75,14 @@ src/
 - **Session check**: `GET /auth/me` (via `useVerifySessionQuery`) — called by `ProtectedRoute` in App.tsx on mount; dispatches `setCredentials` on success, redirects to `/login` on failure.
 - **Logout**: `POST /auth/logout` — clears cookies + `clearCredentials`.
 - **401 interceptor** (`src/api/axiosClient.ts`): On 401, attempts `POST /auth/refresh` (browser sends `refreshtoken` cookie automatically). If refresh succeeds, retries original request. If refresh fails, dispatches `clearCredentials` and redirects to `/login`. Concurrent 401s are queued and replayed after refresh.
-- **Delete Account**: `DELETE /auth/account` — cascades deletion (secrets → environments → projects → team members → team for owned teams; single TeamMember removal for non-owner memberships). Frontend shows Danger Zone in Settings.tsx with "type DELETE" confirmation modal, then dispatches `clearCredentials` + `baseApi.util.resetApiState()` + navigates to `/login`.
+- **Delete Account**: `DELETE /auth/account` — cascades deletion respecting **ownership** (not membership). Determines owned teams via `TeamModel.ownerId` (not `TeamMemberModel.role === "owner"`). Deletes owned teams + all their resources (projects, secrets, environments, members, invites). Deletes personal projects (userId match, no teamId). For non-owner memberships, only removes the TeamMember record. Never touches resources the user doesn't own. Frontend shows Danger Zone in SettingsModal.tsx Account tab with AlertModal confirmation, then calls `useDeleteAccountMutation`, dispatches `clearCredentials` + `baseApi.util.resetApiState()`, and navigates to `/login`.
 
 ### Cache Leak Prevention
 RTK Query caches ALL previous users' data in the Redux store. When user B logs in on the same browser session, they briefly see user A's cached data before their own fetches complete. To prevent this:
 
 - **On login success** (`LoginPage.tsx`): `dispatch(baseApi.util.resetApiState())` + `sessionStorage.removeItem("activeTeamId")`
 - **On logout** (`Sidebar.tsx`): `dispatch(clearCredentials())` + `sessionStorage.removeItem("activeTeamId")` + `dispatch(baseApi.util.resetApiState())`
-- **On delete account** (`Settings.tsx`): Same pattern after mutation success.
+- **On delete account** (`SettingsModal.tsx`): Same pattern after `useDeleteAccountMutation().unwrap()` — `resetApiState()` + `clearCredentials()` + `navigate("/login", { replace: true })`. On error, shows toast without navigating.
 - `baseApi` is re-exported from `src/store/index.ts` so components can import it from `"../../store"`.
 
 ### Route Guards
@@ -440,7 +440,7 @@ error("Title", "Error details");
 - **Single teamId per project**: A project has at most one team. Assigning a new team replaces the old one (removes from old team's projects array, adds to new team's).
 - **Cache clearing on auth change**: `resetApiState()` is called on login, logout, and delete account to prevent stale data from a previous user leaking to the current user.
 - **sessionStorage cleared on auth change**: `activeTeamId` and `inviteToken` are removed on login/logout/delete-account to prevent cross-session contamination.
-- **Account deletion**: Uses cascade deletion in `auth.service.ts` — secrets → environments → projects → team members → team for owned teams. Non-owner memberships just remove the membership record. All cookies cleared.
+- **Account deletion**: Uses cascade deletion in `auth.service.ts` that respects ownership. Owned teams are identified via `TeamModel.ownerId` (not `TeamMemberModel.role`). For each owned team: deletes all projects + nested secrets/environments, team members, invites, then the team itself. Deletes personal projects (userId match, no teamId). Non-owner memberships only remove the TeamMember record. Never deletes resources belonging to other users. Safe deletion order prevents orphaned documents. All cookies cleared on frontend via `clearCredentials()`.
 - **Overview stats from single endpoint**: `GET /users/overview/stats` returns all counts + recent items in one call, avoiding multiple `/all` requests.
 - **Secret key privacy**: When editing a secret, `openEditSecret` sets `secKey` to `""` so the current value is never exposed in the form. The edit schema makes `secKey` optional, and the backend only re-encrypts if a new value is provided.
 - **Secret values never shown**: No reveal toggle or copy button exists. Values are permanently masked.
