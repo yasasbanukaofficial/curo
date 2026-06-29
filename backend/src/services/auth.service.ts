@@ -541,29 +541,48 @@ export const authService = {
       return { success: false, status: 404, msg: "Account not found" };
     }
 
-    const memberships = await TeamMemberModel.find({ userId });
+    const ownedTeams = await TeamModel.find({ ownerId: userId }).lean();
+    const ownedTeamIds = ownedTeams.map((t) => t._id.toString());
 
-    for (const membership of memberships) {
-      if (membership.role === "owner") {
-        const teamId = membership.teamId;
-
-        const teamProjects = await ProjectModel.find({ teamId });
-        const projectIds = teamProjects.map((p) => p._id);
-
-        if (projectIds.length > 0) {
-          await SecretsModel.deleteMany({ projectId: { $in: projectIds } });
-          await EnvironmentModel.deleteMany({ projectId: { $in: projectIds } });
-          await ProjectModel.deleteMany({ _id: { $in: projectIds } });
+    if (ownedTeamIds.length > 0) {
+      const ownedTeamProjectIds: string[] = [];
+      for (const team of ownedTeams) {
+        if (team.projects && team.projects.length > 0) {
+          ownedTeamProjectIds.push(...team.projects.map((p) => p.toString()));
         }
-
-        await TeamMemberModel.deleteMany({ teamId });
-        await TeamModel.findByIdAndDelete(teamId);
-      } else {
-        await TeamMemberModel.findByIdAndDelete(membership._id);
       }
+
+      const extraTeamProjects = await ProjectModel.find({
+        teamId: { $in: ownedTeamIds },
+        _id: { $nin: ownedTeamProjectIds },
+      }).lean();
+      ownedTeamProjectIds.push(...extraTeamProjects.map((p) => p._id.toString()));
+
+      if (ownedTeamProjectIds.length > 0) {
+        await SecretsModel.deleteMany({ projectId: { $in: ownedTeamProjectIds } });
+        await EnvironmentModel.deleteMany({ projectId: { $in: ownedTeamProjectIds } });
+        await ProjectModel.deleteMany({ _id: { $in: ownedTeamProjectIds } });
+      }
+
+      await TeamMemberModel.deleteMany({ teamId: { $in: ownedTeamIds } });
+      await TeamInviteModel.deleteMany({ teamId: { $in: ownedTeamIds } });
+      await TeamModel.deleteMany({ _id: { $in: ownedTeamIds } });
     }
 
-    await TeamInviteModel.deleteMany({ email: user.email });
+    const personalProjects = await ProjectModel.find({
+      userId,
+      $or: [{ teamId: null }, { teamId: { $exists: false } }],
+    }).lean();
+
+    if (personalProjects.length > 0) {
+      const personalProjectIds = personalProjects.map((p) => p._id.toString());
+      await SecretsModel.deleteMany({ projectId: { $in: personalProjectIds } });
+      await EnvironmentModel.deleteMany({ projectId: { $in: personalProjectIds } });
+      await ProjectModel.deleteMany({ _id: { $in: personalProjectIds } });
+    }
+
+    await TeamMemberModel.deleteMany({ userId, teamId: { $nin: ownedTeamIds } });
+    await TeamInviteModel.deleteMany({ email: user.email.toLowerCase() });
     await UserModel.findByIdAndDelete(userId);
 
     return { success: true, status: 200, msg: "Account deleted successfully" };
