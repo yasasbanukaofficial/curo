@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "CommonJS",
     "declaration": true,
     "isolatedModules": true,
     "noEmit": true,
