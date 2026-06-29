@@ -115,6 +115,38 @@ The full invite-to-join flow is:
 ### Team creation with members
 When creating a team with member emails (`POST /teams/check-emails` first), the frontend calls `checkEmails` API to separate registered from unregistered users. Only unregistered users trigger the confirmation modal. All users (registered or unregistered) receive an invitation email with a link.
 
+## Password Reset Flow
+
+There are two paths to trigger a password reset:
+
+### 1. Settings (authenticated) — `sendPasswordResetLink`
+Located in `SettingsModal.tsx` and `Account.tsx` under "Change Password" section. Uses `useSendPasswordResetLinkMutation`:
+1. User clicks "Change Password" → sees confirmation panel with their email
+2. Clicks "Send Reset Link" → calls `POST /auth/send-reset-link`
+3. Backend generates `crypto.randomBytes(32).toString("hex")`, SHA-256 hashes it via `tokenHash.gen()`, stores `{ resetPasswordToken: hashedToken, resetPasswordExpires: Date.now() + 15min }` on the user document, sends email with raw token in the link
+4. Shows success toast — "Check your email for the password reset link."
+
+### 2. Forgot Password (unauthenticated) — `forgotPassword`
+Implemented in `ForgotPasswordPage.tsx`:
+1. User enters email on `/forgot-password`, submits form
+2. Calls `POST /auth/forgot-password` with `{ email }`
+3. Same token generation as above (hashed + stored + emailed)
+4. Shows success state with "Check your email" message — user navigates to email client
+
+### Email link → Reset Password page
+The email contains a link to `{FRONTEND_URL}/reset-password?token={rawToken}`:
+1. `ResetPasswordPage.tsx` reads `token` from URL search params
+2. On load, calls `useVerifyResetTokenQuery(token)` → `GET /auth/reset-password/:token`
+   - Backend hashes the incoming token and looks up a user with matching `resetPasswordToken` and `resetPasswordExpires > now()`
+   - If valid (200) → shows password form; if invalid/expired (400) → shows error UI with "Request new link" button
+3. User enters new password + confirm → calls `useResetPasswordMutation` → `POST /auth/reset-password`
+4. On success → navigates to `/login`
+
+### Token hashing
+- Utility: `backend/src/util/hash.ts` — `tokenHash.gen()` uses `crypto.createHash("sha256").update(token).digest("hex")`
+- The raw token is sent in the email link, never stored. The DB only contains the SHA-256 hash.
+- This applies to both `sendPasswordResetLink`, `forgotPassword`, and `verifyResetToken`/`resetPassword` operations.
+
 ## Role-Based Access Control
 
 ### `useTeamRole(teamId)` hook (`src/hooks/useTeamRole.ts`)
@@ -159,6 +191,14 @@ If `activeTeamId` is null (no team selected), defaults to `"owner"` so users hav
 
 ### Route Design (Frontend)
 ```
+/login                                        → Login page
+/register                                     → Register page
+/forgot-password                              → Forgot password (email form)
+/reset-password                               → Reset password (token in ?token= param, outside PublicRoute so authenticated users can access)
+/invite/accept/:token                         → Invite acceptance
+/auth/callback                                → OAuth callback hub
+```
+```
 /dashboard                                    → redirect to /dashboard/overview
 /dashboard/overview                           → Overview page (global stats)
 /dashboard/projects                           → project list (all modes)
@@ -187,7 +227,8 @@ Project routes no longer include `:teamId` prefix. Changed from `/dashboard/team
 - Guard condition: `!urlProjectId || (!projectByIdError && !!projectById)` — only shows not-found when data has loaded and project is confirmed missing
 
 ### Sidebar Navigation
-- Three static items always shown regardless of route:
+- **Top section** — `ProjectSwitcher` is a single "Create new project" button (always visible). Clicking navigates to `/dashboard/projects` with `state: { openNewProject: true }` which opens the create modal. No project-switching dropdown.
+- **Three nav items** always shown regardless of route:
   - **Overview** → `/dashboard`
   - **Teams** → `/dashboard/teams/{teamId}` (auto-selects first team or sessionStorage)
   - **Projects** → `/dashboard/projects`
@@ -313,6 +354,9 @@ When deleting:
 | POST | `/logout` | Yes | — |
 | GET | `/me` | Yes | — |
 | PUT | `/change-password` | Yes | `{ currentPassword, newPassword }` |
+| PUT | `/profile` | Yes | `{ name }` — updates user's display name |
+| POST | `/send-reset-link` | Yes | (empty) — sends email with SHA-256 hashed token, 15-min expiry |
+| GET | `/reset-password/:token` | No | Verifies hashed token is valid and not expired |
 | POST | `/disconnect-oauth` | Yes | `{ provider }` |
 | DELETE | `/account` | Yes | — |
 | POST | `/verify-email/otp` | No | `{ otp }` |
@@ -406,6 +450,7 @@ All "all" endpoints are scoped to the authenticated user:
 - Submit calls mutation → `.unwrap()` → show toast → close modal/reset form.
 - Catch block: `showError(err?.data?.msg || "Fallback message")`.
 - **Settings forms**: Use `enableReinitialize: true` with `initialValues` pulled directly from the selected entity (`selectedTeam`, `selectedProject`). This auto-fills fields when navigating to the settings tab, without needing manual `setValues()` calls.
+- **Profile editing exception** (`SettingsModal.tsx`, `Account.tsx`): Uses simple `useState` + plain `<button>`/`<input>` instead of Formik. Three state vars: `isEditingProfile`, `profileName`, `isSavingProfile`. The name field toggles between a read-only `<span>` and an editable `<input>`. Email/Member Since/Providers are always read-only display fields. All non-submit buttons explicitly have `type="button"` to prevent accidental form submission. Save/Cancel buttons are plain `<button>` elements with `font-button` class — no `DashboardButton` wrapper.
 - **Create vs Edit schemas**: When a form has different validation rules for create vs edit (e.g., secret name/key required on create but optional on edit), use separate Zod schemas. Switch dynamically in `useFormik`:
   ```ts
   validate: (values) => validateZod(editingSecret ? editSecretSchema : createSecretSchema)(values),
