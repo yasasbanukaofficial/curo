@@ -1,5 +1,13 @@
 import crypto from "crypto";
-import { UserModel } from "../models";
+import {
+  UserModel,
+  TeamMemberModel,
+  TeamModel,
+  ProjectModel,
+  SecretsModel,
+  EnvironmentModel,
+  TeamInviteModel,
+} from "../models";
 import { IUser } from "../types";
 import { tokenGen, verifyToken } from "../util/token";
 import {
@@ -525,6 +533,40 @@ export const authService = {
       : { onboardingComplete: true };
     await UserModel.findByIdAndUpdate(userId, update);
     return { success: true, status: 200, msg: "Onboarding completed" };
+  },
+
+  deleteAccount: async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+
+    const memberships = await TeamMemberModel.find({ userId });
+
+    for (const membership of memberships) {
+      if (membership.role === "owner") {
+        const teamId = membership.teamId;
+
+        const teamProjects = await ProjectModel.find({ teamId });
+        const projectIds = teamProjects.map((p) => p._id);
+
+        if (projectIds.length > 0) {
+          await SecretsModel.deleteMany({ projectId: { $in: projectIds } });
+          await EnvironmentModel.deleteMany({ projectId: { $in: projectIds } });
+          await ProjectModel.deleteMany({ _id: { $in: projectIds } });
+        }
+
+        await TeamMemberModel.deleteMany({ teamId });
+        await TeamModel.findByIdAndDelete(teamId);
+      } else {
+        await TeamMemberModel.findByIdAndDelete(membership._id);
+      }
+    }
+
+    await TeamInviteModel.deleteMany({ email: user.email });
+    await UserModel.findByIdAndDelete(userId);
+
+    return { success: true, status: 200, msg: "Account deleted successfully" };
   },
 };
 

@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { AuthRouter, ProjectRouter, TeamRouter } from "./routes/index";
+import { AuthRouter, ProjectRouter, TeamRouter, UserRouter } from "./routes/index";
 import cookieParser from "cookie-parser";
 import { FRONTEND_URL, PORT, MONGODB_URL, API_VER } from "./config/env";
 
@@ -38,6 +38,7 @@ app.use(`/api/${API_VER}/auth`, AuthRouter);
 app.use(`/api/${API_VER}/projects`, ProjectRouter);
 
 app.use(`/api/${API_VER}/teams`, TeamRouter);
+app.use(`/api/${API_VER}/users`, UserRouter);
 
 app.get("/", (req, res) => {
   res.send(

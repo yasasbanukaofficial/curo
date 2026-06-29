@@ -251,3 +251,12 @@ export const markOnboardingComplete = async (req: AuthRequest, res: Response) =>
   const result = await authService.markOnboardingComplete(req.userId!, skipped);
   return sendResponse(res, result);
 };
+
+export const deleteAccount = async (req: AuthRequest, res: Response) => {
+  const result = await authService.deleteAccount(req.userId!);
+  res.clearCookie("access_token");
+  res.clearCookie("refreshtoken");
+  res.clearCookie("oauth_state");
+  res.clearCookie("github_oauth_state");
+  return sendResponse(res, result);
+};

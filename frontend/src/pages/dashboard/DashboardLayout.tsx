@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import TopNav from "../../components/dashboard/TopNav";
 import Sidebar from "../../components/dashboard/Sidebar";
 import MobileNav from "../../components/dashboard/MobileNav";
@@ -64,6 +64,14 @@ function DashboardInner() {
   const { activeTeamId, setTeam, clearTeam } = useActiveTeam();
   const [getInviteDetails] = useLazyGetInviteDetailsQuery();
   const [acceptInviteExplicit] = useAcceptInviteExplicitMutation();
+  const params = useParams<{ teamId: string }>();
+
+  useEffect(() => {
+    if (params.teamId && teams) {
+      const found = teams.find((t) => t._id === params.teamId);
+      if (found) setTeam(params.teamId);
+    }
+  }, [params.teamId, teams, setTeam]);
 
   useEffect(() => {
     if (teams && teams.length > 0 && !activeTeamId) {

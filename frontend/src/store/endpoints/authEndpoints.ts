@@ -30,6 +30,9 @@ export const authEndpoints = baseApi.injectEndpoints({
       query: (body) => ({ url: "/auth/disconnect-oauth", method: "POST", body }),
       invalidatesTags: [{ type: "User", id: "ME" }],
     }),
+    deleteAccount: builder.mutation<void, void>({
+      query: () => ({ url: "/auth/account", method: "DELETE" }),
+    }),
   }),
 });
 
@@ -42,4 +45,5 @@ export const {
   useLogoutMutation,
   useChangePasswordMutation,
   useDisconnectOAuthMutation,
+  useDeleteAccountMutation,
 } = authEndpoints;

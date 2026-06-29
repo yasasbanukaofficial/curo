@@ -8,6 +8,8 @@ vi.mock("../src/services/auth.service", () => ({
     authenticateUser: vi.fn(),
     getCurrentUser: vi.fn(),
     refreshToken: vi.fn(),
+    logoutUser: vi.fn(),
+    deleteAccount: vi.fn(),
   },
 }));
 
@@ -128,6 +130,26 @@ describe("Auth API", () => {
     it("redirects to GitHub OAuth", async () => {
       const res = await request(app).get("/api/v1/auth/github");
       expect(res.status).toBe(302);
+    });
+  });
+
+  describe("DELETE /api/v1/auth/account", () => {
+    it("deletes account successfully", async () => {
+      vi.mocked(authService.deleteAccount).mockResolvedValue({ success: true, status: 200, msg: "Account deleted successfully" });
+
+      const res = await request(app).delete("/api/v1/auth/account");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("returns 404 when account not found", async () => {
+      vi.mocked(authService.deleteAccount).mockResolvedValue({ success: false, status: 404, msg: "Account not found" });
+
+      const res = await request(app).delete("/api/v1/auth/account");
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
     });
   });
 });
