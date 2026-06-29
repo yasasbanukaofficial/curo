@@ -1,0 +1,48 @@
+{
+  "name": "@curo/cli",
+  "version": "1.0.0",
+  "description": "Curo CLI - Secure environment and secrets manager for modern applications",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "curo": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "curo",
+    "cli",
+    "env",
+    "dotenv",
+    "secrets",
+    "secret-manager",
+    "devtools",
+    "devops",
+    "configuration"
+  ],
+  "homepage": "https://github.com/yasasbanukaofficial/curo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yasasbanukaofficial/curo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yasasbanukaofficial/curo/issues"
+  },
+  "scripts": {
+    "build": "tsup",
+    "start": "node dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}
