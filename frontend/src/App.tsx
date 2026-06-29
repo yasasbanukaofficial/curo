@@ -7,6 +7,9 @@ import HomePage from "./pages/HomePage";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import Overview from "./pages/dashboard/Overview";
 import Projects from "./pages/dashboard/Projects";
+import TeamSecrets from "./pages/dashboard/TeamSecrets";
+import TeamEnvironments from "./pages/dashboard/TeamEnvironments";
+import TeamAudit from "./pages/dashboard/TeamAudit";
 import Integrations from "./pages/dashboard/Integrations";
 import Account from "./pages/dashboard/Account";
 import Settings from "./pages/dashboard/Settings";
@@ -90,8 +93,18 @@ function App() {
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<Overview />} />
             <Route path="projects" element={<Projects />} />
+            <Route path="project/:projectId" element={<Projects />} />
+            <Route path="project/:projectId/secrets" element={<Projects />} />
+            <Route path="project/:projectId/environments" element={<Projects />} />
             <Route path="integrations" element={<Integrations />} />
-            <Route path="teams" element={<Teams />} />
+            <Route path="teams">
+              <Route index element={<Teams />} />
+              <Route path=":teamId" element={<Teams />} />
+              <Route path=":teamId/secrets" element={<TeamSecrets />} />
+              <Route path=":teamId/environments" element={<TeamEnvironments />} />
+              <Route path=":teamId/audit" element={<TeamAudit />} />
+              <Route path=":teamId/settings" element={<Teams />} />
+            </Route>
             <Route path="account" element={<Account />} />
             <Route path="settings" element={<Settings />} />
           </Route>

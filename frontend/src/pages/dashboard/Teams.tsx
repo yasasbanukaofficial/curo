@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { z } from "zod";
 import {
   Users,
@@ -78,7 +78,7 @@ function PlanBadge({ plan }: { plan: TeamPlan }) {
   );
 }
 
-function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => void; onDelete: () => void }) {
+function TeamCard({ team, onSelect }: { team: Team; onSelect: () => void }) {
   return (
     <DashboardCard hover padding="md" className="cursor-pointer" onClick={onSelect}>
       <div className="flex items-start justify-between mb-4">
@@ -101,9 +101,8 @@ function TeamCard({ team, onSelect, onDelete }: { team: Team; onSelect: () => vo
           <FolderKanban className="w-3.5 h-3.5" />{(team.projects ?? []).length} projects
         </span>
       </div>
-      <div className="flex items-center justify-between pt-3 border-t border-black/[0.04] dark:border-[#222]">
+      <div className="pt-3 border-t border-black/[0.04] dark:border-[#222]">
         <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{team.createdAt ? new Date(team.createdAt).toLocaleDateString() : ""}</span>
-        <DashboardButton onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Delete</DashboardButton>
       </div>
     </DashboardCard>
   );
@@ -179,11 +178,34 @@ export default function Teams() {
   const [showInviteUnregisteredConfirm, setShowInviteUnregisteredConfirm] = useState(false);
   const [pendingInviteEmail, setPendingInviteEmail] = useState("");
 
+  const params = useParams<{ teamId: string }>();
+  const location = useLocation();
+  const urlTeamId = params.teamId;
+  const isSettingsPath = location.pathname.endsWith("/settings");
+  const [urlError, setUrlError] = useState(false);
+
+  useEffect(() => {
+    if (urlTeamId && !teamsLoading) {
+      const found = teams.find((t) => t._id === urlTeamId);
+      if (found) {
+        setUrlError(false);
+        setSelectedTeam(found);
+        if (isSettingsPath) {
+          setDetailTab("settings");
+        } else {
+          setDetailTab("overview");
+        }
+      } else {
+        setUrlError(true);
+      }
+    }
+  }, [urlTeamId, teams, isSettingsPath]);
+
   const teamId = selectedTeam?._id || "";
   const { data: teamMembers = [], isLoading: membersLoading } = useGetTeamMembersQuery(teamId, { skip: !teamId });
   const { data: teamInvites = [] } = useGetTeamInvitesQuery(teamId, { skip: !teamId });
   const { data: allProjects = [] } = useGetProjectsQuery();
-  const teamProjects = allProjects.filter((p: Project) => (p.teams ?? []).includes(teamId));
+  const teamProjects = allProjects.filter((p: Project) => p.teamId === teamId);
   const { canDelete, canEdit, canManageMembers } = useTeamRole(teamId);
 
   const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m) => m.email === inv.email));
@@ -333,10 +355,27 @@ export default function Teams() {
     );
   }
 
+  if (urlError) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 rounded-2xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center mx-auto mb-5">
+            <Users className="w-8 h-8 text-[#8E8E93]" />
+          </div>
+          <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-2">Team not found</h1>
+          <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">The team you're looking for doesn't exist or you don't have access to it.</p>
+          <DashboardButton onClick={() => navigate("/dashboard/teams", { replace: true })} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+            Back to Teams
+          </DashboardButton>
+        </div>
+      </div>
+    );
+  }
+
   const teamDetail = selectedTeam ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { setSelectedTeam(null); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={() => { navigate("/dashboard/teams"); setSelectedTeam(null); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <ArrowLeft className="w-5 h-5" />
         </DashboardButton>
         <div className="flex-1">
@@ -560,7 +599,7 @@ export default function Teams() {
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {teams.map((team) => (
-              <TeamCard key={team._id} team={team} onSelect={() => { setSelectedTeam(team); setDetailTab("overview"); settingsFormik.resetForm(); }} onDelete={() => { setDeleteTeamId(team._id); setShowDeleteTeamModal(true); }} />
+              <TeamCard key={team._id} team={team} onSelect={() => { navigate(`/dashboard/teams/${team._id}`); }} />
             ))}
           </div>
           )}

@@ -12,9 +12,7 @@ export interface Project {
   role?: string;
   secretCount: number;
   environmentCount: number;
-  teamCount: number;
-  memberCount: number;
-  teams: string[];
+  teamId: string | null;
   createdAt: string;
   updatedAt: string;
 }

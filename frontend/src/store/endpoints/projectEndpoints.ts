@@ -3,8 +3,8 @@ import type { Project } from "../../types";
 
 export const projectEndpoints = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getProjects: builder.query<Project[], void>({
-      query: () => ({ url: "/projects/all", method: "GET" }),
+    getProjects: builder.query<Project[], string | void>({
+      query: (teamId) => ({ url: `/projects/all${teamId ? `?teamId=${teamId}` : ""}`, method: "GET" }),
       providesTags: (result) =>
         result
           ? [{ type: "Project", id: "LIST" }, ...result.map((p) => ({ type: "Project" as const, id: p._id }))]
@@ -39,8 +39,8 @@ export const projectEndpoints = baseApi.injectEndpoints({
         { type: "Project", id: arg.projectId },
       ],
     }),
-    removeTeamFromProject: builder.mutation<any, { projectId: string; teamId: string }>({
-      query: ({ projectId, teamId }) => ({ url: `/projects/${projectId}/teams/${teamId}`, method: "DELETE" }),
+    removeTeamFromProject: builder.mutation<any, { projectId: string }>({
+      query: ({ projectId }) => ({ url: `/projects/${projectId}/teams`, method: "DELETE" }),
       invalidatesTags: (_result, _error, arg) => [
         { type: "Project", id: "LIST" },
         { type: "Project", id: arg.projectId },

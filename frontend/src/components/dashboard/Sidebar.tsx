@@ -6,9 +6,6 @@ import {
   LayoutDashboard,
   FolderKanban,
   Users,
-
-
-  PlugZap,
   Settings,
   UserCircle,
   ChevronDown,
@@ -16,24 +13,16 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
-import { useGetProjectsQuery, useVerifySessionQuery, useLogoutMutation, clearCredentials } from "../../store";
+import { useGetProjectsQuery, useVerifySessionQuery, useLogoutMutation, clearCredentials, baseApi } from "../../store";
 import { useAppDispatch } from "../../app/store";
-const navSections = [
-  {
-    label: "Workspace",
-    items: [
-      { label: "Overview", icon: LayoutDashboard, path: "/dashboard/overview" },
-      { label: "Teams", icon: Users, path: "/dashboard/teams" },
-      { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
-    ],
-  },
-  {
-    label: "Management",
-    items: [
-      { label: "Integrations", icon: PlugZap, path: "/dashboard/integrations" },
-    ],
-  },
-];
+import { useGetTeamsQuery } from "../../store";
+
+function useActiveTeamId() {
+  const { data: teams = [] } = useGetTeamsQuery();
+  const activeTeamId = sessionStorage.getItem("activeTeamId");
+  const fallbackTeamId = activeTeamId && teams.find((t) => t._id === activeTeamId) ? activeTeamId : (teams[0]?._id || "");
+  return fallbackTeamId;
+}
 
 function ProjectSwitcher() {
   const [open, setOpen] = useState(false);
@@ -77,20 +66,22 @@ function ProjectSwitcher() {
 
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 transition-colors duration-200">
-          {projects.map((p: any) => (
-            <DashboardButton
-              key={p._id}
-              onClick={() => {
-                setSelected(p.projectName);
-                setOpen(false);
-                navigate(`/dashboard/projects?projectId=${p._id}`);
-              }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
-            >
-              <FolderKanban className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="flex-1 text-left truncate">{p.projectName}</span>
-            </DashboardButton>
-          ))}
+          {projects.map((p: any) => {
+            return (
+              <DashboardButton
+                key={p._id}
+                onClick={() => {
+                  setSelected(p.projectName);
+                  setOpen(false);
+                  navigate(`/dashboard/project/${p._id}`);
+                }}
+                className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+              >
+                <FolderKanban className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="flex-1 text-left truncate">{p.projectName}</span>
+              </DashboardButton>
+            );
+          })}
         </div>
       )}
     </div>
@@ -135,6 +126,8 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
     } catch {
     }
     dispatch(clearCredentials());
+    sessionStorage.removeItem("activeTeamId");
+    dispatch(baseApi.util.resetApiState());
     navigate("/login", { replace: true });
   }
 
@@ -243,6 +236,17 @@ interface SidebarProps {
 export default function Sidebar({ onToggleSettings }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const teamId = useActiveTeamId();
+  const navSections = [
+    {
+      label: "Workspace",
+      items: [
+        { label: "Overview", icon: LayoutDashboard, path: "/dashboard" },
+        { label: "Teams", icon: Users, path: `/dashboard/teams/${teamId}` },
+        { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
+      ],
+    },
+  ];
 
   return (
     <aside className="hidden lg:flex w-[280px] bg-white dark:bg-[#111] border-r border-black/[0.04] dark:border-[#222] flex-col flex-shrink-0 transition-colors duration-200">

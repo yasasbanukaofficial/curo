@@ -4,7 +4,7 @@ import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { loginSchema, validateZod } from "../../types/auth";
-import { useLoginMutation, setCredentials } from "../../store";
+import { useLoginMutation, setCredentials, baseApi } from "../../store";
 import { useAppDispatch } from "../../app/store";
 import { useToast } from "../../components/dashboard/Toast";
 import type { LoginFormValues } from "../../types/auth";
@@ -22,6 +22,8 @@ export default function LoginPage() {
       try {
         const result = await login({ email: values.email, password: values.password }).unwrap();
         dispatch(setCredentials({ user: result.user }));
+        sessionStorage.removeItem("activeTeamId");
+        dispatch(baseApi.util.resetApiState());
         navigate("/dashboard");
       } catch (err: any) {
         showError(err?.data?.msg || "Login failed");
