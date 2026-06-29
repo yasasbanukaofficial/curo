@@ -10,6 +10,11 @@ vi.mock("../src/services/auth.service", () => ({
     refreshToken: vi.fn(),
     logoutUser: vi.fn(),
     deleteAccount: vi.fn(),
+    updateProfile: vi.fn(),
+    sendPasswordResetLink: vi.fn(),
+    verifyResetToken: vi.fn(),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
   },
 }));
 
@@ -149,6 +154,130 @@ describe("Auth API", () => {
       const res = await request(app).delete("/api/v1/auth/account");
 
       expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe("PUT /api/v1/auth/profile", () => {
+    it("updates profile with valid name", async () => {
+      vi.mocked(authService.updateProfile).mockResolvedValue({ success: true, status: 200, msg: "Profile updated successfully", data: { id: "user_1", name: "Updated", email: "test@test.com" } });
+
+      const res = await request(app)
+        .put("/api/v1/auth/profile")
+        .send({ name: "Updated" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe("Updated");
+    });
+
+    it("returns 404 when user not found", async () => {
+      vi.mocked(authService.updateProfile).mockResolvedValue({ success: false, status: 404, msg: "Account not found" });
+
+      const res = await request(app)
+        .put("/api/v1/auth/profile")
+        .send({ name: "Ghost" });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe("POST /api/v1/auth/logout", () => {
+    it("logs out successfully", async () => {
+      vi.mocked(authService.logoutUser).mockResolvedValue({ success: true, status: 200, msg: "Logged out successfully" });
+
+      const res = await request(app).post("/api/v1/auth/logout");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+  });
+
+  describe("POST /api/v1/auth/send-reset-link", () => {
+    it("sends password reset link for valid user", async () => {
+      vi.mocked(authService.sendPasswordResetLink).mockResolvedValue({ success: true, status: 200, msg: "Password reset link sent to your email." });
+
+      const res = await request(app).post("/api/v1/auth/send-reset-link");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("returns 404 when user not found", async () => {
+      vi.mocked(authService.sendPasswordResetLink).mockResolvedValue({ success: false, status: 404, msg: "Account not found" });
+
+      const res = await request(app).post("/api/v1/auth/send-reset-link");
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe("POST /api/v1/auth/forgot-password", () => {
+    it("sends reset email for existing user", async () => {
+      vi.mocked(authService.forgotPassword).mockResolvedValue({ success: true, status: 200, msg: "Password reset email sent. Check your inbox." });
+
+      const res = await request(app)
+        .post("/api/v1/auth/forgot-password")
+        .send({ email: "test@test.com" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("returns 404 for unknown email", async () => {
+      vi.mocked(authService.forgotPassword).mockResolvedValue({ success: false, status: 404, msg: "This account doesn't exist. Try a different email." });
+
+      const res = await request(app)
+        .post("/api/v1/auth/forgot-password")
+        .send({ email: "unknown@test.com" });
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe("GET /api/v1/auth/reset-password/:token", () => {
+    it("verifies a valid token", async () => {
+      vi.mocked(authService.verifyResetToken).mockResolvedValue({ success: true, status: 200, msg: "Token is valid" });
+
+      const res = await request(app).get("/api/v1/auth/reset-password/validtoken123");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("rejects invalid or expired token", async () => {
+      vi.mocked(authService.verifyResetToken).mockResolvedValue({ success: false, status: 400, msg: "This reset link has expired or is invalid. Please request a new one." });
+
+      const res = await request(app).get("/api/v1/auth/reset-password/badtoken");
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe("POST /api/v1/auth/reset-password", () => {
+    it("resets password with valid token", async () => {
+      vi.mocked(authService.resetPassword).mockResolvedValue({ success: true, status: 200, msg: "Password reset successfully" });
+
+      const res = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({ token: "validtoken", password: "newPass123" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("rejects invalid token", async () => {
+      vi.mocked(authService.resetPassword).mockResolvedValue({ success: false, status: 400, msg: "This reset link has expired or is invalid. Please request a new one." });
+
+      const res = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({ token: "badtoken", password: "newPass123" });
+
+      expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
     });
   });
