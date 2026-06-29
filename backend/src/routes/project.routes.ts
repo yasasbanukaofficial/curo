@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate, validateProjectAccess, validateRole } from "../middlewares";
 import {
   getAllProjects, getProjectById, createProject, updateProject, deleteProject,
-  addTeamToProject, removeTeamFromProject,
+  setProjectTeam, unsetProjectTeam,
   getAllProjectSecrets, createProjectSecret, updateProjectSecret, deleteProjectSecret,
   getAllProjectEnvironments, createProjectEnvironment, updateProjectEnvironment, deleteProjectEnvironment,
 } from "../controller";
@@ -14,8 +14,8 @@ router.get("/get/:projectId", authenticate, validateProjectAccess, getProjectByI
 router.post("/create", authenticate, createProject);
 router.put("/update/:projectId", authenticate, validateProjectAccess, validateRole("owner", "admin", "developer"), updateProject);
 router.delete("/delete/:projectId", authenticate, validateProjectAccess, validateRole("owner", "admin"), deleteProject);
-router.post("/:projectId/teams", authenticate, validateProjectAccess, validateRole("owner", "admin"), addTeamToProject);
-router.delete("/:projectId/teams/:teamId", authenticate, validateProjectAccess, validateRole("owner", "admin"), removeTeamFromProject);
+router.post("/:projectId/teams", authenticate, validateProjectAccess, validateRole("owner", "admin"), setProjectTeam);
+router.delete("/:projectId/teams", authenticate, validateProjectAccess, validateRole("owner", "admin"), unsetProjectTeam);
 
 router.get("/:projectId/secrets", authenticate, validateProjectAccess, getAllProjectSecrets);
 router.post("/:projectId/secrets", authenticate, validateProjectAccess, validateRole("owner", "admin", "developer"), createProjectSecret);

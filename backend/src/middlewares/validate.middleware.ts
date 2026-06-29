@@ -44,11 +44,13 @@ export const validateProjectAccess = async (
     return next();
   }
 
-  const member = await TeamMemberModel.findOne({
-    userId,
-    teamId: { $in: project.teams || [] },
-    status: "active",
-  }).lean();
+  const member = project.teamId
+    ? await TeamMemberModel.findOne({
+        userId,
+        teamId: project.teamId,
+        status: "active",
+      }).lean()
+    : null;
 
   if (!member) {
     return sendResponse(res, { success: false, status: 403, msg: "Access denied" });
