@@ -5,7 +5,6 @@ import {
   FolderKanban,
   Users,
   KeyRound,
-  ScrollText,
 
   UserCircle,
   Settings,
@@ -22,8 +21,6 @@ const navItems = [
   { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
   { label: "Teams", icon: Users, path: "/dashboard/teams" },
   { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets" },
-
-  { label: "Audit", icon: ScrollText, path: "/dashboard/audits" },
 ];
 
 export default function MobileNav() {

@@ -43,13 +43,22 @@ export const teamService = {
     }
   },
 
-  getAllTeams: async (userId: string): Promise<ITeam[]> => {
+  getAllTeams: async (userId: string): Promise<any[]> => {
     try {
       const memberships = await TeamMemberModel.find({ userId, status: "active" });
       const teamIds = memberships.map((m) => m.teamId);
 
       const teams = await TeamModel.find({ _id: { $in: teamIds } }).sort({ createdAt: -1 });
-      return teams.map((t) => t.toObject());
+      const teamData = teams.map((t) => t.toObject());
+
+      const teamsWithCounts = await Promise.all(
+        teamData.map(async (team) => {
+          const memberCount = await TeamMemberModel.countDocuments({ teamId: team._id });
+          return { ...team, memberCount };
+        }),
+      );
+
+      return teamsWithCounts;
     } catch (error) {
       console.error("DB Error:", error);
       throw new Error("DATABASE_ERROR");
@@ -81,36 +90,19 @@ export const teamService = {
         const inviterName = inviter?.name || "Someone";
 
         for (const entry of emails) {
-          const existingUser = await UserModel.findOne({ email: entry.email });
+          const token = crypto.randomBytes(32).toString("hex");
+          const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-          if (existingUser) {
-            const existingMember = await TeamMemberModel.findOne({
-              teamId: team._id,
-              userId: existingUser._id,
-            });
-            if (!existingMember) {
-              await TeamMemberModel.create({
-                teamId: team._id,
-                userId: existingUser._id,
-                role: (entry.role as TeamRole) || "developer",
-                status: "invited",
-              });
-            }
-          } else {
-            const token = crypto.randomBytes(32).toString("hex");
-            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          await TeamInviteModel.create({
+            teamId: team._id,
+            email: entry.email,
+            role: (entry.role as TeamRole) || "developer",
+            token,
+            expiresAt,
+            invitedToSignup: true,
+          });
 
-            await TeamInviteModel.create({
-              teamId: team._id,
-              email: entry.email,
-              role: (entry.role as TeamRole) || "developer",
-              token,
-              expiresAt,
-              invitedToSignup: true,
-            });
-
-            sendTeamInviteEmail(entry.email, name, inviterName, token, expiresAt);
-          }
+          sendTeamInviteEmail(entry.email, name, inviterName, token, expiresAt);
         }
       }
 

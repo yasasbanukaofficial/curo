@@ -1,38 +1,27 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import InviteJoinModal from "../components/dashboard/InviteJoinModal";
+import { useAppSelector } from "../app/store";
 
 export default function InviteAcceptPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const [details] = useState<{ teamName: string; teamAvatar?: string; memberCount: number; role: string; hasAccount: boolean } | null>(null);
-  const [checked] = useState(true);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
-  async function handleAccept() {
+  useEffect(() => {
     if (!token) return;
-  }
 
-  function handleDecline() {
-    navigate("/");
-  }
+    sessionStorage.setItem("inviteToken", token);
 
-  if (!checked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-        <p className="text-[#8E8E93]">Processing your invitation...</p>
-      </div>
-    );
-  }
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    } else {
+      navigate("/register", { replace: true });
+    }
+  }, [token, isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
-      <InviteJoinModal
-        open={!!details}
-        details={details}
-        onAccept={handleAccept}
-        onDecline={handleDecline}
-        loading={false}
-      />
+      <p className="text-[#8E8E93]">Processing your invitation...</p>
     </div>
   );
 }

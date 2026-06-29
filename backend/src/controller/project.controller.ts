@@ -25,10 +25,11 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
         msg: "Project not found or you don't have access to it",
       });
     }
+    const member = (req as any).member;
     return sendResponse(res, {
       success: true,
       status: 200,
-      data: project,
+      data: { ...project, role: member?.role ?? "viewer" },
     });
   } catch (error) {
     return sendResponse(res, {
@@ -41,20 +42,31 @@ export const getProjectById = async (req: AuthRequest, res: Response) => {
 
 export const getAllProjects = async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
+  const teamId = req.query.teamId as string | undefined;
 
   try {
     const memberships = await TeamMemberModel.find({ userId, status: "active" }).lean();
     const teamIds = memberships.map((m) => m.teamId.toString());
 
-    if (teamIds.length === 0) {
-      return sendResponse(res, { success: true, status: 200, data: [] });
-    }
+    const allProjects = await projectService.getAllProjects(userId, teamIds, teamId);
 
-    const allProjects = await projectService.getAllProjects(teamIds);
+    const projectsWithRole = allProjects.map((project) => {
+      let role = "viewer";
+      if (project.userId?.toString() === userId) {
+        role = "owner";
+      } else if (project.teamId) {
+        const membership = memberships.find(
+          (m) => m.teamId.toString() === project.teamId.toString(),
+        );
+        if (membership) role = membership.role;
+      }
+      return { ...project, role };
+    });
+
     return sendResponse(res, {
       success: true,
       status: 200,
-      data: allProjects,
+      data: projectsWithRole,
     });
   } catch (error) {
     return sendResponse(res, {
@@ -80,7 +92,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
   try {
     const created = await projectService.createProject(
       userId,
-      body as IProject,
+      body as IProject & { teamId?: string },
     );
 
     if (created) {
@@ -96,7 +108,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "Project name and description are required",
+        msg: "Project name is required",
       });
     }
 
@@ -105,14 +117,6 @@ export const createProject = async (req: AuthRequest, res: Response) => {
         success: false,
         status: 400,
         msg: "Project link must be a valid URL",
-      });
-    }
-
-    if (error.message === "DUPLICATE_PROJECT") {
-      return sendResponse(res, {
-        success: false,
-        status: 400,
-        msg: `A project named "${body?.projectName}" already exists`,
       });
     }
 
@@ -158,7 +162,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const addTeamToProject = async (req: AuthRequest, res: Response) => {
+export const setProjectTeam = async (req: AuthRequest, res: Response) => {
   const { projectId } = req.params as { projectId: string };
   const { teamId } = req.body as { teamId: string };
 
@@ -171,7 +175,7 @@ export const addTeamToProject = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    await projectService.addTeamToProject(projectId, teamId);
+    await projectService.setProjectTeam(projectId, teamId);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -188,19 +192,19 @@ export const addTeamToProject = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const removeTeamFromProject = async (req: AuthRequest, res: Response) => {
-  const { projectId, teamId } = req.params as { projectId: string; teamId: string };
+export const unsetProjectTeam = async (req: AuthRequest, res: Response) => {
+  const { projectId } = req.params as { projectId: string };
 
-  if (!projectId || !teamId) {
+  if (!projectId) {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Project ID and Team ID are required",
+      msg: "Project ID is required",
     });
   }
 
   try {
-    await projectService.removeTeamFromProject(projectId, teamId);
+    await projectService.unsetProjectTeam(projectId);
     return sendResponse(res, {
       success: true,
       status: 200,
@@ -209,6 +213,9 @@ export const removeTeamFromProject = async (req: AuthRequest, res: Response) => 
   } catch (error: any) {
     if (error.message === "PROJECT_NOT_FOUND") {
       return sendResponse(res, { success: false, status: 404, msg: "Project not found or you don't have access to it" });
+    }
+    if (error.message === "TEAM_NOT_ASSIGNED") {
+      return sendResponse(res, { success: false, status: 400, msg: "No team is currently assigned to this project" });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong. Please try again." });
   }
@@ -301,17 +308,22 @@ export const updateProjectSecret = async (req: AuthRequest, res: Response) => {
 
 export const deleteProjectSecret = async (req: AuthRequest, res: Response) => {
   const { projectId, secretId } = req.params as { projectId: string; secretId: string };
+  const userId = req.userId!;
+  const member = (req as any).member;
 
   if (!secretId) {
     return sendResponse(res, { success: false, status: 400, msg: "Secret ID is required" });
   }
 
   try {
-    await secretService.deleteProjectSecret(projectId, secretId);
+    await secretService.deleteProjectSecret(projectId, secretId, userId, member?.role);
     return sendResponse(res, { success: true, status: 200, msg: "Secret deleted successfully" });
   } catch (error: any) {
     if (error.message === "SECRET_NOT_FOUND") {
       return sendResponse(res, { success: false, status: 404, msg: "Secret not found" });
+    }
+    if (error.message === "FORBIDDEN") {
+      return sendResponse(res, { success: false, status: 403, msg: "You do not have permission to perform this action." });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the secret." });
   }
@@ -380,17 +392,22 @@ export const updateProjectEnvironment = async (req: AuthRequest, res: Response) 
 
 export const deleteProjectEnvironment = async (req: AuthRequest, res: Response) => {
   const { projectId, environmentId } = req.params as { projectId: string; environmentId: string };
+  const userId = req.userId!;
+  const member = (req as any).member;
 
   if (!environmentId) {
     return sendResponse(res, { success: false, status: 400, msg: "Environment ID is required" });
   }
 
   try {
-    await environmentService.deleteProjectEnvironment(projectId, environmentId);
+    await environmentService.deleteProjectEnvironment(projectId, environmentId, userId, member?.role);
     return sendResponse(res, { success: true, status: 200, msg: "Environment deleted successfully" });
   } catch (error: any) {
     if (error.message === "ENVIRONMENT_NOT_FOUND") {
       return sendResponse(res, { success: false, status: 404, msg: "Environment not found" });
+    }
+    if (error.message === "FORBIDDEN") {
+      return sendResponse(res, { success: false, status: 403, msg: "You do not have permission to perform this action." });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the environment." });
   }

@@ -1,9 +1,9 @@
 import { Router } from "express";
+import { getOverviewStats } from "../controller";
 import { authenticate } from "../middlewares";
-import { getAllAudits } from "../controller";
 
 const router = Router();
 
-router.get("/all", authenticate, getAllAudits);
+router.get("/overview/stats", authenticate, getOverviewStats);
 
 export default router;

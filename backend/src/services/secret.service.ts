@@ -3,8 +3,6 @@ import { EnvironmentModel } from "../models/environment.model";
 import { ISecret } from "../types/secret";
 import { encrypt } from "../util";
 
-import { auditService } from "./audit.service";
-
 export const secretService = {
   saveSecretToDB: async (userId: string, data: ISecret): Promise<boolean> => {
     const { secName, secKey, projectId, environmentId } = data;
@@ -25,13 +23,6 @@ export const secretService = {
         projectId,
         userId,
         environmentId,
-      });
-
-      auditService.createAudit({
-        userId: userId as any,
-        action: "CREATED",
-        resource: "SECRET",
-        metadata: { secName, projectId, environmentId },
       });
 
       return true;
@@ -80,13 +71,6 @@ export const secretService = {
         { returnDocument: "after" },
       );
 
-      auditService.createAudit({
-        userId: userId as any,
-        action: "UPDATED",
-        resource: "SECRET",
-        metadata: { secretId, ...data },
-      });
-
       return true;
     } catch (error: any) {
       console.error("DB Error:", error);
@@ -104,13 +88,6 @@ export const secretService = {
       });
       if (!deleted) throw new Error("SECRET_NOT_FOUND");
 
-      auditService.createAudit({
-        userId: userId as any,
-        action: "DELETED",
-        resource: "SECRET",
-        metadata: { secName: deleted.secName, projectId: deleted.projectId },
-      });
-
       return true;
     } catch (error) {
       console.error("DB Error:", error);
@@ -124,13 +101,6 @@ export const secretService = {
     try {
       const secretDoc = await SecretsModel.findOne({ _id: secretId, userId });
       if (!secretDoc) return null;
-
-      auditService.createAudit({
-        userId: userId as any,
-        action: "VIEWED",
-        resource: "SECRET",
-        metadata: { secName: secretDoc.secName, projectId: secretDoc.projectId },
-      });
 
       return {
         secName: secretDoc.secName,
@@ -186,7 +156,7 @@ export const secretService = {
     projectId: string, secretId: string, data: Partial<ISecret>,
   ): Promise<boolean> => {
     if (!secretId) throw new Error("SECRET_ID_NOT_EXISTING");
-    if (!data.secName && !data.secKey) throw new Error("INVALID_PAYLOAD");
+    if (!data.secName && !data.secKey && !data.environmentId) throw new Error("INVALID_PAYLOAD");
 
     if (data.environmentId) {
       const env = await EnvironmentModel.findOne({ _id: data.environmentId, projectId });
@@ -216,11 +186,15 @@ export const secretService = {
   },
 
   deleteProjectSecret: async (
-    projectId: string, secretId: string,
+    projectId: string, secretId: string, userId: string, role: string,
   ): Promise<boolean> => {
     try {
-      const deleted = await SecretsModel.findOneAndDelete({ _id: secretId, projectId });
-      if (!deleted) throw new Error("SECRET_NOT_FOUND");
+      const secret = await SecretsModel.findOne({ _id: secretId, projectId });
+      if (!secret) throw new Error("SECRET_NOT_FOUND");
+      if (role === "developer" && secret.userId !== userId) {
+        throw new Error("FORBIDDEN");
+      }
+      await SecretsModel.findOneAndDelete({ _id: secretId, projectId });
       return true;
     } catch (error) {
       console.error("DB Error:", error);

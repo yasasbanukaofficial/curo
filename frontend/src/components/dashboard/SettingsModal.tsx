@@ -24,6 +24,12 @@ import type {
   ChangePasswordValues,
   SettingsTab,
 } from "../../types/settings";
+import {
+  useVerifySessionQuery,
+  useDisconnectOAuthMutation,
+  clearCredentials,
+} from "../../store";
+import { useAppDispatch } from "../../app/store";
 
 interface SettingsModalProps {
   open: boolean;
@@ -39,18 +45,14 @@ function formatDate(iso: string) {
   });
 }
 
-const demoUser = {
-  name: "Demo User",
-  email: "demo@example.com",
-  provider: [] as string[],
-  createdAt: new Date().toISOString(),
-};
-
 export default function SettingsModal({ open, onClose, initialTab = "general" }: SettingsModalProps) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const toast = useToast();
   const { theme, toggle } = useTheme();
-  const user = demoUser;
+  const { data: userData } = useVerifySessionQuery();
+  const [disconnectOAuth] = useDisconnectOAuthMutation();
+  const user = (userData as any) ?? null;
   const [tab, setTab] = useState<SettingsTab>(initialTab);
 
   useEffect(() => {
@@ -202,13 +204,19 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.github.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
+                          try {
+                            await disconnectOAuth({ provider: "github" }).unwrap();
+                            dispatch(clearCredentials());
+                            navigate("/login", { replace: true });
+                          } catch (err: any) {
+                            toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
+                          }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
                     ) : (
                       <DashboardButton
-                        onClick={() => {}}
+                        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
                         className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
                       >Connect</DashboardButton>
                     )}
@@ -228,13 +236,19 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.google.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          toast.success("Google disconnected", "Your Google account has been unlinked.");
+                          try {
+                            await disconnectOAuth({ provider: "google" }).unwrap();
+                            dispatch(clearCredentials());
+                            navigate("/login", { replace: true });
+                          } catch (err: any) {
+                            toast.error(err?.data?.msg || "Failed to disconnect Google account");
+                          }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
                     ) : (
                       <DashboardButton
-                        onClick={() => {}}
+                        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/connect`}
                         className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
                       >Connect</DashboardButton>
                     )}
@@ -342,7 +356,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                   <div>
                     <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Providers</label>
                     <div className="flex items-center gap-2 h-10 px-3">
-                      {(user?.provider || []).map((p) => (
+                      {(user?.provider || []).map((p: string) => (
                         <span key={p} className="text-[10px] font-medium px-2 py-0.5 rounded-md capitalize bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]">{p}</span>
                       ))}
                     </div>
@@ -398,13 +412,19 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.github.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
+                          try {
+                            await disconnectOAuth({ provider: "github" }).unwrap();
+                            dispatch(clearCredentials());
+                            navigate("/login", { replace: true });
+                          } catch (err: any) {
+                            toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
+                          }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
                     ) : (
                       <DashboardButton
-                        onClick={() => {}}
+                        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
                         className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
                       >Connect</DashboardButton>
                     )}
@@ -429,13 +449,19 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     {connectedAccounts.google.connected ? (
                       <DashboardButton
                         onClick={async () => {
-                          toast.success("Google disconnected", "Your Google account has been unlinked.");
+                          try {
+                            await disconnectOAuth({ provider: "google" }).unwrap();
+                            dispatch(clearCredentials());
+                            navigate("/login", { replace: true });
+                          } catch (err: any) {
+                            toast.error(err?.data?.msg || "Failed to disconnect Google account");
+                          }
                         }}
                         className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
                       >Disconnect</DashboardButton>
                     ) : (
                       <DashboardButton
-                        onClick={() => {}}
+                        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/connect`}
                         className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
                       >Connect</DashboardButton>
                     )}
@@ -499,7 +525,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     "Unlimited projects",
                     "Unlimited secrets",
                     "Up to 25 team members",
-                    "Advanced audit logs",
                     "Environment sync",
                     "Priority email support",
                   ].map((f) => (
@@ -586,7 +611,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
         onClose={() => setShowDeleteModal(false)}
         variant="warning"
         title="Delete Account"
-        message="All your data will be permanently deleted, including projects, secrets, environments, integrations, and audit logs. Your account cannot be recovered."
+        message="All your data will be permanently deleted, including projects, secrets, environments, and integrations. Your account cannot be recovered."
         buttons={[
           { label: "Cancel", onClick: () => setShowDeleteModal(false), variant: "secondary" },
           { label: "Delete Account", onClick: handleDeleteAccount, variant: "destructive" },

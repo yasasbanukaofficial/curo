@@ -9,6 +9,8 @@ vi.mock("../src/services/project.service", () => ({
     createProject: vi.fn(),
     updateProject: vi.fn(),
     deleteProject: vi.fn(),
+    setProjectTeam: vi.fn(),
+    unsetProjectTeam: vi.fn(),
   },
 }));
 
@@ -153,6 +155,74 @@ describe("Projects API", () => {
       const res = await request(app).delete("/api/v1/projects/delete/nonexistent");
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe("POST /api/v1/projects/:projectId/teams", () => {
+    it("sets team on a project", async () => {
+      vi.mocked(projectService.setProjectTeam).mockResolvedValue(true);
+
+      const res = await request(app)
+        .post("/api/v1/projects/proj_1/teams")
+        .send({ teamId: "team_1" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("returns 400 when teamId missing", async () => {
+      const res = await request(app)
+        .post("/api/v1/projects/proj_1/teams")
+        .send({});
+
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 404 when project not found", async () => {
+      vi.mocked(projectService.setProjectTeam).mockRejectedValue(new Error("PROJECT_NOT_FOUND"));
+
+      const res = await request(app)
+        .post("/api/v1/projects/nonexistent/teams")
+        .send({ teamId: "team_1" });
+
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 400 when team already assigned", async () => {
+      vi.mocked(projectService.setProjectTeam).mockRejectedValue(new Error("TEAM_ALREADY_ASSIGNED"));
+
+      const res = await request(app)
+        .post("/api/v1/projects/proj_1/teams")
+        .send({ teamId: "team_1" });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe("DELETE /api/v1/projects/:projectId/teams", () => {
+    it("unsets team from a project", async () => {
+      vi.mocked(projectService.unsetProjectTeam).mockResolvedValue(true);
+
+      const res = await request(app).delete("/api/v1/projects/proj_1/teams");
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it("returns 404 when project not found", async () => {
+      vi.mocked(projectService.unsetProjectTeam).mockRejectedValue(new Error("PROJECT_NOT_FOUND"));
+
+      const res = await request(app).delete("/api/v1/projects/nonexistent/teams");
+
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 400 when no team assigned", async () => {
+      vi.mocked(projectService.unsetProjectTeam).mockRejectedValue(new Error("TEAM_NOT_ASSIGNED"));
+
+      const res = await request(app).delete("/api/v1/projects/proj_1/teams");
+
+      expect(res.status).toBe(400);
     });
   });
 });

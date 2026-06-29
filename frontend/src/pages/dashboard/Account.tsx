@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
@@ -29,6 +30,13 @@ import type {
   SettingsProfileValues,
   ChangePasswordValues,
 } from "../../types/settings";
+import {
+  useVerifySessionQuery,
+  useChangePasswordMutation,
+  useDisconnectOAuthMutation,
+  clearCredentials,
+} from "../../store";
+import { useAppDispatch } from "../../app/store";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -38,20 +46,27 @@ function formatDate(iso: string) {
   });
 }
 
-const demoUser = {
-  name: "Demo User",
-  email: "demo@example.com",
-  provider: [] as string[],
-  createdAt: new Date().toISOString(),
-};
-
 export default function Account() {
   const toast = useToast();
-  const user = demoUser;
+  const { data: userData, isLoading: sessionLoading } = useVerifySessionQuery();
+  const [changePassword] = useChangePasswordMutation();
+  const [disconnectOAuth] = useDisconnectOAuthMutation();
+
+  const user = userData as {
+    id: string;
+    name: string;
+    email: string;
+    provider: string[];
+    googleId?: string;
+    githubId?: string;
+    emailVerified: boolean;
+    onboardingComplete: boolean;
+    createdAt: string;
+  } | undefined;
+
   const [editMode, setEditMode] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [sessionLoading] = useState(false);
 
   if (sessionLoading) {
     return (
@@ -82,13 +97,17 @@ export default function Account() {
   const passwordFormik = useFormik<ChangePasswordValues>({
     initialValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
     validate: validateZod(changePasswordSchema),
-    onSubmit: (_values, { setSubmitting, resetForm }) => {
-      setTimeout(() => {
-        setSubmitting(false);
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
+      try {
+        await changePassword({ currentPassword: values.currentPassword, newPassword: values.newPassword }).unwrap();
         setShowPasswordModal(false);
         resetForm();
         toast.success("Password updated", "Your password has been changed successfully.");
-      }, 1000);
+      } catch (err: any) {
+        toast.error(err?.data?.msg || "Failed to change password");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
@@ -106,15 +125,26 @@ export default function Account() {
     setShowDeleteModal(false);
   }
 
-  function handleConnectGoogle() {
-  }
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   async function handleDisconnectGoogle() {
-    toast.success("Google disconnected", "Your Google account has been unlinked.");
-  }
-  function handleConnectGithub() {
+    try {
+      await disconnectOAuth({ provider: "google" }).unwrap();
+      dispatch(clearCredentials());
+      navigate("/login", { replace: true });
+    } catch (err: any) {
+      toast.error(err?.data?.msg || "Failed to disconnect Google account");
+    }
   }
   async function handleDisconnectGithub() {
-    toast.success("GitHub disconnected", "Your GitHub account has been unlinked.");
+    try {
+      await disconnectOAuth({ provider: "github" }).unwrap();
+      dispatch(clearCredentials());
+      navigate("/login", { replace: true });
+    } catch (err: any) {
+      toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
+    }
   }
 
   return (
@@ -267,7 +297,7 @@ export default function Account() {
                   </DashboardButton>
                 ) : (
                   <DashboardButton
-                    onClick={handleConnectGithub}
+                    onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
                     className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
                   >
                     Connect
@@ -303,7 +333,7 @@ export default function Account() {
                   </DashboardButton>
                 ) : (
                   <DashboardButton
-                    onClick={handleConnectGoogle}
+                    onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/connect`}
                     className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
                   >
                     Connect
@@ -437,7 +467,7 @@ export default function Account() {
         onClose={() => setShowDeleteModal(false)}
         variant="warning"
         title="Delete Account"
-        message="All your data will be permanently deleted, including projects, secrets, environments, integrations, and audit logs. Your account cannot be recovered."
+        message="All your data will be permanently deleted, including projects, secrets, environments, and integrations. Your account cannot be recovered."
         buttons={[
           { label: "Cancel", onClick: () => setShowDeleteModal(false), variant: "secondary" },
           { label: "Delete Account", onClick: handleDeleteAccount, variant: "destructive" },

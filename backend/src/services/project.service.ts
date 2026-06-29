@@ -1,6 +1,9 @@
 import { ProjectModel } from "../models/project.model";
 import { TeamModel } from "../models/team.model";
+import { SecretsModel } from "../models/secrets.model";
+import { EnvironmentModel } from "../models/environment.model";
 import { IProject } from "../types/project";
+import { TeamMemberModel } from "../models";
 
 function isValidUrl(url: string): boolean {
   try {
@@ -25,7 +28,7 @@ export const projectService = {
         description: projectDoc.description,
         projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
-        teams: projectDoc.teams,
+        teamId: projectDoc.teamId,
       };
     } catch (error) {
       console.error("DB Error:", error);
@@ -33,28 +36,59 @@ export const projectService = {
     }
   },
 
-  getAllProjects: async (teamIds: string[]): Promise<IProject[]> => {
+  getAllProjects: async (userId: string, teamIds: string[], teamId?: string): Promise<any[]> => {
     try {
-      const resp = await ProjectModel.find({ teams: { $in: teamIds } }).sort({
-        createdAt: -1,
-      });
+      let filter: any;
+
+      if (teamId) {
+        const membership = await TeamMemberModel.findOne({ userId, teamId, status: "active" });
+        if (!membership) return [];
+        filter = { teamId };
+      } else {
+        filter = {
+          $or: [
+            { userId, teamId: null },
+            { userId, teamId: { $exists: false } },
+            { teamId: { $in: teamIds } },
+          ],
+        };
+      }
+
+      const resp = await ProjectModel.find(filter).sort({ createdAt: -1 });
       const allProjects = resp.map((projectDoc) => ({
         _id: projectDoc._id,
         projectName: projectDoc.projectName,
         description: projectDoc.description,
         projectLink: projectDoc.projectLink,
         userId: projectDoc.userId,
-        teams: projectDoc.teams,
+        teamId: projectDoc.teamId,
+        createdAt: projectDoc.createdAt,
+        updatedAt: projectDoc.updatedAt,
       }));
-      return allProjects;
+
+      const projectsWithCounts = await Promise.all(
+        allProjects.map(async (project) => {
+          const [secretCount, environmentCount] = await Promise.all([
+            SecretsModel.countDocuments({ projectId: project._id }),
+            EnvironmentModel.countDocuments({ projectId: project._id }),
+          ]);
+          return {
+            ...project,
+            secretCount,
+            environmentCount,
+          };
+        }),
+      );
+
+      return projectsWithCounts;
     } catch (error) {
       console.error("DB Error:", error);
       throw new Error("DATABASE_ERROR");
     }
   },
-  createProject: async (userId: string, data: IProject): Promise<any> => {
-    const { projectName, description, projectLink } = data;
-    if (!projectName || !description) {
+  createProject: async (userId: string, data: IProject & { teamId?: string }): Promise<any> => {
+    const { projectName, description, projectLink, teamId } = data;
+    if (!projectName) {
       throw new Error("INVALID_PAYLOAD");
     }
 
@@ -68,13 +102,15 @@ export const projectService = {
         description,
         projectLink: projectLink || undefined,
         userId,
+        teamId: teamId || null,
       });
+
+      if (teamId) {
+        await TeamModel.findByIdAndUpdate(teamId, { $push: { projects: project._id } });
+      }
 
       return project.toObject();
     } catch (dbError: any) {
-      if (dbError.code === 11000) {
-        throw new Error("DUPLICATE_PROJECT");
-      }
       console.error("DB Error:", dbError);
       throw new Error("DATABASE_ERROR");
     }
@@ -119,10 +155,9 @@ export const projectService = {
       const project = await ProjectModel.findById(projectId);
       if (!project) throw new Error("PROJECT_NOT_FOUND");
 
-      await TeamModel.updateMany(
-        { _id: { $in: project.teams || [] } },
-        { $pull: { projects: project._id } },
-      );
+      if (project.teamId) {
+        await TeamModel.findByIdAndUpdate(project.teamId, { $pull: { projects: project._id } });
+      }
 
       const deleted = await ProjectModel.findByIdAndDelete(project._id);
       if (!deleted) throw new Error("PROJECT_NOT_FOUND");
@@ -132,7 +167,7 @@ export const projectService = {
       throw error;
     }
   },
-  addTeamToProject: async (
+  setProjectTeam: async (
     projectId: string,
     teamId: string,
   ): Promise<boolean> => {
@@ -140,17 +175,19 @@ export const projectService = {
       const project = await ProjectModel.findById(projectId);
       if (!project) throw new Error("PROJECT_NOT_FOUND");
 
-      if (project.teams?.some((id) => id.toString() === teamId)) {
+      if (project.teamId?.toString() === teamId) {
         throw new Error("TEAM_ALREADY_ASSIGNED");
       }
 
-      await ProjectModel.findByIdAndUpdate(projectId, {
-        $push: { teams: teamId },
-      });
+      const oldTeamId = project.teamId;
 
-      await TeamModel.findByIdAndUpdate(teamId, {
-        $push: { projects: projectId },
-      });
+      await ProjectModel.findByIdAndUpdate(projectId, { $set: { teamId } });
+
+      await TeamModel.findByIdAndUpdate(teamId, { $push: { projects: projectId } });
+
+      if (oldTeamId) {
+        await TeamModel.findByIdAndUpdate(oldTeamId, { $pull: { projects: projectId } });
+      }
 
       return true;
     } catch (error) {
@@ -158,21 +195,19 @@ export const projectService = {
       throw error;
     }
   },
-  removeTeamFromProject: async (
+  unsetProjectTeam: async (
     projectId: string,
-    teamId: string,
   ): Promise<boolean> => {
     try {
       const project = await ProjectModel.findById(projectId);
       if (!project) throw new Error("PROJECT_NOT_FOUND");
 
-      await ProjectModel.findByIdAndUpdate(projectId, {
-        $pull: { teams: teamId },
-      });
+      const oldTeamId = project.teamId;
+      if (!oldTeamId) throw new Error("TEAM_NOT_ASSIGNED");
 
-      await TeamModel.findByIdAndUpdate(teamId, {
-        $pull: { projects: projectId },
-      });
+      await ProjectModel.findByIdAndUpdate(projectId, { $set: { teamId: null } });
+
+      await TeamModel.findByIdAndUpdate(oldTeamId, { $pull: { projects: projectId } });
 
       return true;
     } catch (error) {

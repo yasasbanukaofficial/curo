@@ -1,20 +1,35 @@
 import { useFormik } from "formik";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { loginSchema, validateZod } from "../../types/auth";
-import { loginWithGoogle, loginWithGithub } from "../../lib/auth";
+import { useLoginMutation, setCredentials, baseApi } from "../../store";
+import { useAppDispatch } from "../../app/store";
+import { useToast } from "../../components/dashboard/Toast";
 import type { LoginFormValues } from "../../types/auth";
 
 export default function LoginPage() {
-  const [searchParams] = useSearchParams();
+  const [login] = useLoginMutation();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { error: showError } = useToast();
 
   const formik = useFormik<LoginFormValues>({
     initialValues: { email: "", password: "" },
     validate: validateZod(loginSchema),
-    onSubmit: (_values, { setSubmitting }) => {
-      setSubmitting(false);
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        const result = await login({ email: values.email, password: values.password }).unwrap();
+        dispatch(setCredentials({ user: result.user }));
+        sessionStorage.removeItem("activeTeamId");
+        dispatch(baseApi.util.resetApiState());
+        navigate("/dashboard");
+      } catch (err: any) {
+        showError(err?.data?.msg || "Login failed");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
@@ -25,8 +40,8 @@ export default function LoginPage() {
       bottomText="Don't have an account?"
       bottomLinkText="Register"
       bottomLinkHref="/register"
-      onGoogleLogin={loginWithGoogle}
-      onGithubLogin={loginWithGithub}
+      onGoogleLogin={() => { window.location.href = import.meta.env.VITE_API_URL + "/auth/google"; }}
+      onGithubLogin={() => { window.location.href = import.meta.env.VITE_API_URL + "/auth/github"; }}
     >
       <form onSubmit={formik.handleSubmit} className="space-y-5" noValidate>
         <AuthField
