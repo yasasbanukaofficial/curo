@@ -1,22 +1,19 @@
-import type { BaseQueryFn } from "@reduxjs/toolkit/query";
-import axiosInstance from "./axiosInstance";
-import type { AxiosRequestConfig, AxiosError } from "axios";
+import apiClient from "./axiosClient";
 
-export const axiosBaseQuery =
-  (): BaseQueryFn<{
-    url: string;
-    method: AxiosRequestConfig["method"];
-    body?: AxiosRequestConfig["data"];
-    params?: AxiosRequestConfig["params"];
-  }> =>
-  async ({ url, method, body, params }) => {
+const axiosBaseQuery =
+  () =>
+  async ({ url, method, body, params }: { url: string; method: string; body?: any; params?: Record<string, any> }) => {
     try {
-      const result = await axiosInstance({ url, method, data: body, params });
-      return { data: result.data };
-    } catch (axiosError) {
-      const err = axiosError as AxiosError;
+      const result = await apiClient({ url, method, data: body, params });
+      return { data: result.data.data };
+    } catch (err: any) {
       return {
-        error: { status: err.response?.status, data: err.response?.data },
+        error: {
+          status: err.response?.status ?? 500,
+          data: err.response?.data ?? { msg: "Network error" },
+        },
       };
     }
   };
+
+export default axiosBaseQuery;

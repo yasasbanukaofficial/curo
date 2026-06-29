@@ -2,20 +2,13 @@ import { useEffect, useState, useRef, type ClipboardEvent, type KeyboardEvent } 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import { Button } from "../../components/ui/Button";
-import { useVerifyOtpMutation } from "../../features/auth/authApi";
-import { useAppDispatch } from "../../app/hooks";
-import { setAuthenticated } from "../../features/auth/authSlice";
-import { useToast } from "../../components/dashboard/Toast";
 
 const OTP_LENGTH = 6;
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
-  const toast = useToast();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [error, setError] = useState("");
@@ -65,30 +58,6 @@ export default function VerifyEmailPage() {
       setError("Please enter the full 6-digit code");
       return;
     }
-    try {
-      const result = await verifyOtp({
-        otp: code,
-        token: token || undefined,
-      }).unwrap();
-      if (result.success && result.data) {
-        dispatch(setAuthenticated({
-          user: {
-            id: result.data.id || "",
-            name: result.data.name || "",
-            email: result.data.email || "",
-            provider: result.data.provider || [],
-            emailVerified: true,
-            createdAt: "",
-          },
-        }));
-        toast.success("Email verified", "Welcome to Curo!");
-        navigate("/dashboard", { replace: true });
-      } else {
-        setError(result.msg || "Invalid code");
-      }
-    } catch (err: any) {
-      setError(err?.data?.msg || "Something went wrong. Please try again.");
-    }
   };
 
   if (!token) return null;
@@ -130,9 +99,8 @@ export default function VerifyEmailPage() {
           size="md"
           className="w-full"
           onClick={handleSubmit}
-          disabled={isVerifying}
         >
-          {isVerifying ? "Verifying..." : "Verify Email"}
+          Verify Email
         </Button>
       </div>
     </AuthFormLayout>

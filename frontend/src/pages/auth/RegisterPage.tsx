@@ -1,28 +1,25 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { useFormik } from "formik";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { registerSchema, validateZod } from "../../types/auth";
-import { loginWithGoogle, loginWithGithub } from "../../lib/auth";
-import { useRegisterMutation } from "../../features/auth/authApi";
+import { useRegisterMutation, useVerifyEmailMutation, useResendOtpMutation, setCredentials } from "../../store";
+import { useAppDispatch } from "../../app/store";
 import { useToast } from "../../components/dashboard/Toast";
 import type { RegisterFormValues } from "../../types/auth";
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [register] = useRegisterMutation();
-  const toast = useToast();
+  const [verifyEmail] = useVerifyEmailMutation();
+  const [resendOtp] = useResendOtpMutation();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { error: showError, success: showSuccess } = useToast();
 
-  useEffect(() => {
-    const inviteToken = searchParams.get("invite");
-    if (inviteToken) {
-      sessionStorage.setItem("inviteToken", inviteToken);
-      sessionStorage.setItem("pendingInvite", "true");
-    }
-  }, [searchParams]);
+  const [showOtpStep, setShowOtpStep] = useState(false);
+  const [emailForOtp, setEmailForOtp] = useState("");
 
   const formik = useFormik<RegisterFormValues>({
     initialValues: {
@@ -32,29 +29,89 @@ export default function RegisterPage() {
       confirmPassword: "",
     },
     validate: validateZod(registerSchema),
-    onSubmit: async (values, { setSubmitting, setFieldError }) => {
+    onSubmit: async (values, { setSubmitting }) => {
       try {
         const result = await register({
           name: values.name,
           email: values.email,
           password: values.password,
         }).unwrap();
-        if (result.success) {
-          toast.success("Account created", "Please verify your email to continue.");
-          const token = result.data?.verificationToken;
-          navigate(token ? `/verify-email?token=${token}` : "/login");
+        if (result.user) {
+          dispatch(setCredentials({ user: result.user }));
+          navigate("/dashboard");
         } else {
-          setFieldError("email", result.msg || "Registration failed");
+          setShowOtpStep(true);
+          setEmailForOtp(values.email);
+          showSuccess("Account created! Please check your email for the verification code.");
         }
       } catch (err: any) {
-        const msg = err?.data?.msg || "Something went wrong. Please try again.";
-        setFieldError("email", msg);
-        toast.error("Registration failed", msg);
+        showError(err?.data?.msg || "Registration failed");
       } finally {
         setSubmitting(false);
       }
     },
   });
+
+  const [otp, setOtp] = useState("");
+
+  async function handleVerifyOtp() {
+    try {
+      const result = await verifyEmail({ otp, token: undefined }).unwrap();
+      dispatch(setCredentials({ user: result.user }));
+      navigate("/dashboard");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Verification failed");
+    }
+  }
+
+  async function handleResendOtp() {
+    try {
+      await resendOtp(undefined).unwrap();
+      showSuccess("Verification code resent");
+    } catch (err: any) {
+      showError(err?.data?.msg || "Failed to resend code");
+    }
+  }
+
+  if (showOtpStep) {
+    return (
+      <AuthFormLayout
+        title="Verify your email"
+        subtitle={"Enter the 6-digit code sent to " + emailForOtp}
+        bottomText=""
+        bottomLinkText=""
+        bottomLinkHref=""
+        showOAuth={false}
+      >
+        <div className="space-y-5">
+          <AuthField
+            formik={{ values: { otp }, errors: {}, touched: {}, handleChange: (e: any) => setOtp(e.target.value) } as any}
+            name="otp"
+            label="Verification Code"
+            placeholder="000000"
+          />
+          <Button
+            type="button"
+            variant="primary"
+            size="md"
+            className="w-full"
+            onClick={handleVerifyOtp}
+          >
+            Verify Email
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className="w-full"
+            onClick={handleResendOtp}
+          >
+            Resend Code
+          </Button>
+        </div>
+      </AuthFormLayout>
+    );
+  }
 
   return (
     <AuthFormLayout
@@ -63,8 +120,8 @@ export default function RegisterPage() {
       bottomText="Already have an account?"
       bottomLinkText="Sign in"
       bottomLinkHref="/login"
-      onGoogleLogin={loginWithGoogle}
-      onGithubLogin={loginWithGithub}
+      onGoogleLogin={() => { window.location.href = import.meta.env.VITE_API_URL + "/auth/google"; }}
+      onGithubLogin={() => { window.location.href = import.meta.env.VITE_API_URL + "/auth/github"; }}
     >
       <form onSubmit={formik.handleSubmit} className="space-y-5" noValidate>
         <AuthField

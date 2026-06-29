@@ -148,7 +148,7 @@ export default function AnimationSection() {
               <div className="secret-source bg-[#F5F5F7] p-4 rounded-[16px] w-[200px] shadow-[0_2px_20px_rgba(0,0,0,0.06)] border border-white/50 relative mt-8">
                 <div className="flex items-center gap-2 mb-3 text-[#1D1D1F] font-medium text-sm"><SiGithub className="w-4 h-4" /> GitHub Secrets</div>
                 <div className="text-xs text-[#6E6E73] font-mono leading-relaxed">
-                  18 variables, no audit trail
+                  18 variables
                 </div>
                 <div className="warning-dot absolute -top-1 -right-1 w-3 h-3 bg-[#FF3B30] rounded-full"></div>
               </div>

@@ -1,29 +1,19 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "../features/auth/authSlice";
-import projectReducer from "../features/project/projectSlice";
-import secretReducer from "../features/secret/secretSlice";
-import environmentReducer from "../features/environment/environmentSlice";
-import versionReducer from "../features/version/versionSlice";
-import auditReducer from "../features/audit/auditSlice";
-import teamReducer from "../features/team/teamSlice";
-import { baseApi } from "../api/baseApi";
+import { useDispatch, useSelector } from "react-redux";
+import type { TypedUseSelectorHook } from "react-redux";
+import { baseApi } from "../store/baseApi";
+import authReducer from "../store/slices/authSlice";
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
+    api: baseApi.reducer,
     auth: authReducer,
-    project: projectReducer,
-    secret: secretReducer,
-    environment: environmentReducer,
-    version: versionReducer,
-    audit: auditReducer,
-    team: teamReducer,
-    [baseApi.reducerPath]: baseApi.reducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(baseApi.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-export default store;
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+export const useAppDispatch: () => AppDispatch = () => useDispatch<AppDispatch>();

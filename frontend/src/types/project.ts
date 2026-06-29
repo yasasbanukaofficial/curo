@@ -6,14 +6,13 @@ export interface ProjectOption {
 export interface Project {
   _id: string;
   projectName: string;
-  description: string;
+  description?: string;
   projectLink?: string;
   userId: string;
+  role?: string;
   secretCount: number;
   environmentCount: number;
-  teamCount: number;
-  memberCount: number;
-  teams: string[];
+  teamId: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -5,5 +5,5 @@ export interface IProject {
   description: string;
   projectLink?: string;
   userId: Types.ObjectId;
-  teams?: Types.ObjectId[];
+  teamId?: Types.ObjectId | null;
 }
