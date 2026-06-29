@@ -8,12 +8,11 @@ import {
   Users,
   Settings,
   UserCircle,
-  ChevronDown,
   Sun,
   LogOut,
   Plus,
 } from "lucide-react";
-import { useGetProjectsQuery, useVerifySessionQuery, useLogoutMutation, clearCredentials, baseApi } from "../../store";
+import { useVerifySessionQuery, useLogoutMutation, clearCredentials, baseApi } from "../../store";
 import { useAppDispatch } from "../../app/store";
 import { useGetTeamsQuery } from "../../store";
 
@@ -25,66 +24,16 @@ function useActiveTeamId() {
 }
 
 function ProjectSwitcher() {
-  const [open, setOpen] = useState(false);
-  const { data: allProjects = [] } = useGetProjectsQuery();
-  const projects = (allProjects as any[]) ?? [];
-  const [, setSelected] = useState("");
-  const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  if (projects.length === 0) {
-    return (
-      <DashboardButton
-        onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
-        className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] bg-white hover:bg-[#F5F5F7] rounded-xl border border-black/20 justify-start"
-      >
-        <Plus className="w-4 h-4" />
-        Create new project
-      </DashboardButton>
-    );
-  }
-
   return (
-    <div ref={ref} className="relative">
-      <DashboardButton
-        onClick={() => setOpen(!open)}
-        className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] justify-between"
-      >
-        <span className="truncate font-normal">Switch project</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </DashboardButton>
-
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 transition-colors duration-200">
-          {projects.map((p: any) => {
-            return (
-              <DashboardButton
-                key={p._id}
-                onClick={() => {
-                  setSelected(p.projectName);
-                  setOpen(false);
-                  navigate(`/dashboard/project/${p._id}`);
-                }}
-                className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
-              >
-                <FolderKanban className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="flex-1 text-left truncate">{p.projectName}</span>
-              </DashboardButton>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <DashboardButton
+      onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
+      className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] justify-start"
+    >
+      <Plus className="w-4 h-4" />
+      Create new project
+    </DashboardButton>
   );
 }
 
