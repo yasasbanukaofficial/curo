@@ -17,7 +17,7 @@ import {
   getGithubEmail,
 } from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
-import { hash, encrypt } from "../util";
+import { hash, encrypt, tokenHash } from "../util";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../util/email";
 
 export const authService = {
@@ -403,13 +403,14 @@ export const authService = {
       return { success: false, status: 404, msg: "This account doesn't exist. Try a different email." };
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const token = crypto.randomBytes(32).toString("hex");
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = tokenHash.gen(rawToken);
     await UserModel.findByIdAndUpdate(user._id, {
       resetPasswordOTP: otp,
-      resetPasswordToken: token,
+      resetPasswordToken: hashedToken,
       resetPasswordExpires: new Date(Date.now() + 10 * 60 * 1000),
     });
-    sendPasswordResetEmail(user.email, token);
+    sendPasswordResetEmail(user.email, rawToken);
     return {
       success: true,
       status: 200,
@@ -418,9 +419,10 @@ export const authService = {
   },
 
   resetPassword: async (token: string, newPassword: string) => {
+    const hashedToken = tokenHash.gen(token);
     const user = await UserModel.findOne({
       $or: [
-        { resetPasswordToken: token },
+        { resetPasswordToken: hashedToken },
         { resetPasswordOTP: token },
       ],
       resetPasswordExpires: { $gt: new Date() },
@@ -505,6 +507,65 @@ export const authService = {
     });
 
     return { success: true };
+  },
+
+  verifyResetToken: async (token: string) => {
+    const hashedToken = tokenHash.gen(token);
+    const user = await UserModel.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      return { success: false, status: 400, msg: "This reset link has expired or is invalid. Please request a new one." };
+    }
+    return { success: true, status: 200, msg: "Token is valid" };
+  },
+
+  sendPasswordResetLink: async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = tokenHash.gen(rawToken);
+    await UserModel.findByIdAndUpdate(userId, {
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    sendPasswordResetEmail(user.email, rawToken);
+    return {
+      success: true,
+      status: 200,
+      msg: "Password reset link sent to your email.",
+    };
+  },
+
+  updateProfile: async (userId: string, data: { name: string }) => {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { name: data.name },
+      { returnDocument: "after" },
+    ).select("-password -refreshTokens -googleRefreshToken -githubAccessToken");
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    return {
+      success: true,
+      status: 200,
+      msg: "Profile updated successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        provider: user.provider,
+        googleId: user.googleId,
+        githubId: user.githubId,
+        emailVerified: user.emailVerified,
+        onboardingComplete: user.onboardingComplete,
+        onboardingSkipped: user.onboardingSkipped,
+        createdAt: user.createdAt,
+      },
+    };
   },
 
   changePassword: async (userId: string, currentPassword: string, newPassword: string) => {

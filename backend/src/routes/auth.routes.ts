@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { registerUser, loginUser, initiateGoogleAuth, handleGoogleCallback, initiateGithubAuth, handleGithubCallback, refreshToken, getCurrentUser, logoutUser, verifyEmailOTP, verifyEmailToken, resendVerification, forgotPassword, resetPassword, changePassword, disconnectOAuth, markOnboardingComplete, deleteAccount } from "../controller";
+import { registerUser, loginUser, initiateGoogleAuth, handleGoogleCallback, initiateGithubAuth, handleGithubCallback, refreshToken, getCurrentUser, logoutUser, verifyEmailOTP, verifyEmailToken, resendVerification, forgotPassword, resetPassword, changePassword, updateProfile, sendPasswordResetLink, verifyResetToken, disconnectOAuth, markOnboardingComplete, deleteAccount } from "../controller";
 import { authenticate, validate } from "../middlewares";
-import { loginSchema, refreshTokenSchema, registerSchema, verifyOtpSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from "../validators";
+import { loginSchema, refreshTokenSchema, registerSchema, verifyOtpSchema, forgotPasswordSchema, resetPasswordSchema, updateProfileSchema, changePasswordSchema } from "../validators";
 
 const router = Router();
 
@@ -16,6 +16,9 @@ router.post("/verify-email/resend", authenticate, resendVerification);
 router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
 router.post("/reset-password", validate(resetPasswordSchema), resetPassword);
 router.put("/change-password", authenticate, validate(changePasswordSchema), changePassword);
+router.put("/profile", authenticate, validate(updateProfileSchema), updateProfile);
+router.post("/send-reset-link", authenticate, sendPasswordResetLink);
+router.get("/reset-password/:token", verifyResetToken);
 router.post("/disconnect-oauth", authenticate, disconnectOAuth);
 router.get("/google", initiateGoogleAuth);
 router.get("/google/connect", initiateGoogleAuth);
