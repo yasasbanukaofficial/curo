@@ -27,7 +27,9 @@ import type {
 import {
   useVerifySessionQuery,
   useDisconnectOAuthMutation,
+  useDeleteAccountMutation,
   clearCredentials,
+  baseApi,
 } from "../../store";
 import { useAppDispatch } from "../../app/store";
 
@@ -52,6 +54,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const { theme, toggle } = useTheme();
   const { data: userData } = useVerifySessionQuery();
   const [disconnectOAuth] = useDisconnectOAuthMutation();
+  const [deleteAccount] = useDeleteAccountMutation();
   const user = (userData as any) ?? null;
   const [tab, setTab] = useState<SettingsTab>(initialTab);
 
@@ -103,9 +106,18 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
     setShowPasswordModal(true);
   }
 
-  function handleDeleteAccount() {
-    setShowDeleteModal(false);
-    onClose();
+  async function handleDeleteAccount() {
+    try {
+      await deleteAccount().unwrap();
+      setShowDeleteModal(false);
+      onClose();
+      dispatch(baseApi.util.resetApiState());
+      dispatch(clearCredentials());
+      navigate("/login", { replace: true });
+    } catch {
+      setShowDeleteModal(false);
+      toast.error("Failed to delete account. Please try again.");
+    }
   }
 
   if (!open) return null;
