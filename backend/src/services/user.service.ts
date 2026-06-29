@@ -6,14 +6,21 @@ export const userService = {
     const teamIds = memberships.map((m) => m.teamId);
 
     const teams = teamIds.length > 0
-      ? await TeamModel.find({ _id: { $in: teamIds } })
+      ? await TeamModel.find({ _id: { $in: teamIds } }).lean()
       : [];
+    const teamMap = new Map(teams.map((t) => [t._id.toString(), t.name]));
 
-    const projects = teamIds.length > 0
-      ? await ProjectModel.find({ teams: { $in: teamIds } }).sort({ createdAt: -1 })
-      : [];
+    const allProjects = await ProjectModel.find({
+      $or: [
+        { userId, teamId: null },
+        { userId, teamId: { $exists: false } },
+        { teamId: { $in: teamIds } },
+      ],
+    })
+      .sort({ updatedAt: -1 })
+      .lean();
 
-    const projectIds = projects.map((p) => p._id);
+    const projectIds = allProjects.map((p) => p._id);
 
     const [secretCount, environmentCount] = projectIds.length > 0
       ? await Promise.all([
@@ -23,18 +30,22 @@ export const userService = {
       : [0, 0];
 
     const projectsWithCounts = await Promise.all(
-      projects.map(async (project) => {
+      allProjects.map(async (project) => {
         const [sc, ec] = projectIds.length > 0
           ? await Promise.all([
               SecretsModel.countDocuments({ projectId: project._id }),
               EnvironmentModel.countDocuments({ projectId: project._id }),
             ])
           : [0, 0];
+        const tid = project.teamId?.toString() || null;
         return {
           _id: project._id,
           projectName: project.projectName,
+          teamId: tid,
+          teamName: tid ? teamMap.get(tid) || null : null,
           secretCount: sc,
           environmentCount: ec,
+          updatedAt: project.updatedAt || undefined,
         };
       }),
     );
@@ -48,21 +59,21 @@ export const userService = {
           .lean()
       : [];
 
-    const recentSecretsWithProject = await Promise.all(
-      recentSecrets.map(async (secret) => {
-        const project = projects.find((p) => p._id.toString() === secret.projectId.toString());
-        return {
-          _id: secret._id,
-          secName: secret.secName,
-          projectId: secret.projectId,
-          projectName: project?.projectName || "",
-        };
-      }),
-    );
+    const recentSecretsWithProject = recentSecrets.map((secret) => {
+      const project = allProjects.find((p) => p._id.toString() === secret.projectId.toString());
+      const created = parseInt(secret._id.toString().substring(0, 8), 16) * 1000;
+      return {
+        _id: secret._id,
+        secName: secret.secName,
+        projectId: secret.projectId,
+        projectName: project?.projectName || "",
+        createdAt: new Date(created).toISOString(),
+      };
+    });
 
     return {
       teams: teams.length,
-      projects: projects.length,
+      projects: allProjects.length,
       secrets: secretCount,
       environments: environmentCount,
       recentProjects,

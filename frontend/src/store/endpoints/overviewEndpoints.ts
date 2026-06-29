@@ -1,22 +1,30 @@
 import { baseApi } from "../baseApi";
 
+export interface RecentProject {
+  _id: string;
+  projectName: string;
+  teamId: string | null;
+  teamName: string | null;
+  secretCount: number;
+  environmentCount: number;
+  updatedAt: string | undefined;
+}
+
+export interface RecentSecret {
+  _id: string;
+  secName: string;
+  projectId: string;
+  projectName: string;
+  createdAt: string | undefined;
+}
+
 export interface OverviewStats {
   teams: number;
   projects: number;
   secrets: number;
   environments: number;
-  recentProjects: {
-    _id: string;
-    projectName: string;
-    secretCount: number;
-    environmentCount: number;
-  }[];
-  recentSecrets: {
-    _id: string;
-    secName: string;
-    projectId: string;
-    projectName: string;
-  }[];
+  recentProjects: RecentProject[];
+  recentSecrets: RecentSecret[];
 }
 
 export const overviewEndpoints = baseApi.injectEndpoints({
