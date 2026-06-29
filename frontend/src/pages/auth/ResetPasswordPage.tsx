@@ -6,6 +6,8 @@ import AuthFormLayout from "../../components/ui/AuthFormLayout";
 import AuthField from "../../components/ui/AuthField";
 import { Button } from "../../components/ui/Button";
 import { validateZod } from "../../types/auth";
+import { useVerifyResetTokenQuery, useResetPasswordMutation } from "../../store";
+import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 
 const resetPasswordSchema = z
   .object({
@@ -21,6 +23,8 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const { isLoading: tokenLoading, isError: tokenError } = useVerifyResetTokenQuery(token || "", { skip: !token });
+  const [resetPassword, { isLoading: isResetting }] = useResetPasswordMutation();
 
   useEffect(() => {
     if (!token) navigate("/login", { replace: true });
@@ -29,10 +33,56 @@ export default function ResetPasswordPage() {
   const formik = useFormik({
     initialValues: { password: "", confirmPassword: "" },
     validate: validateZod(resetPasswordSchema),
-    onSubmit: (_values, { setSubmitting }) => {
-      setSubmitting(false);
+    onSubmit: async (values, { setSubmitting, setFieldError }) => {
+      try {
+        await resetPassword({ token: token!, password: values.password }).unwrap();
+        navigate("/login", { replace: true });
+      } catch (err: any) {
+        setFieldError("password", err?.data?.msg || "Failed to reset password. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
+
+  if (tokenLoading) {
+    return (
+      <AuthFormLayout
+        title="Verifying..."
+        subtitle="Please wait while we verify your reset link."
+        showOAuth={false}
+        bottomText=""
+        bottomLinkText=""
+        bottomLinkHref=""
+      >
+        <div className="flex justify-center py-8">
+          <LoadingSpinner size={28} />
+        </div>
+      </AuthFormLayout>
+    );
+  }
+
+  if (tokenError) {
+    return (
+      <AuthFormLayout
+        title="Invalid or expired link"
+        subtitle="This password reset link has expired or is invalid. Please request a new one."
+        showOAuth={false}
+        bottomText=""
+        bottomLinkText="Request new link"
+        bottomLinkHref="/forgot-password"
+      >
+        <Button
+          onClick={() => navigate("/forgot-password")}
+          variant="primary"
+          size="md"
+          className="w-full"
+        >
+          Request New Reset Link
+        </Button>
+      </AuthFormLayout>
+    );
+  }
 
   return (
     <AuthFormLayout
@@ -66,9 +116,9 @@ export default function ResetPasswordPage() {
           variant="primary"
           size="md"
           className="w-full"
-          disabled={formik.isSubmitting}
+          disabled={formik.isSubmitting || isResetting}
         >
-          {formik.isSubmitting ? "Resetting..." : "Reset Password"}
+          {formik.isSubmitting || isResetting ? "Resetting..." : "Reset Password"}
         </Button>
       </form>
     </AuthFormLayout>
