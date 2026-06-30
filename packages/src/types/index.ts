@@ -4,7 +4,6 @@ export type Route =
   | 'dashboard'
   | 'projects'
   | 'project'
-  | 'pull'
   | 'settings'
   | 'logout';
 

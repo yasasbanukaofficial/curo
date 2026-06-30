@@ -9,6 +9,8 @@ interface ProjectContextValue {
   secrets: Secret[];
   isLoadingProjects: boolean;
   isLoadingSecrets: boolean;
+  projectsError: string | null;
+  secretsError: string | null;
   fetchProjects: () => Promise<void>;
   selectProject: (project: Project | null) => void;
   fetchSecrets: (projectId: string) => Promise<void>;
@@ -22,12 +24,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingSecrets, setIsLoadingSecrets] = useState(false);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
+  const [secretsError, setSecretsError] = useState<string | null>(null);
 
   const fetchProjects = useCallback(async () => {
     setIsLoadingProjects(true);
+    setProjectsError(null);
     try {
       const data = await projectApi.getProjects();
       setProjects(data);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.message ?? 'failed to load projects';
+      setProjectsError(msg);
+      if (err?.response?.status === 401) setProjectsError('session expired — sign in again');
     } finally {
       setIsLoadingProjects(false);
     }
@@ -40,9 +49,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const fetchSecrets = useCallback(async (projectId: string) => {
     setIsLoadingSecrets(true);
+    setSecretsError(null);
     try {
       const data = await secretApi.getSecrets(projectId);
       setSecrets(data);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.message ?? 'failed to load secrets';
+      setSecretsError(msg);
+      if (err?.response?.status === 401) setSecretsError('session expired — sign in again');
     } finally {
       setIsLoadingSecrets(false);
     }
@@ -50,7 +64,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProjectContext.Provider
-      value={{ projects, selectedProject, secrets, isLoadingProjects, isLoadingSecrets, fetchProjects, selectProject, fetchSecrets }}
+      value={{ projects, selectedProject, secrets, isLoadingProjects, isLoadingSecrets, projectsError, secretsError, fetchProjects, selectProject, fetchSecrets }}
     >
       {children}
     </ProjectContext.Provider>

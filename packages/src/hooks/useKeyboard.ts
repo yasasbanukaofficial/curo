@@ -16,14 +16,14 @@ interface KeyboardBindings {
 export function useKeyboard(bindings: KeyboardBindings) {
   useInput(
     (input, key) => {
-      if (key.upArrow && bindings.onUp) bindings.onUp();
-      else if (key.downArrow && bindings.onDown) bindings.onDown();
-      else if (key.leftArrow && bindings.onLeft) bindings.onLeft();
-      else if (key.rightArrow && bindings.onRight) bindings.onRight();
-      else if (key.return && bindings.onEnter) bindings.onEnter();
-      else if (key.escape && bindings.onEscape) bindings.onEscape();
-      else if (key.backspace && bindings.onBackspace) bindings.onBackspace();
-      else if (input === '/' && bindings.onSlash) bindings.onSlash();
+      if (key.upArrow && bindings.onUp) { bindings.onUp(); return true; }
+      if (key.downArrow && bindings.onDown) { bindings.onDown(); return true; }
+      if (key.leftArrow && bindings.onLeft) { bindings.onLeft(); return true; }
+      if (key.rightArrow && bindings.onRight) { bindings.onRight(); return true; }
+      if (key.return && bindings.onEnter) { bindings.onEnter(); return true; }
+      if (key.escape && bindings.onEscape) { bindings.onEscape(); return true; }
+      if (key.backspace && bindings.onBackspace) { bindings.onBackspace(); return true; }
+      if (input === '/' && bindings.onSlash) { bindings.onSlash(); return true; }
     },
     { isActive: bindings.isActive ?? true },
   );

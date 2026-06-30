@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Box, Text } from 'ink';
-import BigText from 'ink-big-text';
-import Gradient from 'ink-gradient';
-import Spinner from 'ink-spinner';
 import { useAuthStore } from '../store/auth.js';
+import { useScrollback } from '../store/scrollback.js';
+import { useSpinnerFrame } from '../hooks/useSpinnerFrame.js';
+import * as colors from '../theme/colors.js';
 import type { Route } from '../types/index.js';
 
 interface SplashProps {
@@ -12,13 +12,17 @@ interface SplashProps {
 
 export function Splash({ goTo }: SplashProps) {
   const { checkAuth } = useAuthStore();
+  const { push } = useScrollback();
+  const spinner = useSpinnerFrame();
 
   useEffect(() => {
     const timer = setTimeout(async () => {
       const hasSession = await checkAuth();
       if (hasSession) {
+        push('success', 'Session restored');
         goTo('dashboard');
       } else {
+        push('info', 'No active session — sign in to continue');
         goTo('login');
       }
     }, 1500);
@@ -26,28 +30,9 @@ export function Splash({ goTo }: SplashProps) {
   }, []);
 
   return (
-    <Box flexDirection="column" paddingY={1}>
-      {/* ASCII wordmark */}
-      <Gradient name="mind">
-        <BigText text="CURO" font="chrome" align="left" letterSpacing={1} />
-      </Gradient>
-
-      {/* Tagline */}
-      <Box marginLeft={1} marginTop={0} gap={2}>
-        <Text color="gray">Secure Environment Management</Text>
-        <Text color="gray" dimColor>v1.0.0</Text>
-      </Box>
-
-      {/* Separator */}
-      <Box marginTop={1} marginLeft={1}>
-        <Text color="gray">{'─'.repeat(48)}</Text>
-      </Box>
-
-      {/* Loading */}
-      <Box marginTop={1} marginLeft={2} gap={2}>
-        <Text color="cyan"><Spinner type="dots" /></Text>
-        <Text color="gray" dimColor>Initializing session…</Text>
-      </Box>
+    <Box gap={1}>
+      <Text color={colors.accent}>{spinner}</Text>
+      <Text color={colors.textSecondary}>checking session...</Text>
     </Box>
   );
 }

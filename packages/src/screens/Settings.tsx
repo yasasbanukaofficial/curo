@@ -1,103 +1,114 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
+import TextInput from 'ink-text-input';
 import { useKeyboard } from '../hooks/useKeyboard.js';
-import { useUiStore } from '../store/ui.js';
-import { clearAll, getToken } from '../services/token.js';
-import { API_URL, APP_VERSION } from '../services/env.js';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
+import { useAuthStore } from '../store/auth.js';
+import { useScrollback } from '../store/scrollback.js';
+import { KeyHints } from '../components/KeyHints.js';
+import { clearAll } from '../services/token.js';
+import { APP_VERSION } from '../services/env.js';
+import * as colors from '../theme/colors.js';
+import { caret } from '../theme/icons.js';
 import type { Route } from '../types/index.js';
 
 interface SettingsProps {
   goTo: (route: Route) => void;
 }
 
+const hints = [
+  { key: '↑↓', label: 'navigate' },
+  { key: 'enter', label: 'select' },
+  { key: 'esc', label: 'back' },
+];
+
+const confirmHints = [
+  { key: 'enter', label: 'confirm' },
+  { key: 'esc', label: 'cancel' },
+];
+
+const menuItems = [
+  { value: 'clear' as const, label: 'clear local data', hint: 'remove credentials and token cache', danger: true },
+];
+
 export function Settings({ goTo }: SettingsProps) {
-  const { addNotification } = useUiStore();
+  const { columns } = useTerminalSize();
+  const boxWidth = Math.min(72, Math.max(40, columns - 8));
+  const { user, isAuthenticated } = useAuthStore();
+  const { push } = useScrollback();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [confirmClear, setConfirmClear] = useState(false);
-
-  const menuItems = [
-    { value: 'clear', label: 'clear local data', hint: 'remove credentials and token cache', danger: true },
-  ] as const;
+  const [confirmText, setConfirmText] = useState('');
 
   useKeyboard({
     onUp: () => { setConfirmClear(false); setSelectedIndex((i) => Math.max(0, i - 1)); },
     onDown: () => { setConfirmClear(false); setSelectedIndex((i) => Math.min(menuItems.length - 1, i + 1)); },
-    onEscape: () => { if (confirmClear) setConfirmClear(false); else goTo('dashboard'); },
+    onEscape: () => { if (confirmClear) { setConfirmClear(false); setConfirmText(''); } else goTo('dashboard'); },
     onEnter: () => {
       if (menuItems[selectedIndex]?.value === 'clear') {
         if (!confirmClear) { setConfirmClear(true); return; }
+        if (confirmText.toLowerCase() !== 'yes') return;
         clearAll();
-        addNotification('info', 'local data cleared');
+        push('info', 'Local data cleared');
         goTo('login');
       }
     },
   });
 
-  const authed = !!getToken();
-
   return (
-    <Box flexDirection="column" paddingY={1} gap={1}>
-
-      {/* Config info */}
-      <Box gap={1}>
-        <Text color="gray" dimColor>──</Text>
-        <Text color="gray" dimColor>configuration</Text>
-      </Box>
-
-      <Box flexDirection="column" gap={0} paddingLeft={2}>
+    <Box flexDirection="column" alignItems="center" gap={1}>
+      <Box
+        borderStyle="round"
+        borderColor={colors.border}
+        paddingX={1}
+        flexDirection="column"
+        width={boxWidth}
+      >
         <Box gap={1}>
-          <Box width={16}><Text color="gray" dimColor>api url</Text></Box>
-          <Text color="white">{API_URL}</Text>
-        </Box>
-        <Box gap={1}>
-          <Box width={16}><Text color="gray" dimColor>version</Text></Box>
-          <Text color="white">v{APP_VERSION}</Text>
+          <Box width={8}><Text color={colors.textDim}>name</Text></Box>
+          <Text color={colors.textSecondary}>{user?.name ?? '—'}</Text>
         </Box>
         <Box gap={1}>
-          <Box width={16}><Text color="gray" dimColor>auth</Text></Box>
-          <Text color={authed ? 'green' : 'red'}>{authed ? '● authenticated' : '○ not authenticated'}</Text>
+          <Box width={8}><Text color={colors.textDim}>email</Text></Box>
+          <Text color={colors.textSecondary}>{user?.email ?? '—'}</Text>
         </Box>
-      </Box>
-
-      {/* Danger zone */}
-      <Box gap={1}>
-        <Text color="gray" dimColor>──</Text>
-        <Text color="red" dimColor>danger zone</Text>
-      </Box>
-
-      <Box flexDirection="column" gap={0}>
-        {menuItems.map((item, index) => {
-          const isSel = index === selectedIndex;
-          return (
-            <Box key={item.value} gap={2}>
-              <Text color={isSel ? 'cyan' : 'gray'}>{isSel ? '›' : ' '}</Text>
-              <Text color={isSel ? 'red' : 'gray'} bold={isSel}>{item.label}</Text>
-              <Text color="gray" dimColor>{item.hint}</Text>
-            </Box>
-          );
-        })}
-      </Box>
-
-      {/* Confirm banner */}
-      {confirmClear && (
-        <Box gap={1} borderStyle="single" borderColor="red" paddingX={1}>
-          <Text color="red" bold>⚠</Text>
-          <Text color="red">this will sign you out. press </Text>
-          <Text color="white" bold>enter</Text>
-          <Text color="red"> to confirm or </Text>
-          <Text color="white" bold>esc</Text>
-          <Text color="red"> to cancel</Text>
+        <Box gap={1}>
+          <Box width={8}><Text color={colors.textDim}>version</Text></Box>
+          <Text color={colors.textSecondary}>v{APP_VERSION}</Text>
         </Box>
-      )}
+        <Box gap={1}>
+          <Box width={8}><Text color={colors.textDim}>auth</Text></Box>
+          <Text color={isAuthenticated ? colors.accent : colors.textDim}>{isAuthenticated ? 'authenticated' : 'not authenticated'}</Text>
+        </Box>
 
-      {/* Outro */}
-      <Box gap={1}>
-        <Text color="gray" dimColor>──</Text>
-        <Text color="gray" dimColor>
-          {confirmClear ? 'enter confirm  · esc cancel' : '↑↓ navigate  · enter select  · esc back'}
-        </Text>
+        <Text color={colors.textDim}>danger zone</Text>
+
+        <Box flexDirection="column" gap={0}>
+          {menuItems.map((item, index) => {
+            const isSel = index === selectedIndex;
+            return (
+              <Box key={item.value} gap={1}>
+                <Text color={isSel ? colors.accent : colors.textDim}>{isSel ? caret : ' '}</Text>
+                <Text color={isSel ? colors.error : colors.textSecondary} bold={isSel}>{item.label}</Text>
+                <Text color={colors.textDim}>{item.hint}</Text>
+              </Box>
+            );
+          })}
+        </Box>
+
+        {confirmClear && (
+          <Box flexDirection="column" gap={0}>
+            <Text color={colors.error}>type "yes" to confirm clearing all local data</Text>
+            <TextInput
+              value={confirmText}
+              onChange={setConfirmText}
+              placeholder=""
+            />
+          </Box>
+        )}
       </Box>
 
+      <KeyHints hints={confirmClear ? confirmHints : hints} />
     </Box>
   );
 }

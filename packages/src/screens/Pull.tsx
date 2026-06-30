@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import { useKeyboard } from '../hooks/useKeyboard.js';
 import { useProjectStore } from '../store/project.js';
-import { useUiStore } from '../store/ui.js';
+import { useScrollback } from '../store/scrollback.js';
+import { StepIndicator } from '../components/StepIndicator.js';
 import * as secretApi from '../api/secret.js';
 import type { Route } from '../types/index.js';
 import * as fs from 'node:fs';
@@ -12,65 +13,61 @@ interface PullProps {
   goTo: (route: Route) => void;
 }
 
-interface Step {
+interface StepState {
   label: string;
-  hint: string;
   status: 'pending' | 'loading' | 'done' | 'error';
-  detail?: string;
 }
 
-const STEPS: Omit<Step, 'status'>[] = [
-  { label: 'authenticate', hint: 'verifying session token' },
-  { label: 'download',     hint: 'fetching encrypted secrets' },
-  { label: 'decrypt',      hint: 'decrypting values' },
-  { label: 'write',        hint: 'writing .env to disk' },
+const steps: StepState[] = [
+  { label: 'Authenticate session', status: 'pending' },
+  { label: 'Fetch secrets', status: 'pending' },
+  { label: 'Prepare values', status: 'pending' },
+  { label: 'Write .env file', status: 'pending' },
 ];
 
 export function Pull({ goTo }: PullProps) {
   const { selectedProject } = useProjectStore();
-  const { addNotification } = useUiStore();
-  const [steps, setSteps] = useState<Step[]>(STEPS.map((s) => ({ ...s, status: 'pending' })));
+  const { push } = useScrollback();
+  const [stepStates, setStepStates] = useState<StepState[]>(steps);
   const [completed, setCompleted] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
   const [envPath, setEnvPath] = useState('');
   const [count, setCount] = useState(0);
 
-  const set = (i: number, status: Step['status'], detail?: string) =>
-    setSteps((prev) => prev.map((s, idx) => (idx === i ? { ...s, status, detail } : s)));
+  const setStep = (i: number, status: StepState['status']) =>
+    setStepStates((prev) => prev.map((s, idx) => idx === i ? { ...s, status } : s));
 
   useEffect(() => {
     (async () => {
       if (!selectedProject) return;
       try {
-        set(0, 'loading');
+        setStep(0, 'loading');
         await new Promise((r) => setTimeout(r, 300));
-        set(0, 'done');
+        setStep(0, 'done');
 
-        set(1, 'loading');
+        setStep(1, 'loading');
         const secrets = await secretApi.getSecrets(selectedProject._id);
-        set(1, 'done', `${secrets.length} secret${secrets.length !== 1 ? 's' : ''}`);
+        setStep(1, 'done');
 
-        set(2, 'loading');
+        setStep(2, 'loading');
         await new Promise((r) => setTimeout(r, 200));
-        set(2, 'done');
+        setStep(2, 'done');
 
-        set(3, 'loading');
+        setStep(3, 'loading');
         const content = secrets.map((s) => `${s.secName}=${s.secKey}`).join('\n');
         const fp = path.join(process.cwd(), '.env');
         fs.writeFileSync(fp, content, 'utf-8');
         setEnvPath(fp);
-        set(3, 'done', fp);
+        setStep(3, 'done');
 
         setCount(secrets.length);
         setCompleted(true);
-        addNotification('success', `.env saved · ${secrets.length} secret${secrets.length !== 1 ? 's' : ''}`);
+        push('success', `.env saved with ${secrets.length} secret${secrets.length !== 1 ? 's' : ''}`, fp);
       } catch (err: any) {
         const msg = err?.response?.data?.message ?? err?.message ?? 'failed to pull secrets';
-        setErrorMsg(msg);
         setFailed(true);
-        setSteps((prev) => prev.map((s) => s.status === 'loading' ? { ...s, status: 'error' } : s));
-        addNotification('error', msg);
+        setStepStates((prev) => prev.map((s) => s.status === 'loading' ? { ...s, status: 'error' } : s));
+        push('error', msg);
       }
     })();
   }, []);
@@ -80,73 +77,17 @@ export function Pull({ goTo }: PullProps) {
     onEscape: () => goTo('project'),
   });
 
-  const icon = (s: Step['status']) => {
-    if (s === 'pending') return <Text color="gray" dimColor>○</Text>;
-    if (s === 'loading') return <Text color="cyan">◌</Text>;
-    if (s === 'done')    return <Text color="green">✔</Text>;
-    return                      <Text color="red">✖</Text>;
-  };
-
   return (
-    <Box flexDirection="column" paddingY={1} gap={1}>
-
-      {/* Intro */}
-      <Box gap={1}>
-        <Text color="gray" dimColor>──</Text>
-        <Text color="gray" dimColor>pulling secrets from </Text>
-        <Text color="cyan">{selectedProject?.projectName}</Text>
-      </Box>
-
-      {/* Steps — mirrors: s.start() / s.stop() */}
-      <Box flexDirection="column" gap={0}>
-        {steps.map((step) => (
-          <Box key={step.label} gap={2} paddingLeft={1}>
-            <Box width={2}>{icon(step.status)}</Box>
-            <Text
-              color={step.status === 'done' ? 'white' : step.status === 'loading' ? 'cyan' : step.status === 'error' ? 'red' : 'gray'}
-              dimColor={step.status === 'pending'}
-              bold={step.status === 'loading'}
-            >
-              {step.label}{step.status === 'loading' ? '…' : ''}
-            </Text>
-            {step.status === 'done' && step.detail && (
-              <Text color="gray" dimColor>{step.detail}</Text>
-            )}
-            {(step.status === 'pending' || step.status === 'loading') && (
-              <Text color="gray" dimColor>{step.hint}</Text>
-            )}
-          </Box>
-        ))}
-      </Box>
-
-      {/* Result */}
+    <Box flexDirection="column" alignItems="center" gap={1}>
+      {stepStates.map((s, i) => (
+        <StepIndicator key={i} status={s.status} label={s.label} />
+      ))}
       {completed && (
-        <Box flexDirection="column" gap={0}>
-          <Box gap={1}>
-            <Text color="gray" dimColor>──</Text>
-            <Text color="green">✔</Text>
-            <Text color="white">{count} secret{count !== 1 ? 's' : ''} written</Text>
-            <Text color="gray" dimColor>→ {envPath}</Text>
-          </Box>
-          <Box paddingLeft={2}>
-            <Text color="gray" dimColor>press enter to go back</Text>
-          </Box>
-        </Box>
+        <Text>{count} secret{count !== 1 ? 's' : ''} written → {envPath}</Text>
       )}
-
-      {/* Error */}
-      {failed && (
-        <Box flexDirection="column" gap={0}>
-          <Box gap={1} borderStyle="single" borderColor="red" paddingX={1}>
-            <Text color="red" bold>✖</Text>
-            <Text color="red">{errorMsg}</Text>
-          </Box>
-          <Box paddingLeft={1}>
-            <Text color="gray" dimColor>press enter or esc to go back</Text>
-          </Box>
-        </Box>
+      {(completed || failed) && (
+        <Text>press enter to go back</Text>
       )}
-
     </Box>
   );
 }
