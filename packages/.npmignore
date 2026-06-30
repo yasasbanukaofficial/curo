@@ -1,0 +1,39 @@
+# Source
+src/
+test/
+tests/
+examples/
+docs/
+
+# Config
+.vscode/
+.idea/
+.github/
+
+# Build configs
+tsconfig.json
+tsup.config.ts
+eslint.config.js
+.prettierrc
+.prettierignore
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# Node
+node_modules/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Misc
+*.tsbuildinfo
