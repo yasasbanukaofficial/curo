@@ -1,0 +1,11 @@
+export const caret = '❯';
+export const check = '✓';
+export const cross = '✗';
+export const warning = '⚠';
+export const section = '◆';
+export const selected = '●';
+export const unselected = '○';
+export const bullet = '●';
+export const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧'];
+export const ellipsis = '…';
+export const cursor = '█';

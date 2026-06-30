@@ -1,4 +1,13 @@
-import { UserModel } from "../models";
+import crypto from "crypto";
+import {
+  UserModel,
+  TeamMemberModel,
+  TeamModel,
+  ProjectModel,
+  SecretsModel,
+  EnvironmentModel,
+  TeamInviteModel,
+} from "../models";
 import { IUser } from "../types";
 import { tokenGen, verifyToken } from "../util/token";
 import {
@@ -8,7 +17,8 @@ import {
   getGithubEmail,
 } from "../integrations";
 import { GOOGLE_OAUTH_CLIENT_ID } from "../config/env";
-import { hash, encrypt } from "../util";
+import { hash, encrypt, tokenHash } from "../util";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../util/email";
 
 export const authService = {
   createUser: async (user: IUser) => {
@@ -20,22 +30,29 @@ export const authService = {
       return {
         success: false,
         status: 409,
-        msg: "User already exists",
+        msg: "This email is already registered. Try logging in.",
       };
     }
 
     const hashedPass = await hash.gen(password);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(32).toString("hex");
     const newUser = await UserModel.create({
       name,
       email,
       password: hashedPass,
+      emailVerificationOTP: otp,
+      emailVerificationToken: token,
+      emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000),
     });
+
+    sendVerificationEmail(email, otp, token);
 
     return {
       success: true,
       status: 201,
-      msg: "Successfully created an user",
-      data: { id: newUser._id, name, email },
+      msg: "Account created successfully! Please check your email to verify your account.",
+      data: { id: newUser._id, name, email, verificationToken: token },
     };
   },
   authenticateUser: async ({
@@ -50,15 +67,14 @@ export const authService = {
       return {
         success: false,
         status: 404,
-        msg: "User not found",
+        msg: "This email is not registered. Please sign up.",
       };
     }
-    const passwordMatches = await hash.compare(password, existingUser.password);
-    if (!passwordMatches) {
+    if (!existingUser.password || !hash.compare(password, existingUser.password)) {
       return {
         success: false,
         status: 401,
-        msg: "Invalid credentials, please try again!",
+        msg: "Email and password don't match.",
       };
     }
 
@@ -93,7 +109,7 @@ export const authService = {
     const payload = ticket.getPayload();
 
     if (!payload) {
-      throw new Error("Invalid Google token payload");
+      throw new Error("Unable to sign in with Google. Please try again.");
     }
 
     const { sub: googleId, name, email } = payload;
@@ -108,6 +124,7 @@ export const authService = {
         email,
         googleId,
         provider: ["google"],
+        emailVerified: true,
       });
     } else if (!user.googleId) {
       await user.updateOne({
@@ -144,14 +161,14 @@ export const authService = {
     const githubUser = await getGithubUserData(githubToken);
 
     if (!githubUser) {
-      throw new Error("The github authentication seem to have failed!");
+      throw new Error("Unable to sign in with GitHub. Please try again.");
     }
 
     const { id: githubId, name } = githubUser.data;
     const email = await getGithubEmail(githubToken);
 
     if (!email) {
-      throw new Error("No verified primary email found on GitHub");
+      throw new Error("No verified email address found on your GitHub account. Please make sure your email is public on GitHub.");
     }
 
     let user = await UserModel.findOne({
@@ -164,6 +181,7 @@ export const authService = {
         email,
         githubId,
         provider: ["github"],
+        emailVerified: true,
       });
     } else if (!user.githubId) {
       await user.updateOne({
@@ -194,40 +212,44 @@ export const authService = {
   },
 
   refreshToken: async (refreshToken: string) => {
-    const decoded = verifyToken(refreshToken);
+    try {
+      const decoded = verifyToken(refreshToken);
 
-    const user = await UserModel.findById(decoded.id);
-    if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      const user = await UserModel.findById(decoded.id);
+      if (!user) {
+        return { success: false, status: 404, msg: "Account not found. Please log in again." };
+      }
+
+      const tokenExists = user.refreshTokens.includes(refreshToken);
+      if (!tokenExists) {
+        return { success: false, status: 401, msg: "Your session has expired. Please log in again." };
+      }
+
+      const newAccessToken = tokenGen.genAccessToken(user);
+      const newRefreshToken = tokenGen.genRefreshToken(user);
+
+      await UserModel.findByIdAndUpdate(user._id, {
+        $pull: { refreshTokens: refreshToken },
+      }).then(() =>
+        UserModel.findByIdAndUpdate(user._id, {
+          $push: { refreshTokens: newRefreshToken },
+        }),
+      );
+
+      return {
+        success: true,
+        status: 200,
+        msg: "Tokens refreshed successfully",
+        data: {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+          userId: user._id.toString(),
+          userEmail: user.email,
+        },
+      };
+    } catch (error) {
+      return { success: false, status: 401, msg: "Your session has expired. Please log in again." };
     }
-
-    const tokenExists = user.refreshTokens.includes(refreshToken);
-    if (!tokenExists) {
-      return { success: false, status: 401, msg: "Invalid refresh token" };
-    }
-
-    const newAccessToken = tokenGen.genAccessToken(user);
-    const newRefreshToken = tokenGen.genRefreshToken(user);
-
-    await UserModel.findByIdAndUpdate(user._id, {
-      $pull: { refreshTokens: refreshToken },
-    }).then(() =>
-      UserModel.findByIdAndUpdate(user._id, {
-        $push: { refreshTokens: newRefreshToken },
-      }),
-    );
-
-    return {
-      success: true,
-      status: 200,
-      msg: "Tokens refreshed successfully",
-      data: {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-        userId: user._id.toString(),
-        userEmail: user.email,
-      },
-    };
   },
 
   getCurrentUser: async (userId: string) => {
@@ -235,7 +257,7 @@ export const authService = {
       "-password -refreshTokens -googleRefreshToken -githubAccessToken",
     );
     if (!user) {
-      return { success: false, status: 404, msg: "User not found" };
+      return { success: false, status: 404, msg: "Account not found" };
     }
     return {
       success: true,
@@ -245,9 +267,386 @@ export const authService = {
         name: user.name,
         email: user.email,
         provider: user.provider,
+        googleId: user.googleId,
+        githubId: user.githubId,
+        emailVerified: user.emailVerified,
+        onboardingComplete: user.onboardingComplete,
+        onboardingSkipped: user.onboardingSkipped,
         createdAt: user.createdAt,
       },
     };
+  },
+
+  logoutUser: async (userId: string, refreshToken?: string) => {
+    if (refreshToken) {
+      await UserModel.findByIdAndUpdate(userId, {
+        $pull: { refreshTokens: refreshToken },
+      });
+    }
+    return { success: true, status: 200, msg: "Logged out successfully" };
+  },
+
+  verifyEmailOTP: async (userId: string | undefined, otp: string, token?: string) => {
+    let user;
+    if (userId) {
+      user = await UserModel.findById(userId);
+    } else if (token) {
+      user = await UserModel.findOne({ emailVerificationToken: token });
+      if (!user) {
+        console.warn(`[verifyEmailOTP] Token lookup failed — token present but no user found`);
+      }
+    }
+    if (!user && otp) {
+      console.warn(`[verifyEmailOTP] Falling back to OTP lookup for otp=${otp}`);
+      user = await UserModel.findOne({
+        emailVerificationOTP: otp,
+        emailVerificationExpires: { $gt: new Date() },
+      });
+    }
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    if (user.emailVerified) {
+      return { success: false, status: 400, msg: "This email is already verified" };
+    }
+    if (!user.emailVerificationOTP || !user.emailVerificationExpires) {
+      return { success: false, status: 400, msg: "No verification code was found. Please request a new one." };
+    }
+    if (new Date() > user.emailVerificationExpires) {
+      return { success: false, status: 400, msg: "This verification code has expired. Please request a new one." };
+    }
+    if (user.emailVerificationOTP !== otp) {
+      return { success: false, status: 400, msg: "Invalid verification code" };
+    }
+    const accessToken = tokenGen.genAccessToken(user);
+    const refreshToken = tokenGen.genRefreshToken(user);
+    await UserModel.findByIdAndUpdate(user._id, {
+      emailVerified: true,
+      $push: { refreshTokens: refreshToken },
+      $unset: { emailVerificationOTP: "", emailVerificationToken: "", emailVerificationExpires: "" },
+    });
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Email verified successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        emailVerified: true,
+        provider: user.provider,
+        accessToken,
+        refreshToken,
+      },
+    };
+  },
+
+  verifyEmailToken: async (token: string) => {
+    const user = await UserModel.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      return { success: false, status: 400, msg: "This verification link has expired or is invalid. Please request a new one." };
+    }
+    const accessToken = tokenGen.genAccessToken(user);
+    const refreshToken = tokenGen.genRefreshToken(user);
+    await UserModel.findByIdAndUpdate(user._id, {
+      emailVerified: true,
+      $push: { refreshTokens: refreshToken },
+      $unset: { emailVerificationOTP: "", emailVerificationToken: "", emailVerificationExpires: "" },
+    });
+    return {
+      success: true,
+      status: 200,
+      msg: "Email verified successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        emailVerified: true,
+        provider: user.provider,
+        accessToken,
+        refreshToken,
+      },
+    };
+  },
+
+  resendVerification: async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "User not found" };
+    }
+    if (user.emailVerified) {
+      return { success: false, status: 400, msg: "Email already verified" };
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(32).toString("hex");
+    await UserModel.findByIdAndUpdate(userId, {
+      emailVerificationOTP: otp,
+      emailVerificationToken: token,
+      emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000),
+    });
+    sendVerificationEmail(user.email, otp, token);
+    return {
+      success: true,
+      status: 200,
+      msg: "Verification email sent",
+      data: { verificationToken: token },
+    };
+  },
+
+  forgotPassword: async (email: string) => {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return { success: false, status: 404, msg: "This account doesn't exist. Try a different email." };
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = tokenHash.gen(rawToken);
+    await UserModel.findByIdAndUpdate(user._id, {
+      resetPasswordOTP: otp,
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: new Date(Date.now() + 10 * 60 * 1000),
+    });
+    sendPasswordResetEmail(user.email, rawToken);
+    return {
+      success: true,
+      status: 200,
+      msg: "Password reset email sent. Check your inbox.",
+    };
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    const hashedToken = tokenHash.gen(token);
+    const user = await UserModel.findOne({
+      $or: [
+        { resetPasswordToken: hashedToken },
+        { resetPasswordOTP: token },
+      ],
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      return { success: false, status: 400, msg: "This reset link has expired or is invalid. Please request a new one." };
+    }
+    if (user.password && hash.compare(newPassword, user.password)) {
+      return { success: false, status: 400, msg: "You can't reuse your old password. Try a new one or login." };
+    }
+    const hashedPass = await hash.gen(newPassword);
+    await UserModel.findByIdAndUpdate(user._id, {
+      password: hashedPass,
+      $unset: { resetPasswordOTP: "", resetPasswordToken: "", resetPasswordExpires: "" },
+      $set: { refreshTokens: [] },
+    });
+    return { success: true, status: 200, msg: "Password reset successfully" };
+  },
+
+  disconnectProvider: async (userId: string, provider: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    const unset: Record<string, ""> = {};
+    if (provider === "google") {
+      unset.googleId = "";
+    } else if (provider === "github") {
+      unset.githubId = "";
+    } else {
+      return { success: false, status: 400, msg: "Invalid provider. Use 'google' or 'github'." };
+    }
+    await UserModel.findByIdAndUpdate(userId, {
+      $unset: unset,
+      $pull: { provider },
+    });
+    const providerName = provider === "google" ? "Google" : "GitHub";
+    return { success: true, status: 200, msg: `${providerName} account disconnected successfully` };
+  },
+
+  linkGoogleAccount: async (code: string, userId: string) => {
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    const ticket = await oauth2Client.verifyIdToken({
+      idToken: tokens.id_token as string,
+      audience: GOOGLE_OAUTH_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) throw new Error("Invalid Google token payload");
+
+    const { sub: googleId } = payload;
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $set: { googleId },
+      $addToSet: { provider: "google" },
+    });
+
+    if (tokens.refresh_token) {
+      await UserModel.findByIdAndUpdate(userId, {
+        $set: { googleRefreshToken: encrypt.gen(tokens.refresh_token) },
+      });
+    }
+
+    return { success: true };
+  },
+
+  linkGithubAccount: async (code: string, userId: string) => {
+    const githubToken = await getGithubAccessToken(code);
+    const githubUser = await getGithubUserData(githubToken);
+
+    if (!githubUser) {
+      throw new Error("Unable to sign in with GitHub. Please try again.");
+    }
+
+    const { id: githubId } = githubUser.data;
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $set: { githubId, githubAccessToken: encrypt.gen(githubToken) },
+      $addToSet: { provider: "github" },
+    });
+
+    return { success: true };
+  },
+
+  verifyResetToken: async (token: string) => {
+    const hashedToken = tokenHash.gen(token);
+    const user = await UserModel.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      return { success: false, status: 400, msg: "This reset link has expired or is invalid. Please request a new one." };
+    }
+    return { success: true, status: 200, msg: "Token is valid" };
+  },
+
+  sendPasswordResetLink: async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = tokenHash.gen(rawToken);
+    await UserModel.findByIdAndUpdate(userId, {
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    sendPasswordResetEmail(user.email, rawToken);
+    return {
+      success: true,
+      status: 200,
+      msg: "Password reset link sent to your email.",
+    };
+  },
+
+  updateProfile: async (userId: string, data: { name: string }) => {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { name: data.name },
+      { returnDocument: "after" },
+    ).select("-password -refreshTokens -googleRefreshToken -githubAccessToken");
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    return {
+      success: true,
+      status: 200,
+      msg: "Profile updated successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        provider: user.provider,
+        googleId: user.googleId,
+        githubId: user.githubId,
+        emailVerified: user.emailVerified,
+        onboardingComplete: user.onboardingComplete,
+        onboardingSkipped: user.onboardingSkipped,
+        createdAt: user.createdAt,
+      },
+    };
+  },
+
+  changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+    if (!user.password) {
+      return { success: false, status: 400, msg: "No password is set for this account. Please sign in with Google or GitHub." };
+    }
+    const passwordMatches = await hash.compare(currentPassword, user.password);
+    if (!passwordMatches) {
+      return { success: false, status: 401, msg: "Current password is incorrect. Please try again." };
+    }
+    const hashedPass = await hash.gen(newPassword);
+    await UserModel.findByIdAndUpdate(userId, {
+      password: hashedPass,
+      $set: { refreshTokens: [] },
+    });
+    return { success: true, status: 200, msg: "Password changed successfully" };
+  },
+
+  markOnboardingComplete: async (userId: string, skipped?: boolean) => {
+    const update = skipped
+      ? { onboardingSkipped: true }
+      : { onboardingComplete: true };
+    await UserModel.findByIdAndUpdate(userId, update);
+    return { success: true, status: 200, msg: "Onboarding completed" };
+  },
+
+  deleteAccount: async (userId: string) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { success: false, status: 404, msg: "Account not found" };
+    }
+
+    const ownedTeams = await TeamModel.find({ ownerId: userId }).lean();
+    const ownedTeamIds = ownedTeams.map((t) => t._id.toString());
+
+    if (ownedTeamIds.length > 0) {
+      const ownedTeamProjectIds: string[] = [];
+      for (const team of ownedTeams) {
+        if (team.projects && team.projects.length > 0) {
+          ownedTeamProjectIds.push(...team.projects.map((p) => p.toString()));
+        }
+      }
+
+      const extraTeamProjects = await ProjectModel.find({
+        teamId: { $in: ownedTeamIds },
+        _id: { $nin: ownedTeamProjectIds },
+      }).lean();
+      ownedTeamProjectIds.push(...extraTeamProjects.map((p) => p._id.toString()));
+
+      if (ownedTeamProjectIds.length > 0) {
+        await SecretsModel.deleteMany({ projectId: { $in: ownedTeamProjectIds } });
+        await EnvironmentModel.deleteMany({ projectId: { $in: ownedTeamProjectIds } });
+        await ProjectModel.deleteMany({ _id: { $in: ownedTeamProjectIds } });
+      }
+
+      await TeamMemberModel.deleteMany({ teamId: { $in: ownedTeamIds } });
+      await TeamInviteModel.deleteMany({ teamId: { $in: ownedTeamIds } });
+      await TeamModel.deleteMany({ _id: { $in: ownedTeamIds } });
+    }
+
+    const personalProjects = await ProjectModel.find({
+      userId,
+      $or: [{ teamId: null }, { teamId: { $exists: false } }],
+    }).lean();
+
+    if (personalProjects.length > 0) {
+      const personalProjectIds = personalProjects.map((p) => p._id.toString());
+      await SecretsModel.deleteMany({ projectId: { $in: personalProjectIds } });
+      await EnvironmentModel.deleteMany({ projectId: { $in: personalProjectIds } });
+      await ProjectModel.deleteMany({ _id: { $in: personalProjectIds } });
+    }
+
+    await TeamMemberModel.deleteMany({ userId, teamId: { $nin: ownedTeamIds } });
+    await TeamInviteModel.deleteMany({ email: user.email.toLowerCase() });
+    await UserModel.findByIdAndDelete(userId);
+
+    return { success: true, status: 200, msg: "Account deleted successfully" };
   },
 };
 

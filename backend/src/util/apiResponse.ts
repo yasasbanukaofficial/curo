@@ -31,6 +31,7 @@ export const setCookie = (
     secure: NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 1000 * 60 * 10,
+    path: "/",
     ...options,
   });
 };

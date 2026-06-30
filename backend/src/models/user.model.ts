@@ -54,6 +54,42 @@ const _userSchema = new Schema<IUser>(
       type: [String],
       default: ["local"],
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationOTP: {
+      type: String,
+      required: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      required: false,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      required: false,
+    },
+    resetPasswordOTP: {
+      type: String,
+      required: false,
+    },
+    resetPasswordToken: {
+      type: String,
+      required: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      required: false,
+    },
+    onboardingComplete: {
+      type: Boolean,
+      default: false,
+    },
+    onboardingSkipped: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

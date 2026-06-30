@@ -12,7 +12,7 @@ export const createSecret = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Request body is required",
+      msg: "Please provide the secret details",
     });
   }
 
@@ -23,7 +23,7 @@ export const createSecret = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: true,
         status: 201,
-        msg: "Secret is successfully created",
+        msg: "Secret created successfully",
       });
     }
   } catch (error: any) {
@@ -31,7 +31,7 @@ export const createSecret = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 400,
-        msg: "secName, secKey, and projectId are required",
+        msg: "Secret name, secret key, and project are required",
       });
     }
 
@@ -46,7 +46,7 @@ export const createSecret = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while saving secret",
+      msg: "Something went wrong while saving the secret. Please try again.",
     });
   }
 };
@@ -73,7 +73,7 @@ export const updateSecret = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     if (error.message === "SECRET_NOT_FOUND") {
-      return sendResponse(res, { success: false, status: 404, msg: error.message });
+      return sendResponse(res, { success: false, status: 404, msg: "Secret not found or you don't have access to it" });
     }
     if (error.code === 11000) {
       return sendResponse(res, {
@@ -82,7 +82,7 @@ export const updateSecret = async (req: AuthRequest, res: Response) => {
         msg: `A secret named "${body?.secName}" already exists${body?.environmentId ? " in this environment" : ""}`,
       });
     }
-    return sendResponse(res, { success: false, status: 500, msg: error.message });
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the secret. Please try again." });
   }
 };
 
@@ -94,7 +94,7 @@ export const deleteSecret = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Secret ID is required",
+      msg: "Please provide a secret ID",
     });
   }
 
@@ -106,12 +106,10 @@ export const deleteSecret = async (req: AuthRequest, res: Response) => {
       msg: "Secret deleted successfully",
     });
   } catch (error: any) {
-    const status = error.message === "SECRET_NOT_FOUND" ? 404 : 500;
-    return sendResponse(res, {
-      success: false,
-      status,
-      msg: error.message,
-    });
+    if (error.message === "SECRET_NOT_FOUND") {
+      return sendResponse(res, { success: false, status: 404, msg: "Secret not found or you don't have access to it" });
+    }
+    return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while deleting the secret. Please try again." });
   }
 };
 
@@ -123,7 +121,7 @@ export const getSecretById = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 400,
-      msg: "Secret ID is required",
+      msg: "Please provide a secret ID",
     });
   }
 
@@ -133,7 +131,7 @@ export const getSecretById = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, {
         success: false,
         status: 404,
-        msg: "Secret not found",
+        msg: "Secret not found or you don't have access to it",
       });
     }
     return sendResponse(res, {
@@ -145,7 +143,7 @@ export const getSecretById = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching secret",
+      msg: "Something went wrong while loading the secret. Please try again.",
     });
   }
 };
@@ -164,7 +162,7 @@ export const getAllSecrets = async (req: AuthRequest, res: Response) => {
     return sendResponse(res, {
       success: false,
       status: 500,
-      msg: "Internal server error while fetching secrets",
+      msg: "Something went wrong while loading secrets. Please try again.",
     });
   }
 };
