@@ -521,3 +521,140 @@ The following TypeScript errors exist in unchanged files and are NOT related to 
 - `secret.service.ts:194` — `ObjectId` vs `string` comparison
 
 These are strict type issues in code that was written before the type definitions were tightened. They do not affect runtime behavior.
+
+---
+
+# Curo CLI — Terminal Application (`packages/`)
+
+## Overview
+An interactive terminal UI for pulling Curo secrets to `.env` — built with Ink (React for terminals). Single-screen command-palette style (like Claude Code / OpenCode).
+
+## Tech Stack
+- **Runtime**: Node.js (npm)
+- **Framework**: Ink v7 (React for CLI) + TypeScript (strict)
+- **Bundler**: tsup (ESM)
+- **HTTP**: Axios with cookie-based auth
+- **Config**: `conf` npm package (persistent token storage)
+- **Input**: `ink-text-input` for text fields
+
+## Build & Run
+```bash
+cd packages
+npm run build          # tsup → dist/cli.js
+npm run start          # node dist/cli.js
+```
+
+## Project Structure
+```
+packages/src/
+  cli.tsx                          — Entry point: clear terminal → render(<App/>)
+  app/
+    App.tsx                        — Root: providers + global Ctrl+C handler
+    Router.tsx                     — Route switch (splash, login, dashboard, projects, project, settings, logout)
+    Shell.tsx                      — Responsive layout: Logo (header) → content → StatusBar (footer)
+    Navigation.tsx                 — Context-based route stack (useNavigation → goTo, currentRoute)
+  components/
+    Logo.tsx                       — 6-line FIGlet CURO, two-tone (white + dim gray)
+    CommandInput.tsx               — Rounded border box, responsive width (useStdout)
+    KeyHints.tsx                   — Centered keyboard shortcut row
+    TipLine.tsx                    — Accent-bullet tip with bold keywords
+    StatusBar.tsx                  — 1-line footer: project:user (left) · version (right)
+    ScrollbackLog.tsx              — Append-only action history (success/error/info entries)
+    StepIndicator.tsx              — Spinner → ✓/✗ transition row (pending/loading/done/error)
+  screens/
+    Splash.tsx                     — Animated spinner + session check → dashboard or login
+    Login.tsx                      — Email/password form, inline validation, custom 401/404 messages
+    Dashboard.tsx                  — Command palette: TextInput + VS Code-style suggestion dropdown
+    Projects.tsx                   — Project list from API, search filter, select → project detail
+    Project.tsx                    — Secret list + actions (pull .env / refresh / back)
+    Pull.tsx                       — (Legacy, unused) Step-based pull screen
+    Settings.tsx                   — User name/email, version, auth status, clear local data
+    Logout.tsx                     — Spinner → scrollback push → redirect to login
+  hooks/
+    useKeyboard.ts                 — Ink useInput wrapper (arrow keys, enter, escape, etc.)
+    useSpinnerFrame.ts             — Braille spinner animation (80ms interval)
+    useTerminalSize.ts             — useStdout + resize listener (columns, rows)
+  store/
+    auth.tsx                       — AuthProvider: user, token, login/logout/checkAuth
+    project.tsx                    — ProjectProvider: projects, secrets, fetch/select, error states
+    scrollback.tsx                 — ScrollbackProvider: persistent action log entries
+    ui.tsx                         — UIProvider: notifications, global loading
+  api/
+    client.ts                      — Axios instance, 401 interceptor (clears token)
+    auth.ts                        — login(), getMe(), logout()
+    project.ts                     — getProjects(), getProject()
+    secret.ts                      — getSecrets()
+  services/
+    token.ts                       — conf-based persistent storage (auth_token, user_email, workspace)
+    env.ts                         — APP_VERSION, API_URL constants
+  theme/
+    colors.ts                      — accent (#5B8DEF), logoFront, logoBack, textSecondary, textDim, error, success, border, etc.
+    icons.ts                       — caret, check, cross, spinnerFrames, bullet, etc.
+    spacing.ts                     — gutter, sectionGap
+  types/
+    index.ts                       — Route, User, Project, Secret, Environment, Notification, ApiResponse
+```
+
+## Route Flow
+```
+splash → checkAuth
+  ├── has session → dashboard
+  └── no session → login → dashboard
+                     ↓
+               dashboard → /projects → project → select action
+                   │         │                    ├── pull .env (writes to .env)
+                   │         │                    ├── refresh (reload secrets)
+                   │         │                    └── back
+                   │         └── esc → dashboard
+                   ├── /settings → clear data → login
+                   ├── /logout → spinner → login
+                   └── /login → login form
+```
+
+## Navigation is entirely through `/` commands in the Dashboard. No fixed menu.
+
+## UI Layout
+```
+┌──────────────────────────────────────┐
+│           Logo (fixed header)         │
+│                                       │
+│         Scrollable Content            │
+│         (vertically centered)         │
+│                                       │
+├──────────────────────────────────────┤
+│ StatusBar (fixed footer)              │
+└──────────────────────────────────────┘
+```
+
+## Key UI Patterns
+- **Vertical centering**: Flexible spacers (`flexGrow`) push content to center, StatusBar pinned to bottom
+- **Responsive width**: `Math.min(72, Math.max(40, columns - 8))` for all bordered boxes
+- **VS Code-style dropdown**: Inside CommandInput border — separator lines, `>` prefix on selected, "N commands" footer
+- **No hardcoded widths**: All dimensions derived from `useTerminalSize()` (stdout.columns/rows + resize listener)
+- **Safe padding**: 4 spaces left/right via `paddingX={4}`, 2+ lines top/bottom via flex spacers
+- **Clear on startup**: `process.stdout.write('\x1Bc')` before render
+- **Ctrl+C**: Global `useInput` handler exits process from any screen
+- **Global error handler**: `process.on('unhandledRejection', () => {})` prevents crashes
+
+## Auth / Credential Storage
+- **Token persistence**: `conf` package (`projectName: 'curo'`) → JSON file
+  - Windows: `%APPDATA%\curo\config.json`
+  - macOS/Linux: `~/.config/curo/config.json`
+- **Token sent as cookie**: `Cookie: access_token=<token>`
+- **401 interceptor**: Clears token on any 401 response; components detect and show "session expired" message
+- **Login**: `POST /auth/login` → receives token, stores via `setToken()`
+- **Logout**: Clears local token + state (no server-side logout call needed)
+
+## Error Handling
+- `project.tsx` store: `projectsError` / `secretsError` state, caught in `catch` blocks (was `try/finally` only — caused unhandled 401 crash)
+- `Login.tsx`: Custom messages per status code (404 → "user is not registered" + curo.dev link, 401 → "credentials not valid")
+- Screens show error text inline inside bordered boxes with "press esc to go back"
+- `cli.tsx`: `process.on('unhandledRejection', () => {})` as safety net
+
+## Secrets Pull
+When user selects "pull .env" from project actions:
+1. Maps `secrets` array to `secName=secKey` lines
+2. Strips trailing `;e` from values: `s.secKey.replace(/;e$/, '')`
+3. Writes to `process.cwd() + '/.env'`
+4. Shows success message with file path inside the bordered box
+5. Pushes success entry to scrollback log
