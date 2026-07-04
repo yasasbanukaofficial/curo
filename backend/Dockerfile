@@ -12,7 +12,7 @@ RUN chown app:app .
 
 USER app
 
-RUN pnpm install --frozen-lockfile --omit=dev
+RUN pnpm install --frozen-lockfile --prod
 
 COPY . .
 
