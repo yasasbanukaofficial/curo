@@ -39,7 +39,12 @@ export default function ForgotPasswordPage() {
         bottomText=""
         bottomLinkText="Back to sign in"
         bottomLinkHref="/login"
-      />
+      >
+        <p className="text-sm text-[#636363] text-center">
+          Please check your inbox and follow the link to reset your password. If you don't see the
+          email, check your spam folder.
+        </p>
+      </AuthFormLayout>
     );
   }
 
