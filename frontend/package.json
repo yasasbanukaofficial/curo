@@ -26,6 +26,7 @@
   ],
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@reduxjs/toolkit": "^2.12.0",
     "axios": "^1.18.0",
     "driver.js": "^1.6.0",

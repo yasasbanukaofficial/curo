@@ -34,7 +34,7 @@ export default function Navbar() {
       animate={{ y: hidden ? -88 : 0 }}
       transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
     >
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+      <div className="border-x border-[#efefef] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 relative">
         <div className="flex h-16 items-center border-b border-[#efefef]">
           <div className="flex-1 flex items-center">
             <CuroLogo />
