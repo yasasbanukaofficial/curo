@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useReducedMotion } from "../../hooks/useReducedMotion";
 
 interface StaggerContainerProps {
   children: ReactNode;
@@ -14,14 +15,20 @@ export default function StaggerContainer({
   className,
   margin = "-80px",
 }: StaggerContainerProps) {
+  const reduced = useReducedMotion();
+
   return (
     <motion.div
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin }}
-      variants={{
-        visible: { transition: { staggerChildren: staggerDelay } },
-      }}
+      variants={
+        reduced
+          ? undefined
+          : {
+              visible: { transition: { staggerChildren: staggerDelay } },
+            }
+      }
       className={className}
     >
       {children}
@@ -35,5 +42,15 @@ export const fadeInUp = (yOffset = 30, duration = 0.5) => ({
     opacity: 1,
     y: 0,
     transition: { duration, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+});
+
+export const scaleFadeIn = (scaleFrom = 0.96) => ({
+  hidden: { opacity: 0, y: 30, scale: scaleFrom },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 });
