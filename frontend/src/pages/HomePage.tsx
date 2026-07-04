@@ -1,19 +1,26 @@
 import Navbar from "../components/landing/Navbar";
 import Hero from "../components/landing/Hero";
-import AnimationSection from "../components/animations/AnimationSection";
+import ScatteredSection from "../components/landing/ScatteredSection";
+import CentralizeSection from "../components/landing/CentralizeSection";
+import ManageSection from "../components/landing/ManageSection";
+import SyncSection from "../components/landing/SyncSection";
+import PipelineSection from "../components/landing/PipelineSection";
+import CTASection from "../components/landing/CTASection";
 import Footer from "../components/landing/Footer";
-import SmoothScroll from "../components/animations/SmoothScroll";
 
 function HomePage() {
   return (
-    <SmoothScroll>
-      <div className="min-h-screen bg-[#fcfcfc] pt-24">
-        <Navbar />
-        <Hero />
-        <AnimationSection />
-        <Footer />
-      </div>
-    </SmoothScroll>
+    <div className="min-h-screen bg-[#fcfcfc] pt-24">
+      <Navbar />
+      <Hero />
+      <ScatteredSection />
+      <CentralizeSection />
+      <ManageSection />
+      <SyncSection />
+      <PipelineSection />
+      <CTASection />
+      <Footer />
+    </div>
   );
 }
 

@@ -25,7 +25,7 @@ export default function Hero() {
   return (
     <section className="relative bg-[#fcfcfc]">
       <DotsLine className="h-10" />
-      <div className="border-x border-[#efefef] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative">
+      <div className="border-x border-[#efefef] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
         <Corner />
         <motion.div
           className="text-center max-w-4xl mx-auto pb-16"
