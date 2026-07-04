@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --omit=dev
+RUN pnpm install --frozen-lockfile --prod
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
