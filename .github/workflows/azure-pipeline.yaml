@@ -79,11 +79,11 @@ jobs:
       - name: Deploy frontend to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: curo-frontend
+          app-name: curo-web
           images: curoacr.azurecr.io/frontend:${{ github.sha }}
 
       - name: Deploy backend to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: curo-backend
+          app-name: curo-api
           images: curoacr.azurecr.io/backend:${{ github.sha }}
