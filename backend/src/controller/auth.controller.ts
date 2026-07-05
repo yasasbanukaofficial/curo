@@ -209,7 +209,8 @@ export const verifyEmailOTP = async (req: AuthRequest, res: Response) => {
 };
 
 export const verifyEmailToken = async (req: Request, res: Response) => {
-  const result = await authService.verifyEmailToken(req.params.token);
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const result = await authService.verifyEmailToken(token);
   if (result.success && result.data) {
     setCookie(res, "access_token", result.data.accessToken);
     setCookie(res, "refreshtoken", result.data.refreshToken, {
@@ -247,7 +248,8 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 };
 
 export const verifyResetToken = async (req: Request, res: Response) => {
-  const result = await authService.verifyResetToken(req.params.token);
+  const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+  const result = await authService.verifyResetToken(token);
   return sendResponse(res, result);
 };
 
