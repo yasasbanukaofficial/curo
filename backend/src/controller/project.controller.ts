@@ -6,7 +6,7 @@ import { projectService, secretService, environmentService } from "../services";
 import { TeamMemberModel } from "../models";
 
 export const getProjectById = async (req: AuthRequest, res: Response) => {
-  const projectId = req.params.projectId;
+  const projectId = Array.isArray(req.params.projectId) ? req.params.projectId[0] : req.params.projectId;
 
   if (!projectId) {
     return sendResponse(res, {

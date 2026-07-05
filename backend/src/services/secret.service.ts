@@ -191,7 +191,7 @@ export const secretService = {
     try {
       const secret = await SecretsModel.findOne({ _id: secretId, projectId });
       if (!secret) throw new Error("SECRET_NOT_FOUND");
-      if (role === "developer" && secret.userId !== userId) {
+      if (role === "developer" && secret.userId.toString() !== userId) {
         throw new Error("FORBIDDEN");
       }
       await SecretsModel.findOneAndDelete({ _id: secretId, projectId });

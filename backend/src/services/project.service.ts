@@ -23,7 +23,7 @@ export const projectService = {
       if (!projectDoc) return null;
 
       return {
-        _id: projectDoc._id,
+        _id: projectDoc._id.toString(),
         projectName: projectDoc.projectName,
         description: projectDoc.description,
         projectLink: projectDoc.projectLink,

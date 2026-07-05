@@ -145,7 +145,7 @@ export const environmentService = {
     try {
       const env = await EnvironmentModel.findOne({ _id: environmentId, projectId });
       if (!env) throw new Error("ENVIRONMENT_NOT_FOUND");
-      if (role === "developer" && env.userId !== userId) {
+      if (role === "developer" && env.userId.toString() !== userId) {
         throw new Error("FORBIDDEN");
       }
       await EnvironmentModel.findOneAndDelete({ _id: environmentId, projectId });
