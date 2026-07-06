@@ -32,7 +32,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Building package
-        run: pnpm --filter @curo/cli run build
+        run: pnpm --filter curo-cli run build
 
       - name: Publishing the package
-        run: pnpm --filter @curo/cli publish --no-git-checks
+        run: pnpm --filter curo-cli publish --no-git-checks
