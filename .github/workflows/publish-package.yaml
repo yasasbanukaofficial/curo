@@ -1,4 +1,4 @@
-name: Pulbish npm package
+name: Publish npm package
 
 on:
   push:
@@ -22,15 +22,20 @@ jobs:
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: packages/package-lock.json
+
+      - name: Update npm to a version that supports OIDC
+        run: npm install -g npm@latest
 
       - name: Installing dependencies
         working-directory: packages
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Building package
         working-directory: packages
-        run: pnpm --filter curo-cli run build
+        run: npm run build --workspace=curo-cli
 
       - name: Publishing the package
         working-directory: packages
-        run: pnpm --filter curo-cli publish --no-git-checks
+        run: npm publish --workspace=curo-cli

@@ -16,7 +16,7 @@
 **Pull your Curo project secrets directly into `.env` from the terminal.**  
 Never share secrets via email, Slack, or messaging apps again.
 
----
+--
 
 ## Table of Contents
 
