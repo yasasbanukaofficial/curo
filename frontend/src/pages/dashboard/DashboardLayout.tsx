@@ -6,6 +6,7 @@ import MobileNav from "../../components/dashboard/MobileNav";
 import SettingsModal from "../../components/dashboard/SettingsModal";
 import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import InviteJoinModal from "../../components/dashboard/InviteJoinModal";
+import SearchDialog from "../../components/dashboard/SearchDialog";
 import { useGetTeamsQuery, useLazyGetInviteDetailsQuery, useAcceptInviteExplicitMutation } from "../../store";
 import { useActiveTeam } from "../../hooks/useActiveTeam";
 import { ActiveTeamContext } from "../../contexts/ActiveTeamContext";
@@ -49,7 +50,7 @@ function ThemeProvider({ children }: { children: ReactNode }) {
 }
 
 function DashboardInner() {
-  const themeCtx = useTheme();
+  useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
@@ -159,7 +160,7 @@ function DashboardInner() {
 
   if (teamsLoading || !layoutReady) {
     return (
-      <div className="h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="h-screen bg-gray-50 dark:bg-[#09090B] flex items-center justify-center">
         <LoadingSpinner size={28} />
       </div>
     );
@@ -167,7 +168,7 @@ function DashboardInner() {
 
   if (!inviteResolved && !showInviteModal) {
     return (
-      <div className="h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="h-screen bg-gray-50 dark:bg-[#09090B] flex items-center justify-center">
         <LoadingSpinner size={28} />
       </div>
     );
@@ -175,6 +176,7 @@ function DashboardInner() {
 
   return (
     <ActiveTeamContext.Provider value={{ activeTeamId, setTeam, clearTeam }}>
+      <SearchDialog />
       <InviteJoinModal
         open={showInviteModal && !!inviteData}
         details={inviteData}
@@ -182,12 +184,12 @@ function DashboardInner() {
         onDecline={handleDeclineInvite}
         loading={inviteLoading}
       />
-      <div className={"h-screen bg-white dark:bg-black flex flex-col transition-colors duration-200 " + themeCtx.theme}>
+      <div className="h-screen bg-gray-50 dark:bg-[#09090B] flex flex-col">
         <TopNav />
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <Sidebar onToggleSettings={(tab) => { setSettingsTab((tab ?? "general") as SettingsTab); setShowSettings(true); }} />
-          <main className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-16 lg:pb-0">
+          <main className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-16 lg:pb-0 bg-gray-50 dark:bg-[#09090B]">
             <Outlet />
           </main>
         </div>
