@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Sun, Moon } from "lucide-react";
 import Logo from "./Logo";
 import { GitHubIcon } from "./Icons";
+import PixelBlast from "../animations/PixelBlast";
 
 interface AuthFormLayoutProps {
   children: ReactNode;
@@ -25,22 +27,66 @@ export default function AuthFormLayout({
   onGoogleLogin,
   onGithubLogin,
 }: AuthFormLayoutProps) {
-  return (
-    <div className="min-h-screen bg-[#fcfcfc] flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm sm:max-w-md">
-        <div className="text-center mb-8 sm:mb-10">
-          <div className="inline-block mb-6">
-            <Logo size="md" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-normal text-[#191919] font-sans">
-            {title}
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-[#636363] font-sans">
-            {subtitle}
-          </p>
-        </div>
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const stored = localStorage.getItem("curo-theme");
+    if (stored === "dark" || stored === "light") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
 
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-[#efefef] p-6 sm:p-10">
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("curo-theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme(t => t === "light" ? "dark" : "light");
+  }
+
+  return (
+    <section className="relative min-h-screen bg-white dark:bg-black">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <button
+          onClick={toggleTheme}
+          className="inline-flex items-center rounded-full border border-black/[0.04] dark:border-[#333] p-1 overflow-hidden"
+          aria-label="Toggle Theme"
+        >
+          <Sun className={`size-7 p-1.5 text-[#636363] dark:text-accent rounded-full ${theme === "dark" ? "" : "bg-accent/10"}`} />
+          <Moon className={`size-7 p-1.5 text-accent dark:text-[#636363] rounded-full ${theme === "dark" ? "bg-accent/10" : ""}`} />
+        </button>
+      </div>
+      <div className="absolute inset-0">
+        <PixelBlast
+          variant="square"
+          pixelSize={4}
+          color="#FF3333"
+          patternScale={2}
+          patternDensity={1}
+          pixelSizeJitter={0}
+          enableRipples
+          rippleSpeed={0.4}
+          rippleThickness={0.12}
+          rippleIntensityScale={1.5}
+          edgeFade={0.25}
+          centerFade={0.25}
+          speed={0.5}
+        />
+        <div className="absolute inset-0 bg-white/20 dark:bg-black/30 backdrop-blur-[2px]" />
+      </div>
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm sm:max-w-md">
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="inline-block mb-6">
+              <Logo size="md" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-normal text-black dark:text-white font-sans">
+              {title}
+            </h1>
+            <p className="mt-2 text-sm sm:text-base text-black/60 dark:text-white/60 font-sans">
+              {subtitle}
+            </p>
+          </div>
+
+        <div className="bg-white dark:bg-[#111] rounded-2xl shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.08] p-6 sm:p-10">
           {children}
         </div>
 
@@ -48,10 +94,10 @@ export default function AuthFormLayout({
           <div className="mt-6 sm:mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#efefef]" />
+                <div className="w-full border-t border-black/[0.04] dark:border-white/[0.08]" />
               </div>
               <div className="relative flex justify-center text-xs sm:text-sm">
-                <span className="bg-[#fcfcfc] px-4 text-[#636363] font-sans">
+                <span className="px-4 text-accent font-sans">
                   or continue with
                 </span>
               </div>
@@ -61,7 +107,7 @@ export default function AuthFormLayout({
               <button
                 type="button"
                 onClick={onGoogleLogin}
-                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 border border-[#ddd] rounded-[5px] bg-white text-sm text-[#191919] font-button hover:bg-[#f4f4f4] transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 border border-accent rounded-lg bg-transparent text-sm text-accent font-button cursor-pointer"
               >
                 <GoogleLogo className="h-4 w-4 sm:h-5 sm:w-5" />
                 Google
@@ -69,7 +115,7 @@ export default function AuthFormLayout({
               <button
                 type="button"
                 onClick={onGithubLogin}
-                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 border border-[#ddd] rounded-[5px] bg-white text-sm text-[#191919] font-button hover:bg-[#f4f4f4] transition-colors cursor-pointer"
+                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 border border-accent rounded-lg bg-transparent text-sm text-accent font-button cursor-pointer"
               >
                 <GitHubIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 GitHub
@@ -78,17 +124,18 @@ export default function AuthFormLayout({
           </div>
         )}
 
-        <p className="mt-8 text-center text-sm text-[#636363] font-sans">
+        <p className="mt-8 text-center text-sm text-black/60 dark:text-white/60 font-sans">
           {bottomText}{" "}
           <a
             href={bottomLinkHref}
-            className="font-medium text-[#191919] hover:text-[#636363] transition-colors"
+            className="font-medium text-black dark:text-white hover:text-black/60 dark:hover:text-white/60 transition-colors"
           >
             {bottomLinkText}
           </a>
         </p>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
