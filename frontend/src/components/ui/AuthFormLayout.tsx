@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import CuroLogo from "../landing/CuroLogo";
+import Logo from "./Logo";
 import { GitHubIcon } from "./Icons";
 
 interface AuthFormLayoutProps {
@@ -30,7 +30,7 @@ export default function AuthFormLayout({
       <div className="w-full max-w-sm sm:max-w-md">
         <div className="text-center mb-8 sm:mb-10">
           <div className="inline-block mb-6">
-            <CuroLogo size="md" />
+            <Logo size="md" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-normal text-[#191919] font-sans">
             {title}

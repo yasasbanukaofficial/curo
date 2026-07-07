@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Sun, Moon, Menu, X } from "lucide-react";
-import CuroLogo from "./CuroLogo";
+import Logo from "../ui/Logo";
 import { Button } from "../ui/Button";
 import { GitHubIcon } from "../ui/Icons";
 
@@ -30,7 +30,7 @@ export default function Navbar() {
       <div className="backdrop-blur-lg border-b border-black/[0.04] dark:border-[#222] bg-white/80 dark:bg-black/80 transition-colors">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
           <nav className="flex h-16 w-full items-center">
-            <CuroLogo size="sm" />
+            <Logo size="sm" />
 
             <ul className="flex flex-row items-center gap-1 px-6 max-sm:hidden">
               {navLinks.map(link => (
@@ -59,7 +59,7 @@ export default function Navbar() {
                 href="https://github.com/yasasbanukaofficial/curo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#636363] dark:text-[#9A9A9A] hover:text-black dark:hover:text-white transition-colors"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors"
                 aria-label="GitHub"
               >
                 <GitHubIcon className="h-5 w-5" />
@@ -110,7 +110,7 @@ export default function Navbar() {
                 href="https://github.com/yasasbanukaofficial/curo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#636363] dark:text-[#9A9A9A] hover:text-black dark:hover:text-white transition-colors"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors"
                 aria-label="GitHub"
               >
                 <GitHubIcon className="h-5 w-5" />

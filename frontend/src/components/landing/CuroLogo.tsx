@@ -1,15 +1,21 @@
 interface CuroLogoProps {
   size?: "sm" | "md";
   className?: string;
+  dark?: boolean;
 }
 
-const imgSize = { sm: "h-28", md: "h-30" };
+const textSize = { sm: "text-2xl", md: "text-3xl" };
 
-export default function CuroLogo({ size = "md", className = "" }: CuroLogoProps) {
+export default function CuroLogo({ size = "md", className = "", dark: forceDark = false }: CuroLogoProps) {
   return (
     <a href="/" className={`flex items-center ${className}`}>
-      <img src="/Light_Mode-removebg-preview.png" alt="Curo" className={`${imgSize[size]} block dark:hidden`} />
-      <img src="/Dark_Mode-removebg.png" alt="Curo" className={`${imgSize[size]} hidden dark:block`} />
+      <span
+        className={`${textSize[size]} font-display tracking-wide ${
+          forceDark ? "text-white" : "text-black dark:text-white"
+        }`}
+      >
+        CURO
+      </span>
     </a>
   );
 }

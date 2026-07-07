@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, FolderKanban, KeyRound, Layers3, Users, PlugZap, Search } from "lucide-react";
 import DashboardButton from "./DashboardButton";
 import SearchInput from "./SearchInput";
-import CuroLogo from "../landing/CuroLogo";
+import Logo from "../ui/Logo";
 
 interface SearchResult {
   id: string;
@@ -137,7 +137,7 @@ export default function TopNav() {
   return (
     <header className="relative z-50 flex items-center h-16 px-4 md:px-6 bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl border-b border-black/[0.04] dark:border-[#222] transition-colors duration-200">
       <div className="flex items-center">
-        <CuroLogo size="sm" />
+        <Logo size="sm" />
       </div>
 
       <div className="flex-1 flex justify-center px-3">
