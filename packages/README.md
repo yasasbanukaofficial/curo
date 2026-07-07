@@ -1,10 +1,10 @@
 ```
- ██████╗██╗   ██╗██████╗  ██████╗ 
+ ██████╗██╗   ██╗██████╗  ██████╗
 ██╔════╝██║   ██║██╔══██╗██╔═══██╗
 ██║     ██║   ██║██████╔╝██║   ██║
 ██║     ██║   ██║██╔══██╗██║   ██║
 ╚██████╗╚██████╔╝██║  ██║╚██████╔╝
- ╚═════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ 
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝
 ```
 
 # Curo CLI
@@ -54,13 +54,13 @@ You manage your secrets (API keys, database URLs, admin credentials, etc.) on **
 
 How most teams share secrets today:
 
-| Method | Risk |
-|---|---|
-| Email or Slack message | Stored forever in inboxes — any compromised account leaks everything |
-| Shared spreadsheet | No audit trail, no access control, easily leaked |
-| Messaging app (WhatsApp, Telegram, etc.) | Zero governance — anyone in the chat sees every secret |
-| Pasting in meetings / screenshots | Visible to everyone on screen — no revocation |
-| `.env` files committed to Git | A single accidental push exposes every credential |
+| Method                                   | Risk                                                                 |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| Email or Slack message                   | Stored forever in inboxes — any compromised account leaks everything |
+| Shared spreadsheet                       | No audit trail, no access control, easily leaked                     |
+| Messaging app (WhatsApp, Telegram, etc.) | Zero governance — anyone in the chat sees every secret               |
+| Pasting in meetings / screenshots        | Visible to everyone on screen — no revocation                        |
+| `.env` files committed to Git            | A single accidental push exposes every credential                    |
 
 Every one of these methods is **insecure, unscalable, and unaccountable**.
 
@@ -69,7 +69,7 @@ Every one of these methods is **insecure, unscalable, and unaccountable**.
 Curo gives your team a **single source of truth** for every secret:
 
 - **Centralized** — one place to create, update, and revoke secrets across all projects
-- **Role-based access** — developers get read-only access to secret *names*; only admins can view or edit values
+- **Role-based access** — developers get read-only access to secret _names_; only admins can view or edit values
 - **Auditable** — every access is authenticated, so you know exactly who pulled what and when
 - **No secret sharing** — developers pull from Curo instead of asking each other for passwords
 - **Local only** — secrets are written to your local `.env`; Curo never stores or syncs it
@@ -157,12 +157,12 @@ That's it — your `.env` is ready and your application can boot normally.
 Running `curo` with no arguments launches the interactive terminal interface:
 
 ```
-        ██████╗██╗   ██╗██████╗  ██████╗ 
+        ██████╗██╗   ██╗██████╗  ██████╗
         ██╔════╝██║   ██║██╔══██╗██╔═══██╗
         ██║     ██║   ██║██████╔╝██║   ██║
         ██║     ██║   ██║██╔══██╗██║   ██║
         ╚██████╗╚██████╔╝██║  ██║╚██████╔╝
-         ╚═════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ 
+         ╚═════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝
 
 ╭──────────────────────────────────────────────╮
 │ Type a command, e.g. "/projects"              │
@@ -182,19 +182,19 @@ Everything is keyboard-driven — type `/` to see the full command list, or just
 
 All commands are typed inside the CLI interface.
 
-| Command | Action |
-|---|---|
-| `/login` | Authenticate, or switch to a different account |
-| `/projects` | Browse and select a project |
+| Command     | Action                                               |
+| ----------- | ---------------------------------------------------- |
+| `/login`    | Authenticate, or switch to a different account       |
+| `/projects` | Browse and select a project                          |
 | `/settings` | View your profile, CLI version, and clear local data |
-| `/logout` | Sign out and clear your local session |
+| `/logout`   | Sign out and clear your local session                |
 
 Once a project is selected, press `Enter` to open it. Inside the project you'll see:
 
-| Action | What it does |
-|---|---|
+| Action        | What it does                                           |
+| ------------- | ------------------------------------------------------ |
 | **pull .env** | Writes every secret to `.env` in the current directory |
-| **refresh** | Reloads the secret list from the server |
+| **refresh**   | Reloads the secret list from the server                |
 
 > `pull` always replaces the full `.env` file rather than merging keys. Backup your existing `.env` before pulling if you have custom entries.
 
@@ -202,20 +202,20 @@ Once a project is selected, press `Enter` to open it. Inside the project you'll 
 
 ## Keyboard Shortcuts
 
-| Key | Action |
-|---|---|
+| Key       | Action                               |
+| --------- | ------------------------------------ |
 | `↑` / `↓` | Navigate lists / suggestion dropdown |
-| `Enter` | Confirm selection |
-| `Esc` | Go back / clear current input |
-| `Ctrl+C` | Exit the application |
+| `Enter`   | Confirm selection                    |
+| `Esc`     | Go back / clear current input        |
+| `Ctrl+C`  | Exit the application                 |
 
 ---
 
 ## Configuration
 
-| Environment Variable | Default | Description |
-|---|---|---|
-| `CURO_API_URL` | `http://localhost:5000/api/v1` | Override the backend API base URL (useful for self-hosted or staging environments) |
+| Environment Variable | Default                        | Description                                                                        |
+| -------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| `CURO_API_URL`       | `http://localhost:5000/api/v1` | Override the backend API base URL (useful for self-hosted or staging environments) |
 
 ```bash
 # Example: point the CLI at a staging environment
@@ -228,10 +228,10 @@ CURO_API_URL=https://api.staging.curo.dev/v1 curo
 
 The CLI stores only an **authentication token** on your machine — never any secret values.
 
-| Platform | Location |
-|---|---|
+| Platform      | Location                     |
+| ------------- | ---------------------------- |
 | macOS / Linux | `~/.config/curo/config.json` |
-| Windows | `%APPDATA%\curo\config.json` |
+| Windows       | `%APPDATA%\curo\config.json` |
 
 This token authenticates your API requests. Clear it any time via **`/settings` → clear local data**, or by running `/logout`.
 
@@ -241,15 +241,15 @@ This token authenticates your API requests. Clear it any time via **`/settings` 
 
 ## Security Model
 
-| Concern | How Curo handles it |
-|---|---|
-| Token storage | Stored locally via a secure config store — never exposed outside the CLI process |
-| API transport | Encrypted over HTTPS end-to-end (configurable via `CURO_API_URL`) |
-| Auth expiry | Tokens expire and require periodic re-authentication |
-| Local `.env` | Written to disk by the CLI — you own the file, not Curo |
-| Secret visibility | Role-based — developers see names only, admins see values |
-| Revocation | Remove a team member on curo.dev → their CLI access is revoked instantly |
-| Compromised machine | Run `/logout` or clear local data — the token is invalidated server-side |
+| Concern             | How Curo handles it                                                              |
+| ------------------- | -------------------------------------------------------------------------------- |
+| Token storage       | Stored locally via a secure config store — never exposed outside the CLI process |
+| API transport       | Encrypted over HTTPS end-to-end (configurable via `CURO_API_URL`)                |
+| Auth expiry         | Tokens expire and require periodic re-authentication                             |
+| Local `.env`        | Written to disk by the CLI — you own the file, not Curo                          |
+| Secret visibility   | Role-based — developers see names only, admins see values                        |
+| Revocation          | Remove a team member on curo.dev → their CLI access is revoked instantly         |
+| Compromised machine | Run `/logout` or clear local data — the token is invalidated server-side         |
 
 ---
 
