@@ -8,7 +8,7 @@ Full-stack secrets management app (like Doppler). Frontend is React + TypeScript
 - **Framework**: React 19 + Vite + TypeScript (strict mode)
 - **State**: Redux Toolkit + RTK Query
 - **HTTP**: Axios with httpOnly cookie-based auth
-- **UI**: Custom Tailwind-like design system (no Tailwind package — all inline classes with CSS variables)
+- **UI**: Tailwind CSS v4 (Vite plugin, @import "tailwindcss" in CSS) with custom theme variables (--color-accent: #FF3333)
 - **Forms**: Formik + Zod validation
 - **Routing**: React Router v6
 
@@ -18,10 +18,18 @@ pnpm build    # tsc -b && vite build
 pnpm lint     # eslint + prettier
 ```
 
+## Theme System (Dark/Light)
+- **localStorage key**: `"curo-theme"` — stores `"light"` or `"dark"` (no value = use system preference)
+- **System preference fallback**: `window.matchMedia("(prefers-color-scheme: dark)")` — used when no localStorage value exists
+- **Applied via**: `document.documentElement.classList.toggle("dark", theme === "dark")` — the `dark` class on `<html>` enables Tailwind `dark:` variants everywhere
+- **Three independent initializers** (all read/write same localStorage key + apply `dark` class):
+  - `Navbar.tsx` — landing page (`/`)
+  - `AuthFormLayout.tsx` — auth pages (`/login`, `/register`, etc.)
+  - `DashboardLayout.tsx` — dashboard pages (`/dashboard/*`)
+- **Toggle buttons**: Landing page Navbar (desktop + mobile menu), auth pages (floating top-right button), dashboard Settings modal
+- **Theme-aware class pattern**: `text-black dark:text-white`, `bg-black/[0.04] dark:bg-white/[0.04]`, `text-black/50 dark:text-white/50`, `border-black/[0.04] dark:border-white/[0.08]`
+
 ## Environment
-```
-VITE_API_URL=http://localhost:5000/api/v1   (never hardcode)
-```
 
 ## Backend API Pattern
 All responses follow: `{ success: boolean, data: T, msg: string }`
@@ -492,6 +500,12 @@ error("Title", "Error details");
 - **URL-based routing**: projectId comes from URL params. Invalid IDs show a dedicated error page.
 - **Duplicate project names allowed**: Projects are identified by `_id`. Removed the `DUPLICATE_PROJECT` check from backend.
 - **Delete buttons only in settings**: Danger Zone section moved from overview tab to settings tab for both projects and teams.
+- **Separate Logo component** (`components/ui/Logo.tsx`): Colored-letter logo — C/R use `text-black dark:text-white`, U/O always use `text-accent` (#FF3333). Replaces old `CuroLogo.tsx` (unused).
+- **PixelBlast interactive background** (`components/animations/PixelBlast.tsx`): Canvas-based WebGL/Three.js animation with configurable shapes, ripples on pointer events, and density falloff. Used as `absolute inset-0` background in Hero section and auth pages. Content overlays use `pointer-events-none` + `pointer-events-auto` on interactive elements so pointer events pass through to the canvas.
+- **OAuth/social login buttons**: Use `border-accent`, `bg-transparent`, `text-accent` with no hover effects. "or continue with" divider text is transparent bg + `text-accent`.
+- **Auth submit buttons**: Match Hero's "Get Started" button style — `rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333]`.
+- **Font stack**: `--font-sans: "DM Sans"`, `--font-button: "Space Grotesk"`, `--font-display: "Null Normal"` (custom font from `src/assets/fonts/NullNormal400.otf`).
+- **Tailwind accent color**: `accent` is a custom Tailwind color set to `#FF3333`, used via `text-accent`, `border-accent`, `bg-accent/*`.
 
 ## Computed Counts in Backend Responses
 The backend computes aggregate counts using `countDocuments` in parallel with `Promise.all`:

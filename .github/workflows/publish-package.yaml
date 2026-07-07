@@ -1,0 +1,38 @@
+name: Pulbish npm package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/**"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: action/checkout@v7
+
+      - name: Setup Node js
+        uses: action/setup-node@v6
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Installing pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Installing dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Building package
+        run: pnpm --filter curo-cli run build
+
+      - name: Publishing the package
+        run: pnpm --filter curo-cli publish --no-git-checks

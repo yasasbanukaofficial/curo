@@ -11,12 +11,12 @@ export default function ParallaxDrift({ children, drift = 4, className = "" }: {
     offset: ["start end", "end start"],
   });
 
-  const y = useTransform(scrollYProgress, [0, 1], [drift, -drift]);
+  const y = useTransform(scrollYProgress, [0, 1], [drift * 0.5, -drift * 0.5]);
 
   if (reduced) return <div className={className}>{children}</div>;
 
   return (
-    <motion.div ref={ref} style={{ y }} className={className}>
+    <motion.div ref={ref} style={{ y, willChange: "transform" }} className={className}>
       {children}
     </motion.div>
   );

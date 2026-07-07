@@ -187,14 +187,22 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   return sendResponse(res, result);
 };
 
-export const logoutUser = async (req: AuthRequest, res: Response) => {
+export const logoutUser = async (req: Request, res: Response) => {
   const refreshToken = req.cookies?.refreshtoken;
-  const result = await authService.logoutUser(req.userId!, refreshToken);
+
+  if (refreshToken) {
+    await authService.logoutUser(refreshToken);
+  }
+
   res.clearCookie("access_token");
   res.clearCookie("refreshtoken");
   res.clearCookie("oauth_state");
   res.clearCookie("github_oauth_state");
-  return sendResponse(res, result);
+  return sendResponse(res, {
+    success: true,
+    status: 200,
+    msg: "Logged out successfully",
+  });
 };
 
 export const verifyEmailOTP = async (req: AuthRequest, res: Response) => {
@@ -260,12 +268,6 @@ export const sendPasswordResetLink = async (req: AuthRequest, res: Response) => 
 
 export const changePassword = async (req: AuthRequest, res: Response) => {
   const result = await authService.changePassword(req.userId!, req.body.currentPassword, req.body.newPassword);
-  return sendResponse(res, result);
-};
-
-export const markOnboardingComplete = async (req: AuthRequest, res: Response) => {
-  const { skipped } = req.body;
-  const result = await authService.markOnboardingComplete(req.userId!, skipped);
   return sendResponse(res, result);
 };
 

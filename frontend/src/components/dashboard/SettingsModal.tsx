@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  X, Sun, Moon, Check, CreditCard, Settings as SettingsIcon, UserCircle,
+  X, Settings as SettingsIcon, UserCircle,
   User, Mail, Calendar, KeyRound, Trash2, AlertTriangle, Send,
 } from "lucide-react";
-import { useTheme } from "../../pages/dashboard/DashboardLayout";
 import { GitHubIcon } from "../ui/Icons";
 import DashboardButton from "./DashboardButton";
 import AlertModal from "./AlertModal";
@@ -41,7 +40,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const toast = useToast();
-  const { theme, toggle } = useTheme();
   const { data: userData } = useVerifySessionQuery();
   const [updateProfile] = useUpdateProfileMutation();
   const [sendPasswordResetLink, { isLoading: isSendingReset }] = useSendPasswordResetLinkMutation();
@@ -126,7 +124,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
   const navItems: { label: string; value: SettingsTab; icon: typeof SettingsIcon }[] = [
     { label: "General", value: "general", icon: SettingsIcon },
     { label: "Account", value: "account", icon: UserCircle },
-    { label: "Billing", value: "billing", icon: CreditCard },
   ];
 
   return (
@@ -135,7 +132,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="relative w-full max-w-3xl h-[600px] bg-white dark:bg-[#111] rounded-2xl border border-black/[0.04] dark:border-[#222] shadow-xl flex overflow-hidden transition-all duration-200">
-        <DashboardButton onClick={onClose} className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={onClose} className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-[#8E8E93] hover:text-accent hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
           <X className="w-4 h-4" />
         </DashboardButton>
         <div className="w-48 flex-shrink-0 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 border-r border-black/[0.04] dark:border-[#222] p-3 flex flex-col">
@@ -151,8 +148,8 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                   onClick={() => setTab(item.value)}
                   className={`w-full h-9 px-3 text-sm rounded-lg justify-start ${
                     tab === item.value
-                      ? "bg-white dark:bg-[#333] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium shadow-sm"
-                      : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-white dark:hover:bg-[#333]"
+                      ? "bg-white dark:bg-[#333] text-accent font-medium shadow-sm"
+                      : "text-[#8E8E93] dark:text-[#666] hover:text-accent hover:bg-white dark:hover:bg-[#333]"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -166,39 +163,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
         <div className="flex-1 overflow-y-auto">
           {tab === "general" && (
             <div className="p-6 space-y-8">
-              <div>
-                <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-4">Appearance</h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-2">Theme</p>
-                    <div className="flex items-center gap-2">
-                      <DashboardButton
-                        onClick={theme === "dark" ? toggle : undefined}
-                        className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
-                          theme === "light"
-                            ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
-                            : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
-                        }`}
-                      >
-                        <Sun className="w-4 h-4" />
-                        Light
-                      </DashboardButton>
-                      <DashboardButton
-                        onClick={theme === "light" ? toggle : undefined}
-                        className={`flex-1 h-10 gap-2 text-sm rounded-[10px] font-medium ${
-                          theme === "dark"
-                            ? "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] shadow-sm"
-                            : "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
-                        }`}
-                      >
-                        <Moon className="w-4 h-4" />
-                        Dark
-                      </DashboardButton>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <div>
                 <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-4">Connected Accounts</h3>
                 <div className="space-y-3">
@@ -230,7 +194,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     ) : (
                       <DashboardButton
                         onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
-                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                        className="h-8 px-3 text-[11px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20"
                       >Connect</DashboardButton>
                     )}
                   </div>
@@ -262,7 +226,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     ) : (
                       <DashboardButton
                         onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/connect`}
-                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                        className="h-8 px-3 text-[11px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20"
                       >Connect</DashboardButton>
                     )}
                   </div>
@@ -302,11 +266,11 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-3 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] gap-1">Documentation</DashboardButton>
+                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-accent gap-1">Documentation</DashboardButton>
                   <span className="text-[#8E8E93] dark:text-[#666] text-[11px]">·</span>
-                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] gap-1">Changelog</DashboardButton>
+                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-accent gap-1">Changelog</DashboardButton>
                   <span className="text-[#8E8E93] dark:text-[#666] text-[11px]">·</span>
-                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] gap-1">Support</DashboardButton>
+                  <DashboardButton className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] hover:text-accent gap-1">Support</DashboardButton>
                 </div>
               </div>
             </div>
@@ -373,14 +337,14 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                         type="button"
                         onClick={handleSaveProfile}
                         disabled={isSavingProfile || !profileName.trim()}
-                        className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-white bg-accent rounded-[10px] hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSavingProfile ? "Saving..." : "Save"}
                       </button>
                       <button
                         type="button"
                         onClick={handleCancelEdit}
-                        className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-transparent border border-black/10 dark:border-white/10 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                        className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-[10px] hover:bg-gray-200 dark:hover:bg-white/[0.08]"
                       >
                         Cancel
                       </button>
@@ -389,9 +353,9 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     <button
                       type="button"
                       onClick={handleStartEdit}
-                      className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
-                    >
-                      Edit Profile
+                      className="font-button cursor-pointer transition-all text-center inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-white bg-accent rounded-[10px] hover:bg-accent/90"
+                      >
+                        Edit Profile
                     </button>
                   )}
                 </div>
@@ -428,7 +392,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     ) : (
                       <DashboardButton
                         onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
-                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                        className="h-8 px-3 text-[11px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20"
                       >Connect</DashboardButton>
                     )}
                   </div>
@@ -465,7 +429,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                     ) : (
                       <DashboardButton
                         onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/connect`}
-                        className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                        className="h-8 px-3 text-[11px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20"
                       >Connect</DashboardButton>
                     )}
                   </div>
@@ -489,14 +453,14 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       <DashboardButton
                         onClick={handleSendResetLink}
                         disabled={isSendingReset}
-                        className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-9 px-4 text-sm font-medium text-white bg-accent rounded-[10px] hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSendingReset ? <LoadingSpinner size={16} /> : <Send className="w-4 h-4" />}
                         Send Reset Link
                       </DashboardButton>
                       <DashboardButton
                         onClick={handleCancelPasswordReset}
-                        className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
+                        className="h-9 px-4 text-sm font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-[10px] hover:bg-gray-200 dark:hover:bg-white/[0.08]"
                       >
                         Cancel
                       </DashboardButton>
@@ -514,7 +478,7 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
                       </div>
                     </div>
                     <div className="mt-5">
-                      <DashboardButton onClick={handleOpenPasswordReset} className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]">
+                      <DashboardButton onClick={handleOpenPasswordReset} className="h-9 px-4 text-sm font-medium text-accent bg-accent/10 rounded-[10px] hover:bg-accent/20">
                         <KeyRound className="w-4 h-4" />
                         Change Password
                       </DashboardButton>
@@ -540,50 +504,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
             </div>
           )}
 
-          {tab === "billing" && (
-            <div className="p-6 space-y-6">
-              <div>
-                <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">Billing & Plan</h3>
-                <p className="text-xs text-[#8E8E93] dark:text-[#666]">You are currently on the <span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Team</span> plan.</p>
-              </div>
-
-              <div className="rounded-2xl border border-[#1D1D1F] dark:border-white bg-[#1D1D1F] dark:bg-white p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-lg font-bold text-white dark:text-[#1D1D1F]">Team</p>
-                    <p className="text-sm text-white/70 dark:text-[#1D1D1F]/70 mt-0.5">$29/mo per seat</p>
-                  </div>
-                  <span className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-white/20 dark:bg-[#1D1D1F]/20 text-white dark:text-[#1D1D1F]">Current Plan</span>
-                </div>
-                <ul className="space-y-2.5">
-                  {[
-                    "Unlimited projects",
-                    "Unlimited secrets",
-                    "Up to 25 team members",
-                    "Environment sync",
-                    "Priority email support",
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/80 dark:text-[#1D1D1F]/80">
-                      <Check className="w-4 h-4 text-white dark:text-[#1D1D1F] flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="rounded-2xl border border-black/[0.04] dark:border-[#222] bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Need more?</p>
-                    <p className="text-xs text-[#8E8E93] dark:text-[#666] mt-0.5">Upgrade to Enterprise for unlimited team members, SSO, and more.</p>
-                  </div>
-                  <DashboardButton onClick={() => { onClose(); navigate("/pricing"); }} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
-                    Upgrade Plan
-                  </DashboardButton>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

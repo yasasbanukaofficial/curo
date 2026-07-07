@@ -1,6 +1,4 @@
 import { motion } from "framer-motion";
-import DotsLine from "./DotsLine";
-import Corner from "./Corner";
 import StaggerContainer, { scaleFadeIn } from "../animations/StaggerContainer";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import VaultLock from "./VaultLock";
@@ -32,11 +30,11 @@ export default function CentralizeSection() {
 
   const textColumn = (
     <motion.div variants={scaleFadeIn()} className="flex-1 max-w-lg order-1 lg:order-2">
-      <div className="text-[#1D1D1F] text-xs uppercase font-bold tracking-widest mb-3">Centralize</div>
-      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-[#1D1D1F] leading-[1.1] mb-4">
+      <div className="text-accent text-xs uppercase font-bold tracking-widest mb-3">Centralize</div>
+      <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold tracking-tight text-black dark:text-white leading-[1.15] mb-4">
         One source<br />of truth.
       </h2>
-      <p className="text-sm sm:text-base text-[#6E6E73] leading-relaxed">
+      <p className="text-sm sm:text-base lg:text-lg text-black/70 dark:text-white/70 leading-relaxed">
         Bring all your environment variables into a single, encrypted vault. Curo gives you a centralized hub where every secret is stored securely, versioned, and accessible on demand.
       </p>
     </motion.div>
@@ -44,31 +42,26 @@ export default function CentralizeSection() {
 
   if (reduced) {
     return (
-      <section id="centralize" className="relative bg-[#fcfcfc] scroll-mt-24">
-        <DotsLine className="h-10" />
-        <div className="border-x border-[#efefef] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
-          <Corner />
+      <section id="centralize" className="relative bg-white dark:bg-black scroll-mt-24 py-8 lg:py-12">
+        <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
           <StaggerContainer className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
           <ParallaxDrift drift={3} className="flex-1 max-w-lg order-2 lg:order-1 flex justify-center">
             <div className="flex flex-col items-center w-full max-w-sm">
                 {vaultCard}
-                <h3 className="text-2xl md:text-3xl font-medium text-[#1D1D1F] tracking-tight mt-6">CURO</h3>
-                <p className="text-sm text-[#6E6E73] mt-2">Secure Environment Variable Management</p>
+                <h3 className="text-2xl md:text-3xl font-bold text-black dark:text-white tracking-tight mt-6">CURO</h3>
+                <p className="text-sm text-black/70 dark:text-white/70 mt-2">Secure Environment Variable Management</p>
               </div>
             </ParallaxDrift>
             {textColumn}
           </StaggerContainer>
         </div>
-        <DotsLine className="h-10" />
       </section>
     );
   }
 
   return (
-    <section id="centralize" className="relative bg-[#fcfcfc] scroll-mt-24">
-      <DotsLine className="h-10" />
-      <div className="border-x border-[#efefef] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
-        <Corner />
+    <section id="centralize" className="relative bg-white dark:bg-black scroll-mt-24">
+      <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-24 lg:py-32 relative">
         <StaggerContainer className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
           <motion.div variants={scaleFadeIn()} className="flex-1 max-w-lg order-2 lg:order-1 flex justify-center">
             <motion.div
@@ -108,7 +101,7 @@ export default function CentralizeSection() {
                 </motion.div>
               </div>
               <motion.h3
-                className="text-2xl md:text-3xl font-medium text-[#1D1D1F] tracking-tight mt-6"
+                className="text-2xl md:text-3xl font-bold text-black dark:text-white tracking-tight mt-6"
                 variants={{
                   hidden: { opacity: 0, y: 8 },
                   visible: { opacity: 1, y: 0, transition: { duration: 0.35, delay: 0.7, ease: [0.25, 0.1, 0.25, 1] } },
@@ -117,7 +110,7 @@ export default function CentralizeSection() {
                 CURO
               </motion.h3>
               <motion.p
-                className="text-sm text-[#6E6E73] mt-2"
+                className="text-sm text-black/70 dark:text-white/70 mt-2"
                 variants={{
                   hidden: { opacity: 0 },
                   visible: { opacity: 1, transition: { duration: 0.35, delay: 0.8 } },
@@ -130,7 +123,6 @@ export default function CentralizeSection() {
           {textColumn}
         </StaggerContainer>
       </div>
-      <DotsLine className="h-10" />
     </section>
   );
 }

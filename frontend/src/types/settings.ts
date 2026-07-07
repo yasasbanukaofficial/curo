@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export type SettingsTab = "general" | "account" | "billing";
+export type SettingsTab = "general" | "account";
 
 export interface UserProfile {
   _id: string;

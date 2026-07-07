@@ -64,14 +64,14 @@ function ToastItemComponent({ item, onDismiss }: { item: ToastItem; onDismiss: (
         <VariantIcon className={`w-4 h-4 ${config.iconColor}`} />
       </div>
       <div className="min-w-0 flex-1 pt-0.5">
-        <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{item.title}</p>
+        <p className="text-sm font-semibold text-black dark:text-white">{item.title}</p>
         {item.description && (
-          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5 leading-relaxed">{item.description}</p>
+          <p className="text-[11px] text-black/50 dark:text-white/50 mt-0.5 leading-relaxed">{item.description}</p>
         )}
       </div>
       <DashboardButton
         onClick={() => onDismiss(item.id)}
-        className="p-1 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] flex-shrink-0"
+        className="p-1 rounded-lg text-black/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] flex-shrink-0"
       >
         <X className="w-3.5 h-3.5" />
       </DashboardButton>
