@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGetOverviewStatsQuery, useGetTeamsQuery, useGetProjectsQuery, useVerifySessionQuery } from "../../store";
+import { useActivityFeed } from "../../hooks/useActivityFeed";
 import {
   FolderKanban,
   KeyRound,
@@ -14,7 +15,7 @@ import {
   Activity,
   UserPlus,
   Key,
-  Globe,
+
   ExternalLink,
   Sparkles,
 } from "lucide-react";
@@ -229,60 +230,7 @@ export default function Overview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div variants={item} className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Activity</h3>
-                <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Recent projects and secrets</p>
-              </div>
-            </div>
-            <div className="space-y-0.5">
-              {recentProjects.length === 0 && recentSecrets.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-white/30 py-2">No recent activity.</p>
-              ) : (
-                <>
-                  {recentProjects.slice(0, 3).map((p: any, i: number) => (
-                    <motion.div
-                      key={`proj-${p._id}`}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      onClick={() => navigate(`/dashboard/project/${p._id}`)}
-                      className="flex items-center gap-4 py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-150 group cursor-pointer"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700 dark:text-white/70 truncate">
-                          Created project <span className="font-medium text-gray-900 dark:text-[#FAFAFA]">{p.projectName}</span>
-                        </p>
-                        <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{p.teamName || "Personal"}</p>
-                      </div>
-                      <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">{timeAgo(p.updatedAt)}</span>
-                    </motion.div>
-                  ))}
-                  {recentSecrets.slice(0, 3).map((s: any, i: number) => (
-                    <motion.div
-                      key={`sec-${s._id}`}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (recentProjects.slice(0, 3).length + i) * 0.05 }}
-                      onClick={() => navigate(`/dashboard/project/${s.projectId}`)}
-                      className="flex items-center gap-4 py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-150 group cursor-pointer"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-[#3B82F6] flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700 dark:text-white/70 truncate">
-                          Added secret <span className="font-medium text-gray-900 dark:text-[#FAFAFA]">{s.secName}</span>
-                        </p>
-                        <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{s.projectName}</p>
-                      </div>
-                      <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">{timeAgo(s.createdAt)}</span>
-                    </motion.div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
+          <ActivityOverviewCard navigate={navigate} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
@@ -445,3 +393,75 @@ export default function Overview() {
     </motion.div>
   );
 }
+
+const actionColors: Record<string, string> = {
+  created: "bg-[#30D158]",
+  updated: "bg-[#FF9F0A]",
+  rotated: "bg-[#FF9F0A]",
+  deleted: "bg-[#FF3B30]",
+  synced: "bg-[#007AFF]",
+  deployed: "bg-[#30D158]",
+};
+
+function ActivityOverviewCard({ navigate }: { navigate: (path: string) => void }) {
+  const { entries } = useActivityFeed();
+  const recent = entries.slice(0, 5);
+
+  return (
+    <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Activity</h3>
+          <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Latest {Math.min(recent.length, 5)} of {entries.length} events</p>
+        </div>
+        {entries.length > 0 && (
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/activity")}
+            className="cursor-pointer text-[11px] font-medium text-gray-400 dark:text-white/30 hover:text-accent transition-colors"
+          >
+            View all
+          </button>
+        )}
+      </div>
+      <div className="space-y-0.5">
+        {recent.length === 0 ? (
+          <p className="text-sm text-gray-400 dark:text-white/30 py-2">No recent activity.</p>
+        ) : (
+          recent.map((entry, i) => (
+            <motion.div
+              key={entry._id}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => {
+                if (entry.projectId) navigate(`/dashboard/project/${entry.projectId}`);
+                else if (entry.teamId) navigate(`/dashboard/teams/${entry.teamId}`);
+              }}
+              className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-150 group cursor-pointer"
+            >
+              <span
+                className={`w-2 h-2 rounded-full flex-shrink-0 ${actionColors[entry.action] || "bg-gray-400 dark:bg-white/30"}`}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-700 dark:text-white/70 truncate">
+                  {entry.description}
+                </p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-white/40 capitalize">
+                    {entry.entityType}
+                  </span>
+                  {entry.projectName && (
+                    <span className="text-[10px] text-gray-400 dark:text-white/30">{entry.projectName}</span>
+                  )}
+                </div>
+              </div>
+              <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">{timeAgo(entry.createdAt)}</span>
+            </motion.div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+

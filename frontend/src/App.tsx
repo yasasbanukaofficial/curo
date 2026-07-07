@@ -9,6 +9,7 @@ import Overview from "./pages/dashboard/Overview";
 import Projects from "./pages/dashboard/Projects";
 import SecretsPage from "./pages/dashboard/SecretsPage";
 import Integrations from "./pages/dashboard/Integrations";
+import ActivityLog from "./pages/dashboard/ActivityLog";
 import Account from "./pages/dashboard/Account";
 import Settings from "./pages/dashboard/Settings";
 import Teams from "./pages/dashboard/Teams";
@@ -90,6 +91,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<Overview />} />
+            <Route path="activity" element={<ActivityLog />} />
             <Route path="projects" element={<Projects />} />
             <Route path="secrets" element={<SecretsPage />} />
             <Route path="project/:projectId" element={<Projects />} />

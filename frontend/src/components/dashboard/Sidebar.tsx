@@ -22,7 +22,7 @@ const navItems: ({ label: string; icon: any; path: string; shortcut: string; has
   { label: "Projects", icon: FolderKanban, path: "/dashboard/projects", shortcut: "2", hasSub: true },
   { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets", shortcut: "3", sub: true },
   { label: "Teams", icon: Users, path: "/dashboard/teams", shortcut: "4" },
-  { label: "Activity", icon: Activity, path: "/dashboard/overview", shortcut: "5" },
+  { label: "Activity", icon: Activity, path: "/dashboard/activity", shortcut: "5" },
   { label: "Integrations", icon: Command, path: "/dashboard/integrations", shortcut: "6" },
 ];
 
@@ -216,6 +216,7 @@ export default function Sidebar({ onToggleSettings }: SidebarProps) {
     if (path === "/dashboard" || path === "/dashboard/overview") return "/dashboard";
     if (path.startsWith("/dashboard/project")) return "/dashboard/projects";
     if (path === "/dashboard/secrets") return "/dashboard/secrets";
+    if (path === "/dashboard/activity") return "/dashboard/activity";
     if (path.startsWith("/dashboard/teams")) return "/dashboard/teams";
     if (path.startsWith("/dashboard/integrations")) return "/dashboard/integrations";
     if (path.startsWith("/dashboard/settings") || path.startsWith("/dashboard/account")) return "/dashboard/settings";

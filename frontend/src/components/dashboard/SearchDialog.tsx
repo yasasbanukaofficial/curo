@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, FolderKanban, Users, KeyRound, LayoutDashboard, PlugZap, ArrowRight, Sun, Plus } from "lucide-react";
+import { Search, FolderKanban, Users, KeyRound, LayoutDashboard, PlugZap, ArrowRight, Sun, Plus, Activity } from "lucide-react";
 import { useGetProjectsQuery, useGetTeamsQuery } from "../../store";
 import { useTheme } from "../../pages/dashboard/DashboardLayout";
 
@@ -34,6 +34,7 @@ export default function SearchDialog() {
     { id: "secrets", label: "Go to Secrets", description: "View all secrets", icon: KeyRound, path: "/dashboard/secrets", type: "command" },
     { id: "teams", label: "Go to Teams", description: "View all teams", icon: Users, path: "/dashboard/teams", type: "command" },
     { id: "integrations", label: "Go to Integrations", description: "Manage integrations", icon: PlugZap, path: "/dashboard/integrations", type: "command" },
+    { id: "activity", label: "Go to Activity", description: "View activity log", icon: Activity, path: "/dashboard/activity", type: "command" },
     { id: "account", label: "Go to Account", description: "Your account settings", icon: Users, path: "/dashboard/account", type: "command" },
     { id: "toggle-theme", label: theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode", description: "Toggle between light and dark theme", icon: Sun, path: "", type: "command", action: "toggleTheme" },
     { id: "new-project", label: "Create Project", description: "Create a new project", icon: Plus, path: "/dashboard/projects", type: "command", action: "openCreateProject" },

@@ -51,10 +51,11 @@ export function Tr({ children, className = "", onClick }: TrProps) {
 interface TdProps {
   children: ReactNode;
   className?: string;
+  colSpan?: number;
 }
 
-export function Td({ children, className = "" }: TdProps) {
+export function Td({ children, className = "", colSpan }: TdProps) {
   return (
-    <td className={`py-3.5 px-5 ${className}`}>{children}</td>
+    <td colSpan={colSpan} className={`py-3.5 px-5 ${className}`}>{children}</td>
   );
 }

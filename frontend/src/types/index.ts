@@ -9,3 +9,4 @@ export type { TeamInvite } from "./teamInvite";
 export type { LoginFormValues, RegisterFormValues } from "./auth";
 export type { SettingsProfileValues, ChangePasswordValues, SettingsTab, UserProfile } from "./settings";
 export type { SelectOption } from "./select";
+export type { ActivityLogEntry, ActivityLogFilters, ActivityLogResponse } from "./activity";
