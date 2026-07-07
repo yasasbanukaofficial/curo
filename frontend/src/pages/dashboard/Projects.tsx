@@ -96,7 +96,7 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
       variants={cardVariants}
       whileHover={{ y: -2, transition: { duration: 0.2 } }}
       onClick={onClick}
-      className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:border-white/[0.10] hover:shadow-xl group"
+      className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:shadow-xl group"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -488,7 +488,7 @@ const projectDetail = selectedProject ? (
           </button>
         </div>
         {/* Meta pills */}
-        <div className="flex flex-wrap items-center gap-3 mt-4">
+        <div className="flex flex-wrap items-center gap-3 mt-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/[0.04] text-xs font-medium text-gray-600 dark:text-white/60">
             <KeyRound className="w-3 h-3 text-accent" />
             {projectSecrets.length} secrets
@@ -742,7 +742,7 @@ const projectDetail = selectedProject ? (
               </div>
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] overflow-hidden">
+            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] overflow-visible">
               <div className="divide-y divide-gray-100 dark:divide-white/[0.04]">
                 {filteredSecrets.map((s) => {
                   const env = projectEnvironments.find((e) => e._id === s.environmentId);
@@ -835,7 +835,7 @@ const projectDetail = selectedProject ? (
                 return (
                   <div
                     key={env._id}
-                    className="relative bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:border-accent/30 hover:shadow-lg group overflow-hidden"
+                    className="relative bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:shadow-lg group overflow-hidden"
                     onClick={() => handleEnvClick(env._id)}
                   >
                     <div className={`absolute top-0 left-0 w-1 h-full rounded-l-2xl ${style.dot}`} />

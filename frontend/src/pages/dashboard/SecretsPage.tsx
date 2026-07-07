@@ -20,7 +20,7 @@ function SecretCard({ secret }: { secret: any }) {
   const [showValue, setShowValue] = useState(false);
 
   return (
-    <div className="bg-gray-50 dark:bg-white/[0.03] rounded-xl border border-gray-200 dark:border-white/[0.06] p-3.5 hover:border-gray-300 dark:hover:border-white/[0.1] transition-all duration-200">
+    <div className="bg-gray-50 dark:bg-white/[0.03] rounded-xl border border-gray-200 dark:border-white/[0.06] p-3.5 transition-all duration-200">
       <div className="flex items-start justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0">

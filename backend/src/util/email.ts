@@ -36,11 +36,11 @@ export async function sendVerificationEmail(
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #191919;">Verify your email</h1>
           <p style="font-size: 14px; color: #636363; margin-bottom: 24px;">Use the code below or click the button to verify your email address.</p>
-          <div style="background: #F5F5F7; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+          <div style="background: #FFF0F0; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px; border: 1px solid #FFD6D6;">
             <p style="font-size: 12px; color: #636363; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Verification code</p>
-            <p style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #191919; margin: 0;">${otp}</p>
+            <p style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #FF3333; margin: 0;">${otp}</p>
           </div>
-          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #191919; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Verify email</a>
+          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #FF3333; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Verify email</a>
           <p style="font-size: 12px; color: #A3A3A3; text-align: center;">This code expires in 10 minutes. If you didn't create an account, you can ignore this email.</p>
         </div>
       `,
@@ -88,7 +88,7 @@ export async function sendTeamInviteEmail(
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #191919;">You're invited!</h1>
           <p style="font-size: 14px; color: #636363; margin-bottom: 24px;">${inviterName} has invited you to join <strong>${teamName}</strong> on Curo.</p>
-          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #191919; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Accept Invite</a>
+          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #FF3333; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Accept Invite</a>
           <p style="font-size: 12px; color: #A3A3A3; text-align: center;">This invite expires on ${expiresFormatted}. If you don't have an account, you'll be asked to create one.</p>
         </div>
       `,
@@ -127,7 +127,7 @@ export async function sendPasswordResetEmail(
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
           <h1 style="font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #191919;">Reset your password</h1>
           <p style="font-size: 14px; color: #636363; margin-bottom: 24px;">Click the button below to reset your password.</p>
-          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #191919; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Reset password</a>
+          <a href="${link}" style="display: block; text-align: center; padding: 12px 24px; background: #FF3333; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 500; font-size: 14px; margin-bottom: 24px;">Reset password</a>
           <p style="font-size: 12px; color: #A3A3A3; text-align: center;">This link expires in 10 minutes. If you didn't request a password reset, you can ignore this email.</p>
         </div>
       `,

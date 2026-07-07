@@ -22,13 +22,12 @@ import {
   Search,
   ChevronRight,
 } from "lucide-react";
-import SectionHeader from "../../components/dashboard/SectionHeader";
 import Modal from "../../components/dashboard/Modal";
 import AlertModal from "../../components/dashboard/AlertModal";
 import FormInput from "../../components/dashboard/FormInput";
 import FormField from "../../components/dashboard/FormField";
 import FormSelect from "../../components/dashboard/FormSelect";
-import FilterTabs from "../../components/dashboard/FilterTabs";
+
 import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
 import { useToast } from "../../components/dashboard/Toast";
 import { validateZod } from "../../types/settings";
@@ -44,6 +43,8 @@ import {
   useGetTeamInvitesQuery,
   useRevokeInviteMutation,
   useGetProjectsQuery,
+  useAddTeamToProjectMutation,
+  useRemoveTeamFromProjectMutation,
 } from "../../store";
 import { useTeamRole } from "../../hooks/useTeamRole";
 import type { Team, TeamMember, TeamInvite, Project } from "../../types";
@@ -83,7 +84,7 @@ function TeamCard({ team, onSelect }: { team: Team; onSelect: () => void }) {
       variants={cardVariants}
       whileHover={{ y: -2, transition: { duration: 0.2 } }}
       onClick={onSelect}
-      className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:border-white/[0.10] hover:shadow-xl group"
+      className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:shadow-xl group"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -146,6 +147,27 @@ const detailTabs = [
   { label: "Settings", value: "settings" as DetailTab },
 ];
 
+function DetailTabBar({ tabs, active, onChange }: { tabs: { label: string; value: DetailTab }[]; active: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex gap-1 p-1 bg-gray-100 dark:bg-white/[0.04] rounded-xl w-fit">
+      {tabs.map((t) => (
+        <button
+          key={t.value}
+          type="button"
+          onClick={() => onChange(t.value)}
+          className={`cursor-pointer px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+            active === t.value
+              ? "bg-white dark:bg-[#18181B] text-accent shadow-sm"
+              : "text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Teams() {
   const { success: showSuccess, error: showError } = useToast();
   const navigate = useNavigate();
@@ -157,6 +179,8 @@ export default function Teams() {
   const [inviteMember] = useInviteMemberMutation();
   const [removeMember] = useRemoveMemberMutation();
   const [revokeInvite] = useRevokeInviteMutation();
+  const [addTeamToProject] = useAddTeamToProjectMutation();
+  const [removeTeamFromProject] = useRemoveTeamFromProjectMutation();
 
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
@@ -215,7 +239,7 @@ export default function Teams() {
   const { data: teamInvites = [] } = useGetTeamInvitesQuery(teamId, { skip: !teamId });
   const { data: allProjects = [] } = useGetProjectsQuery();
   const teamProjects = allProjects.filter((p: Project) => p.teamId === teamId);
-  const { canDelete, canEdit, canManageMembers } = useTeamRole(teamId);
+  const { canDelete, canEdit, canManageMembers, canCreate } = useTeamRole(teamId);
 
   const pendingInvites = teamInvites.filter((inv) => !teamMembers.some((m) => m.email === inv.email));
 
@@ -381,22 +405,49 @@ export default function Teams() {
 
   const teamDetail = selectedTeam ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 lg:p-8 pb-8 overflow-y-auto">
-      <div className="flex items-center gap-3 mb-5">
-        <button type="button" onClick={() => { navigate("/dashboard/teams"); setSelectedTeam(null); setDetailTab("overview"); }} className="cursor-pointer p-2 rounded-xl text-gray-500 dark:text-white/40 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200">
+
+      <div className="relative flex items-start gap-4 mb-8">
+        <button
+          type="button"
+          onClick={() => { navigate("/dashboard/teams"); setSelectedTeam(null); setDetailTab("overview"); }}
+          className="cursor-pointer mt-1 p-2 rounded-xl text-gray-400 dark:text-white/30 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 flex-shrink-0"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA]">{selectedTeam.name}</h1>
-          <p className="text-sm text-gray-500 dark:text-white/40 mt-0.5">{selectedTeam.slug}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-[#FAFAFA]">{selectedTeam.name}</h1>
+              <p className="text-sm text-gray-500 dark:text-white/40 mt-1">{selectedTeam.slug}</p>
+            </div>
+            <button
+              type="button"
+              onClick={openSettingsForm}
+              disabled={!canEdit}
+              className="cursor-pointer h-9 px-4 text-sm font-medium text-gray-600 dark:text-white/60 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2 flex-shrink-0"
+            >
+              <Settings className="w-4 h-4" />Settings
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 mt-2">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/[0.04] text-xs font-medium text-gray-600 dark:text-white/60">
+              <Users className="w-3 h-3 text-accent" />
+              {teamMembers.length} {(teamMembers.length || 0) === 1 ? "member" : "members"}
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-white/[0.04] text-xs font-medium text-gray-600 dark:text-white/60">
+              <FolderKanban className="w-3 h-3 text-accent" />
+              {teamProjects.length} projects
+            </div>
+            {canDelete && (
+              <button type="button" onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="h-8 px-3 text-xs font-medium text-red-400 bg-red-500/10 rounded-xl hover:bg-red-500/20 transition-all duration-200 inline-flex items-center gap-1.5">
+                <Trash2 className="w-3 h-3" />Delete
+              </button>
+            )}
+          </div>
         </div>
-        {canDelete && (
-          <button type="button" onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="cursor-pointer h-9 px-4 text-sm font-medium text-red-400 bg-red-500/10 rounded-xl hover:bg-red-500/20 transition-all duration-200 inline-flex items-center gap-2">
-            <Trash2 className="w-4 h-4" />Delete Team
-          </button>
-        )}
       </div>
 
-      <FilterTabs options={detailTabs.map((t) => t.label)} value={detailTabs.find((t) => t.value === detailTab)?.label || "Overview"} onChange={(v) => setDetailTab(detailTabs.find((t) => t.label === v)?.value || "overview")} />
+      <DetailTabBar tabs={detailTabs} active={detailTab} onChange={(v) => setDetailTab(v as DetailTab)} />
 
       <div className="mt-6">
         {detailTab === "overview" && (
@@ -407,10 +458,18 @@ export default function Teams() {
             className="grid grid-cols-1 xl:grid-cols-3 gap-6"
           >
             <div className="xl:col-span-2 space-y-6">
-              <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <SectionHeader title="Team Information" description="Manage your team settings and preferences." />
-                  <button type="button" onClick={openSettingsForm} disabled={!canEdit} className="h-8 px-3 text-xs font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-white/[0.08] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+              <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+                      <Users className="w-4 h-4 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Team Information</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Manage your team settings and preferences.</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={openSettingsForm} disabled={!canEdit} className="h-8 px-3 text-xs font-medium text-accent bg-accent/10 rounded-xl hover:bg-accent/20 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
                     <Settings className="w-3 h-3" />Edit
                   </button>
                 </div>
@@ -430,9 +489,17 @@ export default function Teams() {
               {membersLoading ? (
                 <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8 flex items-center justify-center"><LoadingSpinner size={24} /></motion.div>
               ) : (
-                <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+                <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-6">
                   <div className="flex items-center justify-between mb-5">
-                    <SectionHeader title="Members" description={`${teamMembers.length} members in this team.`} />
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+                        <Users className="w-4 h-4 text-accent" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Members</h3>
+                        <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{teamMembers.length} members in this team.</p>
+                      </div>
+                    </div>
                     {canManageMembers && (
                       <button type="button" onClick={() => setShowInviteModal(true)} className="cursor-pointer h-8 px-3 text-xs font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 inline-flex items-center gap-1.5">
                         <UserPlus className="w-3 h-3" />Invite
@@ -462,8 +529,16 @@ export default function Teams() {
               )}
 
               {pendingInvites.length > 0 && (
-                <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
-                  <SectionHeader title="Pending Invites" description={`${pendingInvites.length} pending invitation${pendingInvites.length > 1 ? "s" : ""}.`} />
+                <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-6">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Pending Invites</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{pendingInvites.length} pending invitation{pendingInvites.length > 1 ? "s" : ""}.</p>
+                    </div>
+                  </div>
                   <div className="space-y-1">
                     {pendingInvites.map((inv: TeamInvite) => (
                       <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-200">
@@ -478,18 +553,18 @@ export default function Teams() {
 
             <div className="space-y-6">
               <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
-                <SectionHeader title="Quick Actions" />
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-4">Quick Actions</h3>
                 <div className="space-y-2">
-                  <button type="button" onClick={openSettingsForm} disabled={!canEdit} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white/70 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 justify-start disabled:opacity-40 disabled:cursor-not-allowed"><Settings className="w-4 h-4" />Team Settings</button>
+                  <button type="button" onClick={openSettingsForm} disabled={!canEdit} className="cursor-pointer w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-white/70 hover:text-accent hover:bg-accent/5 transition-all duration-200 justify-start disabled:opacity-40 disabled:cursor-not-allowed"><Settings className="w-4 h-4" />Team Settings</button>
                   {canManageMembers && (
-                    <button type="button" className="cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white/70 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 justify-start"><UserPlus className="w-4 h-4" />Copy Invite Link</button>
+                    <button type="button" className="cursor-pointer w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-white/70 hover:text-accent hover:bg-accent/5 transition-all duration-200 justify-start"><UserPlus className="w-4 h-4" />Copy Invite Link</button>
                   )}
-                  <button type="button" onClick={() => setDetailTab("projects")} className="cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white/70 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 justify-start"><FolderKanban className="w-4 h-4" />View Projects</button>
+                  <button type="button" onClick={() => setDetailTab("projects")} className="cursor-pointer w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-white/70 hover:text-accent hover:bg-accent/5 transition-all duration-200 justify-start"><FolderKanban className="w-4 h-4" />View Projects</button>
                 </div>
               </motion.div>
               {canDelete && (
                 <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-red-500/20 p-5">
-                  <SectionHeader title="Danger Zone" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-4">Danger Zone</h3>
                   <div className="flex items-start gap-3 p-3 bg-red-500/5 rounded-xl mb-4"><AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">Delete Team</p><p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Permanently delete this team and all its data.</p></div></div>
                   <button type="button" onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="cursor-pointer w-full h-9 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-500/90 transition-all duration-200 inline-flex items-center justify-center gap-2"><Trash2 className="w-4 h-4" />Delete Team</button>
                 </motion.div>
@@ -500,8 +575,16 @@ export default function Teams() {
 
         {detailTab === "settings" && (
           <div className="max-w-2xl">
-            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
-              <SectionHeader title="Team Settings" description="Modify your team details and preferences." />
+            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+                  <Settings className="w-4 h-4 text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Team Settings</h3>
+                  <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Modify your team details and preferences.</p>
+                </div>
+              </div>
               <form onSubmit={settingsFormik.handleSubmit} noValidate>
                 <div className="space-y-4">
                   <FormField label="Team Name" name="name" placeholder={settingsFormik.values.name || "e.g. Acme Corp"} value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required disabled={!canEdit} />
@@ -528,20 +611,23 @@ export default function Teams() {
         )}
 
         {detailTab === "projects" && (
-          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
-            <div className="flex items-center justify-between gap-4 mb-5">
+          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <SectionHeader title="Projects" description={`${teamProjects.length} projects assigned to this team.`} />
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Projects</h3>
+                <p className="text-[11px] text-gray-500 dark:text-white/40 mt-1">
+                  {teamProjects.length} project{teamProjects.length !== 1 ? "s" : ""} assigned to this team.
+                </p>
               </div>
               <div className="flex items-center gap-3">
-                <div className="relative flex-1 max-w-[200px]">
+                <div className="relative max-w-[200px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 dark:text-white/40" />
                   <input
                     type="text"
                     value={projectSearch}
                     onChange={(e) => setProjectSearch(e.target.value)}
                     placeholder="Search..."
-                    className="w-full h-8 pl-9 pr-3 text-xs bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.06] outline-none text-white placeholder-gray-400 dark:placeholder-white/30 transition-colors duration-200"
+                    className="w-full h-8 pl-9 pr-3 text-xs bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.06] outline-none text-gray-900 dark:text-[#FAFAFA] placeholder-gray-400 dark:placeholder-white/30 transition-colors duration-200 focus:ring-2 focus:ring-accent/20 focus:border-accent/20"
                   />
                 </div>
                 <button type="button" onClick={() => navigate("/dashboard/projects")} className="cursor-pointer h-8 px-3 text-xs font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 flex-shrink-0 inline-flex items-center gap-1.5">
@@ -549,25 +635,77 @@ export default function Teams() {
                 </button>
               </div>
             </div>
-            <div className="space-y-1">
-              {teamProjects.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-white/40 py-4 text-center">No projects assigned to this team.</p>
-              ) : (
-                teamProjects
+            {allProjects.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <FolderKanban className="w-10 h-10 text-gray-400 dark:text-white/30 mb-3" />
+                <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] mb-1">No projects available</p>
+                <p className="text-xs text-gray-500 dark:text-white/40">Create a project first before assigning to a team.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {allProjects
                   .filter((p: Project) => p.projectName.toLowerCase().includes(projectSearch.toLowerCase()))
-                  .map((p: Project) => (
-                    <div key={p._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-200">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <FolderKanban className="w-4 h-4 text-gray-500 dark:text-white/40 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{p.projectName}</p>
-                          <p className="text-[11px] text-gray-500 dark:text-white/40">{p.description}</p>
+                  .map((p: Project) => {
+                    const isAssigned = selectedTeam && p.teamId === selectedTeam._id;
+                    return (
+                      <div
+                        key={p._id}
+                        onClick={() => navigate(`/dashboard/project/${p._id}`)}
+                        className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all duration-200 ${
+                          isAssigned
+                            ? "bg-accent/5 ring-1 ring-accent/20"
+                            : "bg-gray-50 dark:bg-white/[0.02] hover:bg-gray-100 dark:hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                            isAssigned ? "bg-accent/10" : "bg-gray-100 dark:bg-white/[0.04]"
+                          }`}>
+                            <FolderKanban className={`w-4 h-4 ${isAssigned ? "text-accent" : "text-gray-500 dark:text-white/40"}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className={`text-sm font-medium truncate ${
+                                isAssigned ? "text-accent" : "text-gray-900 dark:text-[#FAFAFA]"
+                              }`}>{p.projectName}</p>
+                              {isAssigned && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-accent/10 text-accent">Assigned</span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-white/40">{p.description || "No description"}</p>
+                          </div>
                         </div>
+                        {canCreate && (
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (isAssigned) {
+                                try {
+                                  await removeTeamFromProject({ projectId: p._id }).unwrap();
+                                  showSuccess("Project unassigned", `"${p.projectName}" has been unassigned from this team.`);
+                                } catch { showError("Failed to unassign project"); }
+                              } else {
+                                try {
+                                  await addTeamToProject({ projectId: p._id, teamId: selectedTeam!._id }).unwrap();
+                                  showSuccess("Project assigned", `"${p.projectName}" has been assigned to this team.`);
+                                } catch { showError("Failed to assign project"); }
+                              }
+                            }}
+                            className={`cursor-pointer h-8 px-4 text-xs font-medium rounded-xl transition-all duration-200 inline-flex items-center gap-1.5 flex-shrink-0 ${
+                              isAssigned
+                                ? "text-red-400 bg-red-500/10 hover:bg-red-500/20"
+                                : "text-white bg-accent hover:bg-accent/90"
+                            }`}
+                          >
+                            {isAssigned ? <><Trash2 className="w-3 h-3" /> Unassign</> : <><Plus className="w-3 h-3" /> Assign</>}
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  ))
-              )}
-            </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         )}
       </div>
