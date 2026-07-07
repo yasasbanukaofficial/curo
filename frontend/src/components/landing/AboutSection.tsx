@@ -1,22 +1,9 @@
 import { motion } from "framer-motion";
+import bgImage from "../../assets/images/bg-image.png";
+import dashboardLight from "../../assets/images/dashboard-light-curo.png";
+import dashboardDark from "../../assets/images/dashboard-dark-curo.png";
 
 const easeOut = [0.25, 0, 0, 1] as [number, number, number, number];
-
-const statVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: 0.1 * i, ease: easeOut },
-  }),
-};
-
-const stats = [
-  { value: "100%", label: "Encrypted" },
-  { value: "Real-time", label: "Sync" },
-  { value: "Granular", label: "Access Control" },
-  { value: "Multi-env", label: "Support" },
-];
 
 export default function AboutSection() {
   return (
@@ -42,22 +29,25 @@ export default function AboutSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3, ease: easeOut }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-16"
+          className="mt-16"
         >
-          {stats.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              custom={i}
-              variants={statVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="text-center p-6 rounded-2xl bg-[#F5F5F7] dark:bg-[#1C1C1E] border border-[#E5E5EA] dark:border-[#333]"
-            >
-              <div className="text-2xl sm:text-3xl font-bold text-accent mb-1">{stat.value}</div>
-              <div className="text-sm text-black/60 dark:text-white/60">{stat.label}</div>
-            </motion.div>
-          ))}
+          <div className="relative w-full min-h-[400px] h-[55vh] max-h-[700px] rounded-2xl border border-[#E5E5EA] dark:border-[#333] overflow-hidden mx-auto">
+            <img
+              src={bgImage}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <img
+              src={dashboardLight}
+              alt="Curo dashboard preview"
+              className="absolute top-[320px] left-[12%] max-w-[1350px] w-full rounded-xl lg:top-[260px] pointer-events-none block dark:hidden"
+            />
+            <img
+              src={dashboardDark}
+              alt="Curo dashboard preview"
+              className="absolute top-[320px] left-[12%] max-w-[1350px] w-full rounded-xl lg:top-[260px] pointer-events-none hidden dark:block"
+            />
+          </div>
         </motion.div>
       </div>
     </section>
