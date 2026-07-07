@@ -31,26 +31,26 @@ export default function Hero() {
 
   return (
     <section className="relative py-8 lg:py-12">
+      <div className="absolute inset-0">
+        <PixelBlast
+          variant="square"
+          pixelSize={4}
+          color="#FF3333"
+          patternScale={2}
+          patternDensity={1}
+          pixelSizeJitter={0}
+          enableRipples
+          rippleSpeed={0.4}
+          rippleThickness={0.12}
+          rippleIntensityScale={1.5}
+          edgeFade={0.25}
+          centerFade={0.25}
+          speed={0.5}
+        />
+      </div>
       <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 min-h-[600px] relative overflow-hidden">
-        <div className="absolute inset-0">
-          <PixelBlast
-            variant="square"
-            pixelSize={4}
-            color="#FF3333"
-            patternScale={2}
-            patternDensity={1}
-            pixelSizeJitter={0}
-            enableRipples
-            rippleSpeed={0.4}
-            rippleThickness={0.12}
-            rippleIntensityScale={1.5}
-            edgeFade={0.25}
-            centerFade={0.25}
-            speed={0.5}
-          />
-        </div>
         <motion.div
-          className="text-left max-w-4xl pb-16 relative z-10"
+          className="text-left max-w-6xl pb-16 relative z-10"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -64,9 +64,11 @@ export default function Hero() {
             >
               <span className="word">Secrets</span>{' '}
               <span className="word">aren't</span>{' '}
-              <span className="word">meant</span>{' '}
+              <span className="word">m<span className="text-accent">e</span>a<span className="text-accent">n</span>t</span>{' '}
               <span className="word">to</span>{' '}
-              <span className="word">be</span>
+              <span className="word">be</span>{' '}
+              <span className="word">re<span className="text-accent">v</span>ealed</span>{' '}
+              <span className="word">or</span>
               <br />
               <span className="word word-shared">
                 shared.
