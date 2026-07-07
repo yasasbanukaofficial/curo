@@ -35,7 +35,7 @@ export default function FormTextarea({
     <div className={className}>
       <label
         htmlFor={name}
-        className={`block text-sm font-medium text-black dark:text-white mb-1.5 ${labelClassName}`}
+        className={`block text-sm font-medium text-gray-900 dark:text-[#FAFAFA] mb-1.5 ${labelClassName}`}
       >
         {label}
         {required && <span className="text-[#FF3B30] ml-0.5">*</span>}
@@ -48,7 +48,7 @@ export default function FormTextarea({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         rows={rows}
-        className={`w-full px-3.5 py-2.5 text-sm bg-black/[0.04] dark:bg-white/[0.04] rounded-xl border-none outline-none text-black dark:text-white placeholder-black/50 dark:placeholder-white/50 transition-colors duration-200 resize-none disabled:opacity-50 disabled:cursor-not-allowed ${inputClassName}`}
+        className={`w-full px-3.5 py-2.5 text-sm bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.06] outline-none text-gray-900 dark:text-[#FAFAFA] placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/20 transition-all duration-200 resize-none disabled:opacity-50 disabled:cursor-not-allowed ${inputClassName}`}
       />
       {touched && error && (
         <p className={`mt-1.5 text-xs text-[#FF3B30] ${errorClassName}`}>{error}</p>

@@ -55,11 +55,11 @@ const variantConfig: Record<AlertVariant, { icon: typeof Info; bg: string; borde
 
 const buttonStyles: Record<AlertButtonVariant, string> = {
   primary:
-    "h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed",
+    "h-9 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
   secondary:
-    "h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed",
+    "h-9 px-4 text-sm font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
   destructive:
-    "h-9 px-4 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90 disabled:opacity-50 disabled:cursor-not-allowed",
+    "h-9 px-4 text-sm font-medium text-white bg-[#FF3B30] rounded-xl hover:bg-[#FF3B30]/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
 };
 
 const sizeStyles = {
@@ -90,7 +90,7 @@ export default function AlertModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`w-full ${sizeStyles[size]} bg-white dark:bg-[#111] rounded-2xl border border-black/[0.04] dark:border-[#222] shadow-xl transition-all duration-200 ${className}`}
+        className={`w-full ${sizeStyles[size]} bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] shadow-xl transition-all duration-200 ${className}`}
       >
         <div className="flex items-start justify-between px-6 pt-6 pb-3">
           <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -98,11 +98,11 @@ export default function AlertModal({
               <VariantIcon className={`w-5 h-5 ${config.iconColor}`} />
             </div>
             <div className="min-w-0 pt-0.5">
-              <h2 className="text-lg font-semibold text-black dark:text-white">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-[#FAFAFA]">
                 {title}
               </h2>
               {message && (
-                <div className="text-sm text-black/50 dark:text-white/50 mt-1 leading-relaxed">
+                <div className="text-sm text-gray-500 dark:text-white/40 mt-1 leading-relaxed">
                   {message}
                 </div>
               )}
@@ -110,14 +110,14 @@ export default function AlertModal({
           </div>
           <DashboardButton
             onClick={onClose}
-            className="p-1.5 rounded-lg text-black/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] flex-shrink-0 ml-3"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] flex-shrink-0 ml-3"
           >
             <X className="w-4 h-4" />
           </DashboardButton>
         </div>
 
         {buttons && buttons.length > 0 && (
-          <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-4 border-t border-black/[0.04] dark:border-[#222]">
+          <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-4 border-t border-gray-200 dark:border-white/[0.06]">
             {buttons.map((btn, i) => (
               <DashboardButton
                 key={i}
