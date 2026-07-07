@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { Search, Sun, Moon } from "lucide-react";
 import Logo from "../ui/Logo";
 import { useTheme } from "../../pages/dashboard/DashboardLayout";
@@ -8,7 +7,6 @@ declare global {
 }
 
 export default function TopNav() {
-  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
 
   return (

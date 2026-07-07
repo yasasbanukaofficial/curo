@@ -251,7 +251,7 @@ export default function ActivityLog() {
           <DashboardTable>
             <thead>
               <tr>
-                <Th className="w-8 hidden sm:table-cell" />
+                <Th className="w-8 hidden sm:table-cell">&nbsp;</Th>
                 <Th className="w-full">Event</Th>
                 <Th className="hidden md:table-cell w-[90px]">Type</Th>
                 <Th className="hidden lg:table-cell w-[130px]">Project</Th>
