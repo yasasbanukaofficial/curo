@@ -21,8 +21,8 @@ export default function Integrations() {
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Integrations</h1>
-          <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">
+          <h1 className="text-xl font-semibold text-black dark:text-white">Integrations</h1>
+          <p className="text-sm text-black/50 dark:text-white/50 mt-0.5">
             {integrations.filter((i) => i.connected).length} connected · {integrations.filter((i) => !i.connected).length} available
           </p>
         </div>
@@ -43,16 +43,16 @@ export default function Integrations() {
               </div>
               {item.connected
                 ? <CheckCircle className="w-5 h-5 text-[#30D158] flex-shrink-0" />
-                : <XCircle className="w-5 h-5 text-[#8E8E93] flex-shrink-0" />
+                : <XCircle className="w-5 h-5 text-black/50 dark:text-white/50 flex-shrink-0" />
               }
             </div>
-            <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">{item.name}</h3>
-            <p className="text-xs text-[#8E8E93] dark:text-[#666] mb-4">{item.desc}</p>
+            <h3 className="text-sm font-semibold text-black dark:text-white mb-1">{item.name}</h3>
+            <p className="text-xs text-black/50 dark:text-white/50 mb-4">{item.desc}</p>
             <DashboardButton
               className={`w-full h-8 text-xs font-medium rounded-[10px] ${
                 item.connected
-                  ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] hover:bg-[#eee] dark:hover:bg-[#222]"
-                  : "bg-[#1D1D1F] dark:bg-white text-white dark:text-[#1D1D1F] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                  ? "bg-black/[0.04] dark:bg-white/[0.04] text-black dark:text-white hover:bg-black/[0.08] dark:hover:bg-white/[0.08]"
+                  : "bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white"
               }`}
             >
               {item.connected ? (

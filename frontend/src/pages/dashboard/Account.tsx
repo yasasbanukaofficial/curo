@@ -166,8 +166,8 @@ export default function Account() {
   return (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Account</h1>
-        <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">
+        <h1 className="text-xl font-semibold text-black dark:text-white">Account</h1>
+        <p className="text-sm text-black/50 dark:text-white/50 mt-0.5">
           Manage your account settings and preferences
         </p>
       </div>
@@ -182,7 +182,7 @@ export default function Account() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">
+                <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">
                   Name
                 </label>
                 {editMode ? (
@@ -192,38 +192,38 @@ export default function Account() {
                     onBlur={profileFormik.handleBlur}
                     placeholder="Your name"
                     error={profileFormik.touched.name && profileFormik.errors.name ? profileFormik.errors.name : undefined}
-                    icon={<User className="w-4 h-4 text-[#8E8E93]" />}
+                    icon={<User className="w-4 h-4 text-black/50 dark:text-white/50" />}
                   />
                 ) : (
-                  <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">
-                    <User className="w-4 h-4 text-[#8E8E93]" />
+                  <div className="flex items-center gap-3 h-10 px-3 bg-black/[0.04] dark:bg-white/[0.04] rounded-xl text-sm text-black dark:text-white">
+                    <User className="w-4 h-4 text-black/50 dark:text-white/50" />
                     <span>{user?.name || ""}</span>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">
+                <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">
                   Email
                 </label>
-                <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#8E8E93] dark:text-[#666]">
-                  <Mail className="w-4 h-4 text-[#8E8E93]" />
+                <div className="flex items-center gap-3 h-10 px-3 bg-black/[0.04] dark:bg-white/[0.04] rounded-xl text-sm text-black/50 dark:text-white/50">
+                  <Mail className="w-4 h-4 text-black/50 dark:text-white/50" />
                   <span>{user?.email || ""}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">
+                <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">
                   Member Since
                 </label>
-                <div className="flex items-center gap-3 h-10 px-3 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl text-sm text-[#8E8E93] dark:text-[#666]">
-                  <Calendar className="w-4 h-4 text-[#8E8E93]" />
+                <div className="flex items-center gap-3 h-10 px-3 bg-black/[0.04] dark:bg-white/[0.04] rounded-xl text-sm text-black/50 dark:text-white/50">
+                  <Calendar className="w-4 h-4 text-black/50 dark:text-white/50" />
                   <span>{user?.createdAt ? formatDate(user.createdAt) : ""}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">
+                <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">
                   Providers
                 </label>
                 <div className="flex items-center gap-2 h-10 px-3">
@@ -235,13 +235,13 @@ export default function Account() {
             </div>
 
             <form onSubmit={profileFormik.handleSubmit} noValidate>
-              <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
+              <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-white/[0.08]">
                 {editMode ? (
                   <>
                     <DashboardButton
                       type="submit"
                       disabled={profileFormik.isSubmitting || isUpdating}
-                      className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {profileFormik.isSubmitting || isUpdating ? (
                         <LoadingSpinner size={16} />
@@ -253,7 +253,7 @@ export default function Account() {
                     <DashboardButton
                       type="button"
                       onClick={handleCancelEdit}
-                      className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
+                      className="h-9 px-4 text-sm font-medium text-black/50 dark:text-white/50 bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:text-black dark:hover:text-white"
                     >
                       Cancel
                     </DashboardButton>
@@ -262,7 +262,7 @@ export default function Account() {
                   <DashboardButton
                     type="button"
                     onClick={handleStartEdit}
-                    className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"
+                    className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white"
                   >
                     Edit Profile
                   </DashboardButton>
@@ -278,14 +278,14 @@ export default function Account() {
             />
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 transition-all duration-200">
+              <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] dark:bg-white/10 flex items-center justify-center">
-                    <GitHubIcon className="w-5 h-5 text-white dark:text-[#E5E5E5]" />
+                    <GitHubIcon className="w-5 h-5 text-white dark:text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
-                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
+                    <p className="text-sm font-medium text-black dark:text-white">GitHub</p>
+                    <p className="text-[11px] text-black/50 dark:text-white/50">
                       {connectedAccounts.github.connected
                         ? "Connected"
                         : "Not connected"}
@@ -302,14 +302,14 @@ export default function Account() {
                 ) : (
                   <DashboardButton
                     onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
-                    className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                    className="h-8 px-3 text-[11px] font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-lg hover:bg-black/[0.08] dark:hover:bg-white/[0.08]"
                   >
                     Connect
                   </DashboardButton>
                 )}
               </div>
 
-              <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 transition-all duration-200">
+              <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] transition-all duration-200">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-[#007AFF] flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -320,8 +320,8 @@ export default function Account() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Google</p>
-                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
+                    <p className="text-sm font-medium text-black dark:text-white">Google</p>
+                    <p className="text-[11px] text-black/50 dark:text-white/50">
                       {connectedAccounts.google.connected
                         ? "Connected"
                         : "Not connected"}
@@ -338,7 +338,7 @@ export default function Account() {
                 ) : (
                   <DashboardButton
                     onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/connect`}
-                    className="h-8 px-3 text-[11px] font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-lg hover:bg-[#eee] dark:hover:bg-[#222]"
+                    className="h-8 px-3 text-[11px] font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-lg hover:bg-black/[0.08] dark:hover:bg-white/[0.08]"
                   >
                     Connect
                   </DashboardButton>
@@ -356,13 +356,13 @@ export default function Account() {
             />
 
             {showPasswordReset ? (
-              <div className="p-5 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl space-y-4">
+              <div className="p-5 bg-black/[0.04] dark:bg-white/[0.04] rounded-xl space-y-4">
                 <div className="flex items-start gap-3">
-                  <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
+                  <KeyRound className="w-5 h-5 text-black/50 dark:text-white/50 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Reset via email</p>
-                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
-                      To protect your account, we'll send a secure password reset link to your registered email address (<span className="font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">{user?.email}</span>).
+                    <p className="text-sm font-medium text-black dark:text-white">Reset via email</p>
+                    <p className="text-[11px] text-black/50 dark:text-white/50 mt-1">
+                      To protect your account, we'll send a secure password reset link to your registered email address (<span className="font-medium text-black dark:text-white">{user?.email}</span>).
                     </p>
                   </div>
                 </div>
@@ -370,14 +370,14 @@ export default function Account() {
                   <DashboardButton
                     onClick={handleSendResetLink}
                     disabled={isSendingReset}
-                    className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSendingReset ? <LoadingSpinner size={16} /> : <Send className="w-4 h-4" />}
                     Send Reset Link
                   </DashboardButton>
                   <DashboardButton
                     onClick={handleCancelPasswordReset}
-                    className="h-9 px-4 text-sm font-medium text-[#8E8E93] dark:text-[#666] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5]"
+                    className="h-9 px-4 text-sm font-medium text-black/50 dark:text-white/50 bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:text-black dark:hover:text-white"
                   >
                     Cancel
                   </DashboardButton>
@@ -385,12 +385,12 @@ export default function Account() {
               </div>
             ) : (
               <>
-                <div className="p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl">
+                <div className="p-4 bg-black/[0.04] dark:bg-white/[0.04] rounded-xl">
                   <div className="flex items-start gap-3">
-                    <KeyRound className="w-5 h-5 text-[#8E8E93] flex-shrink-0 mt-0.5" />
+                    <KeyRound className="w-5 h-5 text-black/50 dark:text-white/50 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Password</p>
-                      <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
+                      <p className="text-sm font-medium text-black dark:text-white">Password</p>
+                      <p className="text-[11px] text-black/50 dark:text-white/50 mt-1">
                         Choose a strong, unique password with at least 8 characters.
                       </p>
                     </div>
@@ -399,7 +399,7 @@ export default function Account() {
                 <div className="mt-5">
                   <DashboardButton
                     onClick={handleOpenPasswordReset}
-                    className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]"
+                    className="h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08]"
                   >
                     <KeyRound className="w-4 h-4" />
                     Change Password
@@ -419,8 +419,8 @@ export default function Account() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-[#FF3B30] flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Account</p>
-                  <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1">
+                  <p className="text-sm font-medium text-black dark:text-white">Delete Account</p>
+                  <p className="text-[11px] text-black/50 dark:text-white/50 mt-1">
                     Permanently remove your account and all associated data. This action cannot be undone.
                     All projects, secrets, environments, and integrations will be deleted.
                   </p>

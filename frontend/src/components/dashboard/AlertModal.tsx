@@ -55,9 +55,9 @@ const variantConfig: Record<AlertVariant, { icon: typeof Info; bg: string; borde
 
 const buttonStyles: Record<AlertButtonVariant, string> = {
   primary:
-    "h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed",
+    "h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed",
   secondary:
-    "h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] disabled:opacity-50 disabled:cursor-not-allowed",
+    "h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed",
   destructive:
     "h-9 px-4 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90 disabled:opacity-50 disabled:cursor-not-allowed",
 };
@@ -98,11 +98,11 @@ export default function AlertModal({
               <VariantIcon className={`w-5 h-5 ${config.iconColor}`} />
             </div>
             <div className="min-w-0 pt-0.5">
-              <h2 className="text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">
+              <h2 className="text-lg font-semibold text-black dark:text-white">
                 {title}
               </h2>
               {message && (
-                <div className="text-sm text-[#8E8E93] dark:text-[#666] mt-1 leading-relaxed">
+                <div className="text-sm text-black/50 dark:text-white/50 mt-1 leading-relaxed">
                   {message}
                 </div>
               )}
@@ -110,7 +110,7 @@ export default function AlertModal({
           </div>
           <DashboardButton
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] flex-shrink-0 ml-3"
+            className="p-1.5 rounded-lg text-black/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04] flex-shrink-0 ml-3"
           >
             <X className="w-4 h-4" />
           </DashboardButton>

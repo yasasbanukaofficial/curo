@@ -57,13 +57,13 @@ const roleStyles: Record<TeamRole, string> = {
   owner: "bg-[#FF9F0A]/10 text-[#FF9F0A]",
   admin: "bg-[#007AFF]/10 text-[#007AFF]",
   developer: "bg-[#30D158]/10 text-[#30D158]",
-  viewer: "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]",
+  viewer: "bg-black/[0.04] dark:bg-white/[0.04] text-black/50 dark:text-white/50",
 };
 
 const planStyles: Record<TeamPlan, string> = {
-  starter: "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]",
+  starter: "bg-black/[0.04] dark:bg-white/[0.04] text-black/50 dark:text-white/50",
   team: "bg-[#007AFF]/10 text-[#007AFF]",
-  enterprise: "bg-[#1A1A1A]/10 dark:bg-white/10 text-[#1A1A1A] dark:text-[#E5E5E5]",
+  enterprise: "bg-black/10 dark:bg-white/10 text-black dark:text-white",
 };
 
 function RoleBadge({ role }: { role: TeamRole }) {
@@ -83,26 +83,26 @@ function TeamCard({ team, onSelect }: { team: Team; onSelect: () => void }) {
     <DashboardCard hover padding="md" className="cursor-pointer" onClick={onSelect}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center">
-            <Users className="w-5 h-5 text-[#8E8E93]" />
+          <div className="w-10 h-10 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
+            <Users className="w-5 h-5 text-black/50 dark:text-white/50" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{team.name}</h3>
-            <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{team.slug}</p>
+            <h3 className="text-sm font-semibold text-black dark:text-white">{team.name}</h3>
+            <p className="text-[11px] text-black/50 dark:text-white/50">{team.slug}</p>
           </div>
         </div>
         <PlanBadge plan={team.plan || "starter"} />
       </div>
       <div className="flex items-center gap-4 mb-4">
-        <span className="flex items-center gap-1.5 text-xs text-[#8E8E93] dark:text-[#666]">
+        <span className="flex items-center gap-1.5 text-xs text-black/50 dark:text-white/50">
           <Users className="w-3.5 h-3.5" />{team.memberCount || 0} {(team.memberCount || 0) === 1 ? "member" : "members"}
         </span>
-        <span className="flex items-center gap-1.5 text-xs text-[#8E8E93] dark:text-[#666]">
+        <span className="flex items-center gap-1.5 text-xs text-black/50 dark:text-white/50">
           <FolderKanban className="w-3.5 h-3.5" />{(team.projects ?? []).length} projects
         </span>
       </div>
-      <div className="pt-3 border-t border-black/[0.04] dark:border-[#222]">
-        <span className="text-[11px] text-[#8E8E93] dark:text-[#666]">{team.createdAt ? new Date(team.createdAt).toLocaleDateString() : ""}</span>
+      <div className="pt-3 border-t border-black/[0.04] dark:border-white/[0.08]">
+        <span className="text-[11px] text-black/50 dark:text-white/50">{team.createdAt ? new Date(team.createdAt).toLocaleDateString() : ""}</span>
       </div>
     </DashboardCard>
   );
@@ -359,12 +359,12 @@ export default function Teams() {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 rounded-2xl bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center mx-auto mb-5">
-            <Users className="w-8 h-8 text-[#8E8E93]" />
+          <div className="w-16 h-16 rounded-2xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-5">
+            <Users className="w-8 h-8 text-black/50 dark:text-white/50" />
           </div>
-          <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-2">Team not found</h1>
-          <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">The team you're looking for doesn't exist or you don't have access to it.</p>
-          <DashboardButton onClick={() => navigate("/dashboard/teams", { replace: true })} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+          <h1 className="text-xl font-semibold text-black dark:text-white mb-2">Team not found</h1>
+          <p className="text-sm text-black/50 dark:text-white/50 mb-6">The team you're looking for doesn't exist or you don't have access to it.</p>
+          <DashboardButton onClick={() => navigate("/dashboard/teams", { replace: true })} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
             Back to Teams
           </DashboardButton>
         </div>
@@ -375,12 +375,12 @@ export default function Teams() {
   const teamDetail = selectedTeam ? (
     <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { navigate("/dashboard/teams"); setSelectedTeam(null); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]">
+        <DashboardButton onClick={() => { navigate("/dashboard/teams"); setSelectedTeam(null); setDetailTab("overview"); }} className="p-2 rounded-[10px] text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]">
           <ArrowLeft className="w-5 h-5" />
         </DashboardButton>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.name}</h1>
-          <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{selectedTeam.slug} · {selectedTeam.plan || "starter"} plan</p>
+          <h1 className="text-xl font-semibold text-black dark:text-white">{selectedTeam.name}</h1>
+          <p className="text-sm text-black/50 dark:text-white/50 mt-0.5">{selectedTeam.slug} · {selectedTeam.plan || "starter"} plan</p>
         </div>
         {canDelete && (
           <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="h-9 px-4 text-sm font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-[10px] hover:bg-[#FF3B30]/20">
@@ -398,23 +398,23 @@ export default function Teams() {
               <DashboardCard>
                 <div className="flex items-center justify-between mb-4">
                   <SectionHeader title="Team Information" description="Manage your team settings and preferences." />
-                  <DashboardButton onClick={openSettingsForm} disabled={!canEdit} className="h-8 px-3 text-xs font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#F5F5F7] dark:disabled:hover:bg-[#1A1A1A]">
+                  <DashboardButton onClick={openSettingsForm} disabled={!canEdit} className="h-8 px-3 text-xs font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black/[0.04] dark:disabled:hover:bg-white/[0.04]">
                     <Settings className="w-3.5 h-3.5" />Edit
                   </DashboardButton>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Name</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.name}</p></div>
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Slug</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.slug}</p></div>
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Plan</p><PlanBadge plan={selectedTeam.plan || "starter"} /></div>
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Billing Email</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.billingEmail || "—"}</p></div>
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Subscription</p><span className="text-[11px] text-[#30D158] font-medium">Active</span></div>
-                  <div><p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1">Enforce 2FA</p><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{selectedTeam.enforce2fa ? "Enabled" : "Disabled"}</p></div>
+                  <div><p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Name</p><p className="text-sm text-black dark:text-white">{selectedTeam.name}</p></div>
+                  <div><p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Slug</p><p className="text-sm text-black dark:text-white">{selectedTeam.slug}</p></div>
+                  <div><p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Plan</p><PlanBadge plan={selectedTeam.plan || "starter"} /></div>
+                  <div><p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Billing Email</p><p className="text-sm text-black dark:text-white">{selectedTeam.billingEmail || "—"}</p></div>
+                  <div><p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Subscription</p><span className="text-[11px] text-[#30D158] font-medium">Active</span></div>
+                  <div><p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Enforce 2FA</p><p className="text-sm text-black dark:text-white">{selectedTeam.enforce2fa ? "Enabled" : "Disabled"}</p></div>
                 </div>
-                <div className="mt-5 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <p className="text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-2">Allowed Domains</p>
+                <div className="mt-5 pt-5 border-t border-black/[0.04] dark:border-white/[0.08]">
+                  <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-2">Allowed Domains</p>
                   {(selectedTeam.allowedDomains ?? []).length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">{(selectedTeam.allowedDomains ?? []).map((d: string) => (<span key={d} className="text-[11px] font-medium text-[#007AFF] bg-[#007AFF]/10 px-2 py-0.5 rounded-md">{d}</span>))}</div>
-                  ) : <p className="text-sm text-[#8E8E93] dark:text-[#666]">No domains restricted</p>}
+                  ) : <p className="text-sm text-black/50 dark:text-white/50">No domains restricted</p>}
                 </div>
               </DashboardCard>
 
@@ -425,7 +425,7 @@ export default function Teams() {
                   <div className="flex items-center justify-between mb-5">
                     <SectionHeader title="Members" description={`${teamMembers.length} members in this team.`} />
                     {canManageMembers && (
-                      <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]">
+                      <DashboardButton onClick={() => setShowInviteModal(true)} className="h-8 px-3 text-xs font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
                         <UserPlus className="w-3.5 h-3.5" />Invite
                       </DashboardButton>
                     )}
@@ -435,15 +435,15 @@ export default function Teams() {
                       const memberName = typeof m.userId === "object" && m.userId ? (m.userId as any).name || "" : m.name || "";
                       const memberEmail = typeof m.userId === "object" && m.userId ? (m.userId as any).email || "" : m.email || "";
                       return (
-                        <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                        <div key={m._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors duration-200">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-[#1A1A1A] flex items-center justify-center text-xs font-semibold text-[#8E8E93] flex-shrink-0">{memberName?.charAt(0) || "?"}</div>
-                            <div className="min-w-0"><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{memberName}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{memberEmail}</p></div>
+                            <div className="w-8 h-8 rounded-full bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center text-xs font-semibold text-black/50 dark:text-white/50 flex-shrink-0">{memberName?.charAt(0) || "?"}</div>
+                            <div className="min-w-0"><p className="text-sm font-medium text-black dark:text-white truncate">{memberName}</p><p className="text-[11px] text-black/50 dark:text-white/50">{memberEmail}</p></div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <RoleBadge role={m.role} />
-                            <span className="text-[11px] text-[#8E8E93] dark:text-[#666] hidden sm:inline">{m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : ""}</span>
-                            {canManageMembers && m.role !== "owner" && <DashboardButton onClick={() => handleRemoveMember(m._id)} className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"><X className="w-3.5 h-3.5" /></DashboardButton>}
+                            <span className="text-[11px] text-black/50 dark:text-white/50 hidden sm:inline">{m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : ""}</span>
+                            {canManageMembers && m.role !== "owner" && <DashboardButton onClick={() => handleRemoveMember(m._id)} className="p-1.5 rounded-lg text-black/50 dark:text-white/50 hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"><X className="w-3.5 h-3.5" /></DashboardButton>}
                           </div>
                         </div>
                       );
@@ -457,8 +457,8 @@ export default function Teams() {
                   <SectionHeader title="Pending Invites" description={`${pendingInvites.length} pending invitation${pendingInvites.length > 1 ? "s" : ""}.`} />
                   <div className="space-y-1">
                     {pendingInvites.map((inv: TeamInvite) => (
-                      <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
-                        <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-[#8E8E93]" /><div><p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{inv.email}</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666]">Expires {new Date(inv.expiresAt).toLocaleDateString()}</p></div></div>
+                      <div key={inv._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors duration-200">
+                        <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-black/50 dark:text-white/50" /><div><p className="text-sm text-black dark:text-white">{inv.email}</p><p className="text-[11px] text-black/50 dark:text-white/50">Expires {new Date(inv.expiresAt).toLocaleDateString()}</p></div></div>
                         <div className="flex items-center gap-2"><RoleBadge role={inv.role} />{canManageMembers && <DashboardButton onClick={() => handleRevokeInvite(inv._id)} className="text-[11px] text-[#FF3B30] hover:text-[#FF3B30]/80 font-medium">Revoke</DashboardButton>}</div>
                       </div>
                     ))}
@@ -471,17 +471,17 @@ export default function Teams() {
               <DashboardCard>
                 <SectionHeader title="Quick Actions" />
                 <div className="space-y-2">
-                  <DashboardButton onClick={openSettingsForm} disabled={!canEdit} className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#F5F5F7] dark:disabled:hover:bg-[#1A1A1A]"><Settings className="w-4 h-4" />Team Settings</DashboardButton>
+                  <DashboardButton onClick={openSettingsForm} disabled={!canEdit} className="w-full h-9 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] justify-start disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black/[0.04] dark:disabled:hover:bg-white/[0.04]"><Settings className="w-4 h-4" />Team Settings</DashboardButton>
                   {canManageMembers && (
-                    <DashboardButton className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><Copy className="w-4 h-4" />Copy Invite Link</DashboardButton>
+                    <DashboardButton className="w-full h-9 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] justify-start"><Copy className="w-4 h-4" />Copy Invite Link</DashboardButton>
                   )}
-                  <DashboardButton onClick={() => setDetailTab("projects")} className="w-full h-9 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222] justify-start"><FolderKanban className="w-4 h-4" />View Projects</DashboardButton>
+                  <DashboardButton onClick={() => setDetailTab("projects")} className="w-full h-9 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] justify-start"><FolderKanban className="w-4 h-4" />View Projects</DashboardButton>
                 </div>
               </DashboardCard>
               {canDelete && (
                 <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
                   <SectionHeader title="Danger Zone" />
-                  <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4"><AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Delete Team</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Permanently delete this team and all its data.</p></div></div>
+                  <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4"><AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" /><div><p className="text-sm font-medium text-black dark:text-white">Delete Team</p><p className="text-[11px] text-black/50 dark:text-white/50 mt-0.5">Permanently delete this team and all its data.</p></div></div>
                   <DashboardButton onClick={() => { setDeleteTeamId(selectedTeam._id); setShowDeleteTeamModal(true); }} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Team</DashboardButton>
                 </DashboardCard>
               )}
@@ -499,21 +499,21 @@ export default function Teams() {
                   <FormField label="Slug" name="slug" placeholder={settingsFormik.values.slug || "e.g. acme-corp"} value={settingsFormik.values.slug} onChange={(v) => settingsFormik.setFieldValue("slug", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.slug ? settingsFormik.errors.slug : undefined} touched={!!settingsFormik.touched.slug} required disabled={!canEdit} />
                   <FormField label="Billing Email" name="billingEmail" type="email" placeholder={settingsFormik.values.billingEmail || "billing@company.com"} value={settingsFormik.values.billingEmail} onChange={(v) => settingsFormik.setFieldValue("billingEmail", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.billingEmail ? settingsFormik.errors.billingEmail : undefined} touched={!!settingsFormik.touched.billingEmail} disabled={!canEdit} />
                   <div>
-                    <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Plan</label>
-                    <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]"><PlanBadge plan={selectedTeam.plan || "starter"} /></p>
+                    <label className="block text-sm font-medium text-black dark:text-white mb-1.5">Plan</label>
+                    <p className="text-sm text-black dark:text-white"><PlanBadge plan={selectedTeam.plan || "starter"} /></p>
                   </div>
                   <div className="flex items-center justify-between py-3">
-                    <div><p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">Enforce Two-Factor Authentication</p><p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-0.5">Require all members to enable 2FA.</p></div>
-                    <DashboardButton onClick={() => setEnforce2fa(!enforce2fa)} disabled={!canEdit} className="text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed">{enforce2fa ? <ToggleRight className="w-6 h-6 text-[#30D158]" /> : <ToggleLeft className="w-6 h-6" />}</DashboardButton>
+                    <div><p className="text-sm font-medium text-black dark:text-white">Enforce Two-Factor Authentication</p><p className="text-[11px] text-black/50 dark:text-white/50 mt-0.5">Require all members to enable 2FA.</p></div>
+                    <DashboardButton onClick={() => setEnforce2fa(!enforce2fa)} disabled={!canEdit} className="text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed">{enforce2fa ? <ToggleRight className="w-6 h-6 text-[#30D158]" /> : <ToggleLeft className="w-6 h-6" />}</DashboardButton>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] mb-1.5">Allowed Domains</label>
-                    <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mb-2">Domains comma separated (e.g. acme.com, example.com)</p>
+                    <label className="block text-sm font-medium text-black dark:text-white mb-1.5">Allowed Domains</label>
+                    <p className="text-[11px] text-black/50 dark:text-white/50 mb-2">Domains comma separated (e.g. acme.com, example.com)</p>
                     <FormInput value={(selectedTeam.allowedDomains ?? []).join(", ")} onChange={() => {}} placeholder="acme.com, example.com" disabled={!canEdit} />
                   </div>
                 </div>
-                <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-[#222]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting || !canEdit} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed">
+                <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-white/[0.08]">
+                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting || !canEdit} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
                   </DashboardButton>
@@ -531,24 +531,24 @@ export default function Teams() {
               </div>
               <div className="flex items-center gap-3">
                 <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search projects..." className="max-w-[260px]" />
-                <DashboardButton onClick={() => navigate("/dashboard/projects")} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] flex-shrink-0">
+                <DashboardButton onClick={() => navigate("/dashboard/projects")} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white flex-shrink-0">
                   <Plus className="w-4 h-4" />New Project
                 </DashboardButton>
               </div>
             </div>
             <div className="space-y-1">
               {teamProjects.length === 0 ? (
-                <p className="text-sm text-[#8E8E93] dark:text-[#666] py-4 text-center">No projects assigned to this team.</p>
+                <p className="text-sm text-black/50 dark:text-white/50 py-4 text-center">No projects assigned to this team.</p>
               ) : (
                 teamProjects
                   .filter((p: Project) => p.projectName.toLowerCase().includes(projectSearch.toLowerCase()))
                   .map((p: Project) => (
-                    <div key={p._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200">
+                    <div key={p._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors duration-200">
                       <div className="flex items-center gap-3 min-w-0">
-                        <FolderKanban className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
+                        <FolderKanban className="w-4 h-4 text-black/50 dark:text-white/50 flex-shrink-0" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{p.projectName}</p>
-                          <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{p.description}</p>
+                          <p className="text-sm font-medium text-black dark:text-white truncate">{p.projectName}</p>
+                          <p className="text-[11px] text-black/50 dark:text-white/50">{p.description}</p>
                         </div>
                       </div>
                     </div>
@@ -584,17 +584,17 @@ export default function Teams() {
         <>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">Teams</h1>
-              <p className="text-sm text-[#8E8E93] dark:text-[#666] mt-0.5">{teams.length} teams · Manage your teams and members</p>
+              <h1 className="text-xl font-semibold text-black dark:text-white">Teams</h1>
+              <p className="text-sm text-black/50 dark:text-white/50 mt-0.5">{teams.length} teams · Manage your teams and members</p>
             </div>
-            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"><Plus className="w-4 h-4" />Create Team</DashboardButton>
+            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white"><Plus className="w-4 h-4" />Create Team</DashboardButton>
           </div>
           {teams.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Users className="w-12 h-12 text-[#8E8E93] mb-4" />
-              <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-1">No teams yet</h3>
-              <p className="text-sm text-[#8E8E93] dark:text-[#666] mb-6">Create a team to collaborate with others.</p>
-              <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5]"><Plus className="w-4 h-4" />Create Team</DashboardButton>
+              <Users className="w-12 h-12 text-black/50 dark:text-white/50 mb-4" />
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-1">No teams yet</h3>
+              <p className="text-sm text-black/50 dark:text-white/50 mb-6">Create a team to collaborate with others.</p>
+              <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white"><Plus className="w-4 h-4" />Create Team</DashboardButton>
             </div>
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -610,18 +610,18 @@ export default function Teams() {
         <form onSubmit={createFormik.handleSubmit} noValidate>
           <div className="space-y-5">
             <div>
-              <h4 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-3">Team Details</h4>
+              <h4 className="text-sm font-semibold text-black dark:text-white mb-3">Team Details</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Team Name</label>
+                  <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">Team Name</label>
                   <FormInput value={createFormik.values.name} onChange={(v) => createFormik.setFieldValue("name", v)} onBlur={createFormik.handleBlur} placeholder="e.g. Acme Corp" error={createFormik.touched.name ? createFormik.errors.name : undefined} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Slug</label>
+                  <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">Slug</label>
                   <FormInput value={createFormik.values.slug} onChange={(v) => createFormik.setFieldValue("slug", v)} onBlur={createFormik.handleBlur} placeholder="e.g. acme-corp" error={createFormik.touched.slug ? createFormik.errors.slug : undefined} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Billing Email</label>
+                  <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">Billing Email</label>
                   <FormInput value={createFormik.values.billingEmail} onChange={(v) => createFormik.setFieldValue("billingEmail", v)} onBlur={createFormik.handleBlur} placeholder="billing@company.com" error={createFormik.touched.billingEmail ? createFormik.errors.billingEmail : undefined} />
                 </div>
                 <FormSelect
@@ -637,17 +637,17 @@ export default function Teams() {
                 />
               </div>
               <div className="mt-4">
-                <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Allowed Domains</label>
+                <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">Allowed Domains</label>
                 <FormInput value={createFormik.values.allowedDomains} onChange={(v) => createFormik.setFieldValue("allowedDomains", v)} onBlur={createFormik.handleBlur} placeholder="acme.com, example.com" />
-                <p className="text-[11px] text-[#8E8E93] dark:text-[#666] mt-1.5">Comma-separated list of email domains allowed to join this team.</p>
+                <p className="text-[11px] text-black/50 dark:text-white/50 mt-1.5">Comma-separated list of email domains allowed to join this team.</p>
               </div>
             </div>
 
-            <div className="border-t border-black/[0.04] dark:border-[#222] pt-5">
-              <h4 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-3">Invite Members</h4>
+            <div className="border-t border-black/[0.04] dark:border-white/[0.08] pt-5">
+              <h4 className="text-sm font-semibold text-black dark:text-white mb-3">Invite Members</h4>
               <div className="flex items-start gap-3">
                 <div className="flex-1">
-                  <label className="block text-[11px] font-medium text-[#8E8E93] dark:text-[#666] tracking-wide mb-1.5">Email Address</label>
+                  <label className="block text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1.5">Email Address</label>
                   <FormInput
                     value={createMemberEmail}
                     onChange={(v) => { setCreateMemberEmail(v); setCreateMemberError(""); }}
@@ -689,11 +689,11 @@ export default function Teams() {
               {createMembers.length > 0 && (
                 <div className="mt-4 space-y-1">
                   {createMembers.map((m, i) => (
-                    <div key={i} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
+                    <div key={i} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.04]">
                       <div className="flex items-center gap-3 min-w-0">
-                        <Mail className="w-4 h-4 text-[#8E8E93] flex-shrink-0" />
+                        <Mail className="w-4 h-4 text-black/50 dark:text-white/50 flex-shrink-0" />
                         <div className="min-w-0">
-                          <p className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{m.email}</p>
+                          <p className="text-sm text-black dark:text-white truncate">{m.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
@@ -701,7 +701,7 @@ export default function Teams() {
                         <DashboardButton
                           type="button"
                           onClick={() => setCreateMembers((prev) => prev.filter((_, idx) => idx !== i))}
-                          className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"
+                          className="p-1.5 rounded-lg text-black/50 dark:text-white/50 hover:text-[#FF3B30] hover:bg-[#FF3B30]/10"
                         >
                           <X className="w-3.5 h-3.5" />
                         </DashboardButton>
@@ -758,13 +758,13 @@ export default function Teams() {
         title="Unregistered Users"
         message={
           <div className="space-y-3">
-            <p className="text-sm text-[#636363]">These users don't have an account yet. They will receive an email invitation to sign up. Do you want to continue?</p>
+            <p className="text-sm text-black/50 dark:text-white/50">These users don't have an account yet. They will receive an email invitation to sign up. Do you want to continue?</p>
             <div className="space-y-1">
               {unregisteredList.map((u, i) => (
-                <div key={i} className="flex items-center justify-between py-2 px-3 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
+                <div key={i} className="flex items-center justify-between py-2 px-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.04]">
                   <div className="flex items-center gap-2">
                     <Info className="w-4 h-4 text-[#FF9F0A]" />
-                    <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{u.email}</span>
+                    <span className="text-sm text-black dark:text-white">{u.email}</span>
                   </div>
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md capitalize ${roleStyles[u.role]}`}>{u.role}</span>
                 </div>
@@ -789,11 +789,11 @@ export default function Teams() {
         title="Unregistered User"
         message={
           <div className="space-y-3">
-            <p className="text-sm text-[#636363]">This user doesn't have an account yet. They will receive an email invitation to sign up. Do you want to continue?</p>
-            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
+            <p className="text-sm text-black/50 dark:text-white/50">This user doesn't have an account yet. They will receive an email invitation to sign up. Do you want to continue?</p>
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.04]">
               <div className="flex items-center gap-2">
                 <Info className="w-4 h-4 text-[#FF9F0A]" />
-                <span className="text-sm text-[#1D1D1F] dark:text-[#E5E5E5]">{pendingInviteEmail}</span>
+                <span className="text-sm text-black dark:text-white">{pendingInviteEmail}</span>
               </div>
             </div>
           </div>

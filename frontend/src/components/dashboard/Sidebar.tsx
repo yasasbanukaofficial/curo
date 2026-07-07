@@ -29,7 +29,7 @@ function ProjectSwitcher() {
   return (
     <DashboardButton
       onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
-      className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] justify-start"
+      className="w-full h-10 px-3 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-xl border border-black/[0.04] dark:border-[#222] justify-start"
     >
       <Plus className="w-4 h-4" />
       Create new project
@@ -95,14 +95,14 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] transition-colors duration-200 text-left"
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors duration-200 text-left"
       >
-        <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-xs font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-black dark:bg-white flex items-center justify-center text-xs font-semibold text-white dark:text-black flex-shrink-0">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{userName}</p>
-          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{userEmail}</p>
+          <p className="text-sm font-medium text-black dark:text-white truncate">{userName}</p>
+          <p className="text-[11px] text-black/50 dark:text-white/50 truncate">{userEmail}</p>
         </div>
       </button>
 
@@ -110,12 +110,12 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
         <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-3 z-50">
           <div className="px-4 pb-3 mb-2 border-b border-black/[0.04] dark:border-[#222]">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-sm font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-black dark:bg-white flex items-center justify-center text-sm font-semibold text-white dark:text-black flex-shrink-0">
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{userName}</p>
-                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{userEmail}</p>
+                <p className="text-sm font-semibold text-black dark:text-white">{userName}</p>
+                <p className="text-[11px] text-black/50 dark:text-white/50">{userEmail}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -130,21 +130,21 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
           <div className="px-1.5 space-y-0.5">
             <DashboardButton
               onClick={() => { setOpen(false); onToggleSettings("account"); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
             >
               <UserCircle className="w-4 h-4" />
               Account
             </DashboardButton>
             <DashboardButton
               onClick={() => { setOpen(false); onToggleSettings("general"); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
             >
               <Settings className="w-4 h-4" />
               Settings
             </DashboardButton>
             <DashboardButton
               onClick={() => { setOpen(false); onToggleSettings("general"); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
             >
               <Sun className="w-4 h-4" />
               Theme
@@ -206,7 +206,7 @@ export default function Sidebar({ onToggleSettings }: SidebarProps) {
       <nav className="flex-1 px-3 overflow-y-auto space-y-5">
         {navSections.map((section) => (
           <div key={section.label}>
-            <p className="px-2 mb-1.5 text-[10px] font-medium text-[#8E8E93] dark:text-[#666] tracking-[0.08em] uppercase">
+            <p className="px-2 mb-1.5 text-[10px] font-medium text-black/50 dark:text-white/50 tracking-[0.08em] uppercase">
               {section.label}
             </p>
             <div className="space-y-0.5">
@@ -221,8 +221,8 @@ export default function Sidebar({ onToggleSettings }: SidebarProps) {
                     onClick={() => navigate(item.path)}
                     className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
                       active
-                        ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
-                        : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
+                        ? "bg-black/[0.04] dark:bg-white/[0.04] text-black dark:text-white font-medium"
+                        : "text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
                     }`}
                   >
                     <Icon className="w-4 h-4" />

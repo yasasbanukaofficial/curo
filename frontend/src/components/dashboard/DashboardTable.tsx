@@ -22,7 +22,7 @@ interface ThProps {
 
 export function Th({ children, className = "" }: ThProps) {
   return (
-    <th className={`text-left text-[11px] font-medium text-[#8E8E93] dark:text-[#666] py-3 px-5 ${className}`}>
+    <th className={`text-left text-[11px] font-medium text-black/50 dark:text-white/50 py-3 px-5 ${className}`}>
       {children}
     </th>
   );
@@ -37,7 +37,7 @@ interface TrProps {
 export function Tr({ children, className = "", onClick }: TrProps) {
   return (
     <tr
-      className={`border-b border-black/[0.02] dark:border-[#222]/50 last:border-none hover:bg-[#F5F5F7]/50 dark:hover:bg-[#1A1A1A]/50 transition-colors duration-200 ${onClick ? "cursor-pointer" : ""} ${className}`}
+      className={`border-b border-black/[0.02] dark:border-white/[0.04] last:border-none hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors duration-200 ${onClick ? "cursor-pointer" : ""} ${className}`}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
