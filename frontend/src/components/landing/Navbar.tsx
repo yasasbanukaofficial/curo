@@ -26,10 +26,10 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 h-20">
+    <header className="sticky top-0 z-40 h-16">
       <div className="backdrop-blur-lg border-b border-black/[0.04] dark:border-[#222] bg-white/80 dark:bg-black/80 transition-colors">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-          <nav className="flex h-20 w-full items-center">
+          <nav className="flex h-16 w-full items-center">
             <CuroLogo size="sm" />
 
             <ul className="flex flex-row items-center gap-1 px-6 max-sm:hidden">
@@ -65,10 +65,10 @@ export default function Navbar() {
                 <GitHubIcon className="h-5 w-5" />
               </a>
 
-              <a href="/login" className="text-sm font-medium text-[#636363] dark:text-[#9A9A9A] hover:text-black dark:hover:text-white transition-colors px-3">
+              <a href="/login" className="text-sm font-medium text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors px-3">
                 Sign In
               </a>
-              <Button variant="secondary" href="/register" size="sm">Get Started</Button>
+              <Button variant="outline" href="/register" size="sm" className="rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333]">Get Started</Button>
             </div>
 
             <div className="flex flex-row items-center ms-auto -me-1.5 lg:hidden">
@@ -119,7 +119,7 @@ export default function Navbar() {
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A]">
               Sign In
             </a>
-            <Button variant="secondary" href="/register" onClick={() => setIsOpen(false)} className="w-full text-base font-medium" size="sm">
+            <Button variant="outline" href="/register" onClick={() => setIsOpen(false)} size="sm" className="w-full text-base font-medium rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333]">
               Get Started
             </Button>
           </div>
