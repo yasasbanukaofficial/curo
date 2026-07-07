@@ -26,16 +26,17 @@
     "configuration"
   ],
   "homepage": "https://github.com/yasasbanukaofficial/curo",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yasasbanukaofficial/curo.git"
-  },
   "bugs": {
     "url": "https://github.com/yasasbanukaofficial/curo/issues"
   },
   "scripts": {
     "build": "tsup",
     "start": "node dist/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yasasbanukaofficial/curo.git",
+    "directory": "packages"
   },
   "engines": {
     "node": ">=18"
