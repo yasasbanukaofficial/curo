@@ -4,8 +4,8 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import StaggerContainer, { scaleFadeIn } from "../animations/StaggerContainer";
-import { SiGithub, SiRailway, SiVercel } from "react-icons/si";
-import { FaAws } from "react-icons/fa";
+import { SiGithub, SiRailway, SiVercel, SiGooglecloud, SiNetlify } from "react-icons/si";
+import { FaAws, FaMicrosoft } from "react-icons/fa";
 import VaultLock from "./VaultLock";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 
@@ -102,6 +102,18 @@ export default function PipelineSection() {
             <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
               <SiVercel className="w-10 h-10 text-[#000000] dark:text-white" />
               <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Vercel</span>
+            </div>
+            <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
+              <SiGooglecloud className="w-10 h-10 text-[#4285F4]" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Google Cloud</span>
+            </div>
+            <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
+              <SiNetlify className="w-10 h-10 text-[#32A6DC]" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Netlify</span>
+            </div>
+            <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
+              <FaMicrosoft className="w-10 h-10 text-[#00A4EF]" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Azure</span>
             </div>
           </motion.div>
         </StaggerContainer>
