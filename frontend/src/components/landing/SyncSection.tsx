@@ -190,15 +190,15 @@ export default function SyncSection() {
         );
       }
 
-      tl.call(() => hiliteCmd(1, true), [], null, "+=0.2");
+      tl.call(() => hiliteCmd(1, true), [], "+=0.2");
 
-      tl.call(() => hiliteCmd(1, false), [], null, "+=0.6");
-      tl.call(() => hiliteCmd(2, true), [], null, "+=0");
+      tl.call(() => hiliteCmd(1, false), [], "+=0.6");
+      tl.call(() => hiliteCmd(2, true), [], "+=0");
 
-      tl.call(() => hiliteCmd(2, false), [], null, "+=0.6");
-      tl.call(() => hiliteCmd(1, true), [], null, "+=0");
+      tl.call(() => hiliteCmd(2, false), [], "+=0.6");
+      tl.call(() => hiliteCmd(1, true), [], "+=0");
 
-      tl.call(() => clickCmd(1), [], null, "+=0.4");
+      tl.call(() => clickCmd(1), [], "+=0.4");
 
       if (logs.length >= 3 && logTexts.length >= 3) {
         tl.to(logs[2], { opacity: 0, duration: 0.05 }, "+=0.1");
@@ -220,15 +220,15 @@ export default function SyncSection() {
         );
       }
 
-      tl.call(() => hiliteAction(0, true), [], null, "+=0.2");
+      tl.call(() => hiliteAction(0, true), [], "+=0.2");
 
-      tl.call(() => hiliteAction(0, false), [], null, "+=0.6");
-      tl.call(() => hiliteAction(1, true), [], null, "+=0");
+      tl.call(() => hiliteAction(0, false), [], "+=0.6");
+      tl.call(() => hiliteAction(1, true), [], "+=0");
 
-      tl.call(() => hiliteAction(1, false), [], null, "+=0.6");
-      tl.call(() => hiliteAction(0, true), [], null, "+=0");
+      tl.call(() => hiliteAction(1, false), [], "+=0.6");
+      tl.call(() => hiliteAction(0, true), [], "+=0");
 
-      tl.call(() => clickAction(0), [], null, "+=0.4");
+      tl.call(() => clickAction(0), [], "+=0.4");
 
       tl.to({}, { duration: 0.3 });
 

@@ -758,8 +758,8 @@ const projectDetail = selectedProject ? (
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         {env ? (
-                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${style.bg} ring-1 ${style.ring}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${style?.bg} ring-1 ${style?.ring}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${style?.dot}`} />
                             <span className="text-[10px] font-medium text-gray-600 dark:text-white/60">{env.name}</span>
                           </div>
                         ) : (

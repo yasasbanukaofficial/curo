@@ -207,7 +207,7 @@ interface SidebarProps {
   onToggleSettings: (tab?: string) => void;
 }
 
-export default function Sidebar({ onToggleSettings }: SidebarProps) {
+export default function Sidebar({ onToggleSettings: _onToggleSettings }: SidebarProps) {
   const location = useLocation();
   const [projectsExpanded, setProjectsExpanded] = useState(false);
 
