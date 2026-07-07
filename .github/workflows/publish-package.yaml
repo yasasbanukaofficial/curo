@@ -34,8 +34,8 @@ jobs:
 
       - name: Building package
         working-directory: packages
-        run: npm run build --workspace=curo-cli
+        run: npm run build
 
       - name: Publishing the package
         working-directory: packages
-        run: npm publish --workspace=curo-cli
+        run: npm publish
