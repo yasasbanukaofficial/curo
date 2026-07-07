@@ -3,11 +3,9 @@ import { motion } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import DotsLine from "./DotsLine";
-import Corner from "./Corner";
 import StaggerContainer, { scaleFadeIn } from "../animations/StaggerContainer";
-import { SiGithub, SiRailway, SiVercel } from "react-icons/si";
-import { FaAws } from "react-icons/fa";
+import { SiGithub, SiRailway, SiVercel, SiGooglecloud, SiNetlify } from "react-icons/si";
+import { FaAws, FaMicrosoft } from "react-icons/fa";
 import VaultLock from "./VaultLock";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 
@@ -58,26 +56,24 @@ export default function PipelineSection() {
   }, [reduced]);
 
   return (
-    <section id="deploy" className="relative bg-[#fcfcfc] scroll-mt-24">
-      <DotsLine className="h-10" />
-      <div className="border-x border-[#efefef] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
-        <Corner />
+    <section id="deploy" className="relative bg-white dark:bg-black scroll-mt-24 py-8 lg:py-12">
+      <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
         <StaggerContainer className="flex flex-col items-center text-center">
           <motion.div variants={scaleFadeIn()} className="max-w-lg mb-12">
-            <div className="text-[#1D1D1F] text-xs uppercase font-bold tracking-widest mb-3">Deploy</div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-[#1D1D1F] leading-[1.1] mb-4">
+            <div className="text-accent text-xs uppercase font-bold tracking-widest mb-3">Deploy</div>
+            <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold tracking-tight text-black dark:text-white leading-[1.15] mb-4">
               Sync everywhere<br />you deploy.
             </h2>
-            <p className="text-sm sm:text-base text-[#6E6E73] leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-black/70 dark:text-white/70 leading-relaxed">
               Connect Curo to your entire deployment pipeline. Push secrets from your vault to every platform automatically.
             </p>
           </motion.div>
           <motion.div ref={pipelineRef} variants={scaleFadeIn()} className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
             <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
-              <SiGithub className="w-10 h-10 text-[#1D1D1F]" />
-              <span className="text-xs text-[#6E6E73] font-sans">GitHub</span>
+              <SiGithub className="w-10 h-10 text-[#1D1D1F] dark:text-white" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">GitHub</span>
             </div>
-            <span ref={(el) => { arrowsRef.current[0] = el; }} className="text-[#1D1D1F] text-2xl relative overflow-hidden">
+            <span ref={(el) => { arrowsRef.current[0] = el; }} className="text-[#1D1D1F] dark:text-white text-2xl relative overflow-hidden">
               →
               <div ref={(el) => { flowDotsRef.current[0] = el; }} className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#64D2FF]" />
@@ -87,9 +83,9 @@ export default function PipelineSection() {
               <div className="w-12 h-12 bg-[#1D1D1F] rounded-xl flex items-center justify-center">
                 <VaultLock className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xs text-[#1D1D1F] font-sans font-medium">Curo</span>
+              <span className="text-xs text-[#1D1D1F] dark:text-white font-sans font-medium">Curo</span>
             </div>
-            <span ref={(el) => { arrowsRef.current[1] = el; }} className="text-[#1D1D1F] text-2xl relative overflow-hidden">
+            <span ref={(el) => { arrowsRef.current[1] = el; }} className="text-[#1D1D1F] dark:text-white text-2xl relative overflow-hidden">
               →
               <div ref={(el) => { flowDotsRef.current[1] = el; }} className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
@@ -97,20 +93,31 @@ export default function PipelineSection() {
             </span>
             <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
               <SiRailway className="w-10 h-10 text-[#0B0D0E]" />
-              <span className="text-xs text-[#6E6E73] font-sans">Railway</span>
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Railway</span>
             </div>
             <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
               <FaAws className="w-10 h-10 text-[#FF9900]" />
-              <span className="text-xs text-[#6E6E73] font-sans">AWS</span>
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">AWS</span>
             </div>
             <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
-              <SiVercel className="w-10 h-10 text-[#000000]" />
-              <span className="text-xs text-[#6E6E73] font-sans">Vercel</span>
+              <SiVercel className="w-10 h-10 text-[#000000] dark:text-white" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Vercel</span>
+            </div>
+            <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
+              <SiGooglecloud className="w-10 h-10 text-[#4285F4]" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Google Cloud</span>
+            </div>
+            <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
+              <SiNetlify className="w-10 h-10 text-[#32A6DC]" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Netlify</span>
+            </div>
+            <div className="pipeline-node-wrapper flex flex-col items-center gap-2">
+              <FaMicrosoft className="w-10 h-10 text-[#00A4EF]" />
+              <span className="text-xs text-[#6E6E73] dark:text-[#9A9A9A] font-sans">Azure</span>
             </div>
           </motion.div>
         </StaggerContainer>
       </div>
-      <DotsLine className="h-10" />
     </section>
   );
 }

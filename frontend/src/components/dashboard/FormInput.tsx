@@ -36,9 +36,9 @@ export default function FormInput({
           onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full h-10 text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] border border-black/[0.04] dark:border-[#222] rounded-xl px-3 ${
+          className={`w-full h-10 text-sm bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.06] rounded-xl px-3 ${
             icon ? "pl-10" : ""
-          } text-[#1D1D1F] dark:text-[#E5E5E5] placeholder:text-[#8E8E93] dark:placeholder:text-[#666] focus:outline-none focus:ring-2 focus:ring-black/[0.08] dark:focus:ring-white/[0.08] focus:bg-white dark:focus:bg-[#222] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+          } text-gray-900 dark:text-[#FAFAFA] placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
         />
       </div>
       {error && (

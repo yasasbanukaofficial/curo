@@ -1,47 +1,32 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardButton from "./DashboardButton";
 import AlertModal from "./AlertModal";
 import {
   LayoutDashboard,
   FolderKanban,
   Users,
-  Settings,
+  KeyRound,
   UserCircle,
-  Sun,
   LogOut,
-  Plus,
+  Activity,
+  ChevronDown,
+  Command,
 } from "lucide-react";
 import { useVerifySessionQuery, useLogoutMutation, clearCredentials, baseApi } from "../../store";
 import { useAppDispatch } from "../../app/store";
-import { useGetTeamsQuery } from "../../store";
 
-function useActiveTeamId() {
-  const { data: teams = [] } = useGetTeamsQuery();
-  const activeTeamId = sessionStorage.getItem("activeTeamId");
-  const fallbackTeamId = activeTeamId && teams.find((t) => t._id === activeTeamId) ? activeTeamId : (teams[0]?._id || "");
-  return fallbackTeamId;
-}
+const navItems: ({ label: string; icon: any; path: string; shortcut: string; hasSub?: boolean; sub?: boolean })[] = [
+  { label: "Overview", icon: LayoutDashboard, path: "/dashboard", shortcut: "1" },
+  { label: "Projects", icon: FolderKanban, path: "/dashboard/projects", shortcut: "2", hasSub: true },
+  { label: "Secrets", icon: KeyRound, path: "/dashboard/secrets", shortcut: "3", sub: true },
+  { label: "Teams", icon: Users, path: "/dashboard/teams", shortcut: "4" },
+  { label: "Activity", icon: Activity, path: "/dashboard/activity", shortcut: "5" },
+  { label: "Integrations", icon: Command, path: "/dashboard/integrations", shortcut: "6" },
+];
 
-function ProjectSwitcher() {
-  const navigate = useNavigate();
-
-  return (
-    <DashboardButton
-      onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
-      className="w-full h-10 px-3 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] justify-start"
-    >
-      <Plus className="w-4 h-4" />
-      Create new project
-    </DashboardButton>
-  );
-}
-
-interface UserDropdownProps {
-  onToggleSettings: (tab?: string) => void;
-}
-
-function UserCard({ onToggleSettings }: UserDropdownProps) {
+function SidebarUserCard() {
   const [open, setOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -54,7 +39,6 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   const user = (userData as any) ?? null;
   const userName = user?.displayName || user?.name || user?.email?.split("@")[0] || "";
   const userEmail = user?.email || "";
-  const emailVerified = user?.emailVerified ?? user?.isEmailVerified ?? false;
 
   const initials = useMemo(() => {
     if (userName) {
@@ -91,77 +75,66 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative px-3 py-3">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] transition-colors duration-200 text-left"
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 text-left group"
       >
-        <div className="w-8 h-8 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-xs font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-xs font-semibold text-accent flex-shrink-0">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] truncate">{userName}</p>
-          <p className="text-[11px] text-[#8E8E93] dark:text-[#666] truncate">{userEmail}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{userName}</p>
+          <p className="text-[11px] text-gray-500 dark:text-white/40 truncate">{userEmail}</p>
         </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-white/40 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {open && (
-        <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-3 z-50">
-          <div className="px-4 pb-3 mb-2 border-b border-black/[0.04] dark:border-[#222]">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-lg bg-[#1D1D1F] dark:bg-white flex items-center justify-center text-sm font-semibold text-white dark:text-[#1D1D1F] flex-shrink-0">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">{userName}</p>
-                <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">{userEmail}</p>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full left-3 right-3 mb-2 bg-white dark:bg-[#18181B] rounded-xl border border-gray-200 dark:border-white/[0.06] shadow-xl py-2 z-50"
+          >
+            <div className="px-3 pb-2 mb-2 border-b border-gray-200 dark:border-white/[0.06]">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center text-sm font-semibold text-accent flex-shrink-0">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">{userName}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-white/40">{userEmail}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {emailVerified && (
-                <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-md bg-[#30D158]/10 text-[#30D158]">
-                  Verified
-                </span>
-              )}
+
+            <div className="px-1.5 space-y-0.5">
+              <DashboardButton
+                onClick={() => { setOpen(false); navigate("/dashboard/account"); }}
+                className="w-full h-9 px-3 text-sm rounded-lg justify-start text-gray-500 dark:text-white/50 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04]"
+              >
+                <UserCircle className="w-4 h-4" />
+                Account
+              </DashboardButton>
+
             </div>
-          </div>
 
-          <div className="px-1.5 space-y-0.5">
-            <DashboardButton
-              onClick={() => { setOpen(false); onToggleSettings("account"); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
-            >
-              <UserCircle className="w-4 h-4" />
-              Account
-            </DashboardButton>
-            <DashboardButton
-              onClick={() => { setOpen(false); onToggleSettings("general"); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </DashboardButton>
-            <DashboardButton
-              onClick={() => { setOpen(false); onToggleSettings("general"); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
-            >
-              <Sun className="w-4 h-4" />
-              Theme
-            </DashboardButton>
-          </div>
-
-          <div className="mt-2 pt-2 border-t border-black/[0.04] dark:border-[#222] px-1.5">
-            <DashboardButton
-              onClick={() => { setOpen(false); setShowLogoutModal(true); }}
-              className="w-full h-9 px-3 text-sm rounded-lg justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-            >
-              <LogOut className="w-4 h-4" />
-              Log out
-            </DashboardButton>
-          </div>
-        </div>
-      )}
+            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-white/[0.06] px-1.5">
+              <DashboardButton
+                onClick={() => { setOpen(false); setShowLogoutModal(true); }}
+                className="w-full h-9 px-3 text-sm rounded-lg justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              >
+                <LogOut className="w-4 h-4" />
+                Log out
+              </DashboardButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AlertModal
         open={showLogoutModal}
@@ -178,66 +151,105 @@ function UserCard({ onToggleSettings }: UserDropdownProps) {
   );
 }
 
+function NavLink({ item, active, expanded, onToggle }: { item: typeof navItems[0]; active: boolean; expanded?: boolean; onToggle?: () => void }) {
+  const navigate = useNavigate();
+  const Icon = item.icon;
+  const isSub = "sub" in item && item.sub;
+  const hasSub = "hasSub" in item && item.hasSub;
+
+  function handleClick() {
+    if (hasSub && onToggle) {
+      onToggle();
+    }
+    navigate(item.path);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="relative w-full group cursor-pointer"
+    >
+      <div className={`relative flex items-center gap-3 h-10 mx-2 rounded-xl text-sm transition-all duration-200 justify-start ${
+        isSub ? "pl-10" : "px-3"
+      }`}
+        style={{
+          backgroundColor: active ? "rgba(255, 51, 51, 0.08)" : "transparent",
+        }}
+      >
+        {active && !isSub && (
+          <motion.div
+            layoutId="sidebar-active"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-accent rounded-r-full"
+            transition={{ type: "spring", stiffness: 500, damping: 35 }}
+          />
+        )}
+        {active && isSub && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-accent rounded-r-full" />
+        )}
+        <Icon className={`w-4 h-4 flex-shrink-0 transition-colors duration-200 ${
+          active ? "text-accent" : "text-gray-400 dark:text-white/40 group-hover:text-accent"
+        }`} />
+        <span className={`transition-colors duration-200 ${
+          active ? "text-gray-900 dark:text-[#FAFAFA] font-medium" : "text-gray-500 dark:text-white/50 group-hover:text-accent"
+        }`}>
+          {item.label}
+        </span>
+        {hasSub && (
+          <ChevronDown className={`w-3.5 h-3.5 ml-auto text-gray-400 dark:text-white/30 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
+        )}
+      </div>
+    </button>
+  );
+}
+
 interface SidebarProps {
   onToggleSettings: (tab?: string) => void;
 }
 
 export default function Sidebar({ onToggleSettings }: SidebarProps) {
   const location = useLocation();
-  const navigate = useNavigate();
-  const teamId = useActiveTeamId();
-  const navSections = [
-    {
-      label: "Workspace",
-      items: [
-        { label: "Overview", icon: LayoutDashboard, path: "/dashboard" },
-        { label: "Teams", icon: Users, path: `/dashboard/teams/${teamId}` },
-        { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
-      ],
-    },
-  ];
+  const [projectsExpanded, setProjectsExpanded] = useState(false);
+
+  const activePath = useMemo(() => {
+    const path = location.pathname;
+    if (path === "/dashboard" || path === "/dashboard/overview") return "/dashboard";
+    if (path.startsWith("/dashboard/project")) return "/dashboard/projects";
+    if (path === "/dashboard/secrets") return "/dashboard/secrets";
+    if (path === "/dashboard/activity") return "/dashboard/activity";
+    if (path.startsWith("/dashboard/teams")) return "/dashboard/teams";
+    if (path.startsWith("/dashboard/integrations")) return "/dashboard/integrations";
+    if (path.startsWith("/dashboard/settings") || path.startsWith("/dashboard/account")) return "/dashboard/settings";
+    return path;
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (activePath === "/dashboard/secrets" || activePath === "/dashboard/projects") {
+      setProjectsExpanded(true);
+    }
+  }, [activePath]);
 
   return (
-    <aside className="hidden lg:flex w-[280px] bg-white dark:bg-[#111] border-r border-black/[0.04] dark:border-[#222] flex-col flex-shrink-0 transition-colors duration-200">
-      <div className="px-5 pt-5 pb-4">
-        <ProjectSwitcher />
-      </div>
-
-      <nav className="flex-1 px-3 overflow-y-auto space-y-5">
-        {navSections.map((section) => (
-          <div key={section.label}>
-            <p className="px-2 mb-1.5 text-[10px] font-medium text-[#8E8E93] dark:text-[#666] tracking-[0.08em] uppercase">
-              {section.label}
-            </p>
-            <div className="space-y-0.5">
-              {section.items.map((item) => {
-                const Icon = item.icon;
-                const active = location.pathname === item.path
-                  || (item.path === "/dashboard/overview" && location.pathname === "/dashboard");
-                return (
-                  <DashboardButton
-                    key={item.label}
-                    id={`sidenav-${item.label.toLowerCase()}`}
-                    onClick={() => navigate(item.path)}
-                    className={`w-full h-10 px-3 text-sm rounded-xl justify-start ${
-                      active
-                        ? "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
-                        : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A]"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </DashboardButton>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+    <aside className="hidden lg:flex w-[260px] bg-white dark:bg-[#09090B] border-r border-gray-200 dark:border-white/[0.06] flex-col flex-shrink-0">
+      <nav className="flex-1 py-4 mt-2 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          if (item.sub) {
+            if (!projectsExpanded) return null;
+            return <NavLink key={item.label} item={item} active={activePath === item.path} />;
+          }
+          return (
+            <NavLink
+              key={item.label}
+              item={item}
+              active={item.hasSub ? activePath === "/dashboard/projects" : activePath === item.path}
+              expanded={projectsExpanded}
+              onToggle={() => setProjectsExpanded(!projectsExpanded)}
+            />
+          );
+        })}
       </nav>
 
-      <div className="px-3 pt-3 pb-5 border-t border-black/[0.04] dark:border-[#222]">
-        <UserCard onToggleSettings={onToggleSettings} />
-      </div>
+      <SidebarUserCard />
     </aside>
   );
 }

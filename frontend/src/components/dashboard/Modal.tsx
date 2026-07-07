@@ -55,22 +55,22 @@ export default function Modal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`w-full ${sizeStyles[size]} bg-white dark:bg-[#111] rounded-2xl border border-black/[0.04] dark:border-[#222] shadow-xl transition-all duration-200 ${className}`}
+        className={`w-full ${sizeStyles[size]} bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] shadow-xl transition-all duration-200 ${className}`}
       >
         <div className="flex items-start justify-between px-6 pt-6 pb-3">
           <div className="min-w-0 flex-1">
-            <h2 className={`text-lg font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] ${titleClassName}`}>
+            <h2 className={`text-lg font-semibold text-gray-900 dark:text-[#FAFAFA] ${titleClassName}`}>
               {title}
             </h2>
             {description && (
-              <p className={`text-sm text-[#8E8E93] dark:text-[#666] mt-1 ${descriptionClassName}`}>
+              <p className={`text-sm text-gray-500 dark:text-white/40 mt-1 ${descriptionClassName}`}>
                 {description}
               </p>
             )}
           </div>
           <DashboardButton
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#1A1A1A] flex-shrink-0 ml-3"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] flex-shrink-0 ml-3"
           >
             <X className="w-4 h-4" />
           </DashboardButton>
@@ -80,19 +80,19 @@ export default function Modal({
           {children}
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-4 border-t border-black/[0.04] dark:border-[#222]">
+        <div className="flex items-center justify-end gap-3 px-6 pb-6 pt-4 border-t border-gray-200 dark:border-[#222]">
           {footer || (
             <>
               <DashboardButton
                 onClick={onClose}
-                className="h-9 px-4 text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5] bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-[10px] hover:bg-[#eee] dark:hover:bg-[#222]"
+                className="h-9 px-4 text-sm font-medium text-gray-700 dark:text-white bg-gray-100 dark:bg-white/[0.04] rounded-[10px] hover:bg-gray-200 dark:hover:bg-white/[0.08]"
               >
                 Cancel
               </DashboardButton>
               <DashboardButton
                 onClick={onSubmit}
                 disabled={submitDisabled || loading}
-                className="h-9 px-4 text-sm font-medium text-white bg-[#1D1D1F] dark:bg-white dark:text-[#1D1D1F] rounded-[10px] hover:bg-[#1D1D1F]/90 dark:hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-9 px-4 text-sm font-medium text-white bg-gray-900 dark:bg-white dark:text-gray-900 rounded-[10px] hover:bg-gray-800 dark:hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Saving..." : submitLabel}
               </DashboardButton>

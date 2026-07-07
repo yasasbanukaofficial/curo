@@ -9,8 +9,7 @@ export default function DotsLine({ className = "" }: { className?: string }) {
       <motion.svg
         viewBox="0 0 1224 40"
         preserveAspectRatio="none"
-        className="w-full h-full"
-        style={{ color: "rgb(221, 221, 221)" }}
+        className="w-full h-full text-[#ddd] dark:text-[#333]"
         initial={reduced ? undefined : { opacity: 0 }}
         whileInView={reduced ? undefined : { opacity: 1 }}
         viewport={{ once: true }}

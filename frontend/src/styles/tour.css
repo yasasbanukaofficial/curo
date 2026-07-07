@@ -83,7 +83,7 @@
 }
 
 .curo-tour-light .driver-popover-next-btn {
-  background: #1d1d1f;
+  background: #FF3333;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -100,8 +100,8 @@
 
 /* ── Theme: Dark ── */
 .curo-tour-dark .driver-popover {
-  background: #1c1c1e;
-  border: 1px solid #2c2c2e;
+  background: #000000;
+  border: 1px solid #333333;
   border-radius: 24px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.50);
   padding: 20px;
@@ -111,7 +111,7 @@
 }
 
 .curo-tour-dark .driver-popover-arrow {
-  border-color: #1c1c1e;
+  border-color: #000000;
 }
 
 .curo-tour-dark .driver-popover-close-btn {
@@ -182,8 +182,8 @@
 }
 
 .curo-tour-dark .driver-popover-next-btn {
-  background: #ffffff;
-  color: #1d1d1f;
+  background: #FF3333;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-size: 13px;
@@ -253,11 +253,11 @@
 
 .tour-dot.active {
   width: 18px;
-  background: #1d1d1f;
+  background: #FF3333;
 }
 
 .curo-tour-dark .tour-dot.active {
-  background: #ffffff;
+  background: #FF3333;
 }
 
 

@@ -1,12 +1,12 @@
-export const accent = '#5B8DEF';
+export const accent = '#FF3333';
 export const logoFront = '#FFFFFF';
-export const logoBack = '#6B6B6B';
+export const logoBack = '#000000';
 export const textPrimary = '#FFFFFF';
 export const textSecondary = '#9A9A9A';
 export const textDim = '#5A5A5A';
-export const boxFill = '#161616';
-export const tipAccent = '#E8A33D';
+export const boxFill = '#000000';
+export const tipAccent = '#FF3333';
 export const success = '#5FD68A';
-export const error = '#FF6B6B';
+export const error = '#FF3333';
 export const warning = '#FFD479';
 export const border = '#333333';

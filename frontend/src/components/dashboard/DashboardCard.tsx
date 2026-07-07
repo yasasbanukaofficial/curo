@@ -24,8 +24,8 @@ export default function DashboardCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-white/80 dark:bg-[#111]/80 backdrop-blur-xl rounded-2xl border border-black/[0.04] dark:border-[#222] ${paddings[padding]} transition-all duration-200 ${
-        hover ? "hover:shadow-lg hover:-translate-y-0.5" : ""
+      className={`bg-[#111113] rounded-2xl border border-white/[0.06] ${paddings[padding]} transition-all duration-200 ${
+        hover ? "hover:border-white/[0.10] hover:shadow-xl hover:-translate-y-0.5" : ""
       } ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
       {children}

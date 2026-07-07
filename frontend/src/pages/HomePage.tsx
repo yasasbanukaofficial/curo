@@ -1,5 +1,6 @@
 import Navbar from "../components/landing/Navbar";
 import Hero from "../components/landing/Hero";
+import AboutSection from "../components/landing/AboutSection";
 import ScatteredSection from "../components/landing/ScatteredSection";
 import CentralizeSection from "../components/landing/CentralizeSection";
 import ManageSection from "../components/landing/ManageSection";
@@ -10,9 +11,10 @@ import Footer from "../components/landing/Footer";
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-[#fcfcfc] pt-24">
+    <div className="min-h-screen bg-white dark:bg-black">
       <Navbar />
       <Hero />
+      <AboutSection />
       <ScatteredSection />
       <CentralizeSection />
       <ManageSection />

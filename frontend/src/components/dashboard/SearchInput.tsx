@@ -24,7 +24,7 @@ function SearchInputInner({
 }: SearchInputProps, ref: ForwardedRef<HTMLInputElement>) {
   return (
     <div className={`relative flex-1 max-w-md ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
       <input
         ref={ref}
         type="text"
@@ -34,10 +34,10 @@ function SearchInputInner({
         onFocus={onFocus}
         onBlur={onBlur}
         onKeyDown={onKeyDown}
-        className="w-full h-9 pl-10 pr-12 text-sm bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none text-[#1D1D1F] dark:text-[#E5E5E5] placeholder-[#8E8E93] dark:placeholder-[#666] transition-colors duration-200"
+        className="w-full h-9 pl-10 pr-12 text-sm bg-white/[0.04] rounded-xl border border-white/[0.06] outline-none text-[#FAFAFA] placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/20 transition-all duration-200"
       />
       {shortcutKey && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] font-medium text-[#8E8E93] dark:text-[#666] pointer-events-none">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] font-medium text-white/30 pointer-events-none">
           <Command className="w-3 h-3" />
           <span>{shortcutKey}</span>
         </div>

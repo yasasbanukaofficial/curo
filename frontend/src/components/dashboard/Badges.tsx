@@ -11,7 +11,7 @@ const envStyles: Record<string, string> = {
 
 const actionStyles: Record<string, string> = {
   created: "bg-[#30D158]/10 text-[#30D158]",
-  updated: "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]",
+  updated: "bg-black/[0.04] dark:bg-white/[0.04] text-black/50 dark:text-white/50",
   rotated: "bg-[#FF9F0A]/10 text-[#FF9F0A]",
   deleted: "bg-[#FF3B30]/10 text-[#FF3B30]",
   synced: "bg-[#007AFF]/10 text-[#007AFF]",
@@ -21,7 +21,7 @@ const actionStyles: Record<string, string> = {
 };
 
 export function EnvBadge({ label, className = "" }: BadgeProps) {
-  const style = envStyles[label.toLowerCase()] || "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]";
+  const style = envStyles[label.toLowerCase()] || "bg-black/[0.04] dark:bg-white/[0.04] text-black/50 dark:text-white/50";
   return (
     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${style} ${className}`}>
       {label}
@@ -30,7 +30,7 @@ export function EnvBadge({ label, className = "" }: BadgeProps) {
 }
 
 export function ActionBadge({ label, className = "" }: BadgeProps) {
-  const style = actionStyles[label.toLowerCase()] || "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]";
+  const style = actionStyles[label.toLowerCase()] || "bg-black/[0.04] dark:bg-white/[0.04] text-black/50 dark:text-white/50";
   return (
     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md capitalize ${style} ${className}`}>
       {label}
@@ -39,7 +39,7 @@ export function ActionBadge({ label, className = "" }: BadgeProps) {
 }
 
 const providerStyles: Record<string, string> = {
-  local: "bg-[#F5F5F7] dark:bg-[#1A1A1A] text-[#8E8E93]",
+  local: "bg-black/[0.04] dark:bg-white/[0.04] text-black/50 dark:text-white/50",
   google: "bg-[#007AFF]/10 text-[#007AFF]",
   github: "bg-[#1A1A1A]/10 dark:bg-white/10 text-[#1A1A1A] dark:text-[#E5E5E5]",
 };

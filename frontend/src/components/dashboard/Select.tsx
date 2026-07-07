@@ -57,19 +57,19 @@ export default function Select({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!disabled) setOpen(!open); }
           if (e.key === "Escape") setOpen(false);
         }}
-        className={`flex items-center w-full bg-[#F5F5F7] dark:bg-[#1A1A1A] rounded-xl border-none outline-none transition-colors duration-200 cursor-pointer relative ${
+        className={`flex items-center w-full bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.06] outline-none transition-colors duration-200 cursor-pointer relative ${
           icon ? "pl-10 pr-3" : "pl-3.5 pr-3"
-        } ${size === "sm" ? "h-7 text-[11px]" : "h-10 text-sm"} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${open ? "ring-2 ring-black/[0.08] dark:ring-white/[0.08]" : ""}`}
+        } ${size === "sm" ? "h-7 text-[11px]" : "h-10 text-sm"} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${open ? "ring-2 ring-accent/30 border-accent/20" : "focus:border-gray-300 dark:focus:border-white/[0.12]"}`}
       >
         {icon && <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">{icon}</div>}
-        <span className={`flex-1 ${selected ? "text-[#1D1D1F] dark:text-[#E5E5E5]" : "text-[#8E8E93] dark:text-[#666]"}`}>
+        <span className={`flex-1 ${selected ? "text-gray-900 dark:text-[#FAFAFA]" : "text-gray-400 dark:text-white/40"}`}>
           {selected ? selected.label : placeholder || "Select..."}
         </span>
-        <ChevronDown className={`${size === "sm" ? "w-3 h-3" : "w-4 h-4"} text-[#8E8E93] flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`${size === "sm" ? "w-3 h-3" : "w-4 h-4"} text-gray-400 dark:text-white/40 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </div>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#1A1A1A] rounded-xl border border-black/[0.04] dark:border-[#222] shadow-lg py-1 z-50 max-h-60 overflow-y-auto min-w-[160px] w-max">
+        <div className="absolute top-full left-0 mt-1.5 bg-white dark:bg-[#18181B] rounded-xl border border-gray-200 dark:border-white/[0.06] shadow-lg py-1 z-50 max-h-60 overflow-y-auto min-w-[160px] w-max">
           {options.map((opt) => (
             <div
               key={opt.value}
@@ -80,12 +80,12 @@ export default function Select({
               onKeyDown={(e) => { if (e.key === "Enter") { onChange(opt.value); setOpen(false); } }}
               className={`flex items-center gap-2 h-9 px-3 text-sm cursor-pointer transition-colors duration-150 ${
                 opt.value === value
-                  ? "bg-[#F5F5F7] dark:bg-[#333] text-[#1D1D1F] dark:text-[#E5E5E5] font-medium"
-                  : "text-[#8E8E93] dark:text-[#666] hover:text-[#1D1D1F] dark:hover:text-[#E5E5E5] hover:bg-[#F5F5F7] dark:hover:bg-[#333]"
+                  ? "bg-gray-100 dark:bg-white/[0.04] text-gray-900 dark:text-[#FAFAFA] font-medium"
+                  : "text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.04]"
               }`}
             >
               <span className="flex-1">{opt.label}</span>
-              {opt.value === value && <Check className="w-3.5 h-3.5 text-[#1D1D1F] dark:text-[#E5E5E5]" />}
+              {opt.value === value && <Check className="w-3.5 h-3.5 text-accent" />}
             </div>
           ))}
         </div>
