@@ -158,7 +158,7 @@ function DashboardInner() {
 
   if (teamsLoading || !layoutReady) {
     return (
-      <div className="h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex items-center justify-center">
+      <div className="h-screen bg-white dark:bg-black flex items-center justify-center">
         <LoadingSpinner size={28} />
       </div>
     );
@@ -166,7 +166,7 @@ function DashboardInner() {
 
   if (!inviteResolved && !showInviteModal) {
     return (
-      <div className="h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex items-center justify-center">
+      <div className="h-screen bg-white dark:bg-black flex items-center justify-center">
         <LoadingSpinner size={28} />
       </div>
     );
@@ -181,7 +181,7 @@ function DashboardInner() {
         onDecline={handleDeclineInvite}
         loading={inviteLoading}
       />
-      <div className={"h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex flex-col transition-colors duration-200 " + themeCtx.theme}>
+      <div className={"h-screen bg-white dark:bg-black flex flex-col transition-colors duration-200 " + themeCtx.theme}>
         <TopNav />
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
