@@ -20,7 +20,7 @@ export default function AboutSection() {
             Curo is a <span className="text-accent font-medium">centralized secrets management</span> platform for{' '}
             <span className="text-accent font-medium">teams</span> and{' '}
             <span className="text-accent font-medium">developers</span>.
-            Bringing powerful features for your environment variable workflows, with high security and simplicity to fit your preferences — works seamlessly with any CI/CD, framework, or cloud provider.
+            Bringing powerful features for your environment variable workflows, with high security and simplicity to fit your preferences. Works seamlessly with any CI/CD, framework, or cloud provider.
           </p>
         </motion.div>
 
@@ -40,12 +40,12 @@ export default function AboutSection() {
             <img
               src={dashboardLight}
               alt="Curo dashboard preview"
-              className="absolute top-[320px] left-[12%] max-w-[1350px] w-full rounded-xl lg:top-[260px] pointer-events-none block dark:hidden"
+              className="absolute top-[240px] left-[12%] max-w-[1350px] w-full rounded-xl lg:top-[180px] pointer-events-none block dark:hidden"
             />
             <img
               src={dashboardDark}
               alt="Curo dashboard preview"
-              className="absolute top-[320px] left-[12%] max-w-[1350px] w-full rounded-xl lg:top-[260px] pointer-events-none hidden dark:block"
+              className="absolute top-[240px] left-[12%] max-w-[1350px] w-full rounded-xl lg:top-[180px] pointer-events-none hidden dark:block"
             />
           </div>
         </motion.div>
