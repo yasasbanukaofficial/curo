@@ -14,14 +14,6 @@ import {
 } from "lucide-react";
 import { useVerifySessionQuery, useLogoutMutation, clearCredentials, baseApi } from "../../store";
 import { useAppDispatch } from "../../app/store";
-import { useGetTeamsQuery } from "../../store";
-
-function useActiveTeamId() {
-  const { data: teams = [] } = useGetTeamsQuery();
-  const activeTeamId = sessionStorage.getItem("activeTeamId");
-  const fallbackTeamId = activeTeamId && teams.find((t) => t._id === activeTeamId) ? activeTeamId : (teams[0]?._id || "");
-  return fallbackTeamId;
-}
 
 function ProjectSwitcher() {
   const navigate = useNavigate();
@@ -185,13 +177,12 @@ interface SidebarProps {
 export default function Sidebar({ onToggleSettings }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const teamId = useActiveTeamId();
   const navSections = [
     {
       label: "Workspace",
       items: [
         { label: "Overview", icon: LayoutDashboard, path: "/dashboard" },
-        { label: "Teams", icon: Users, path: `/dashboard/teams/${teamId}` },
+        { label: "Teams", icon: Users, path: "/dashboard/teams" },
         { label: "Projects", icon: FolderKanban, path: "/dashboard/projects" },
       ],
     },
