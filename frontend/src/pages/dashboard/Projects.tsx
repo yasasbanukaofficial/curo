@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useFormik } from "formik";
+import { motion } from "framer-motion";
 import { z } from "zod";
 import {
   Plus,
@@ -15,11 +16,12 @@ import {
   AlertTriangle,
   CheckCircle,
   HelpCircle,
-
+  Search,
+  Clock,
+  ChevronRight,
+  Globe,
 } from "lucide-react";
-import DashboardCard from "../../components/dashboard/DashboardCard";
-import DashboardButton from "../../components/dashboard/DashboardButton";
-import SearchInput from "../../components/dashboard/SearchInput";
+
 import CreateProjectModal from "../../components/dashboard/CreateProjectModal";
 import FilterTabs from "../../components/dashboard/FilterTabs";
 import FormField from "../../components/dashboard/FormField";
@@ -77,6 +79,55 @@ const editSecretSchema = z.object({
 const environmentSchema = z.object({
   name: z.string().trim().min(1, "Environment name is required"),
 });
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } as const },
+};
+
+function ProjectCard({ project, onClick }: { project: Project; onClick: () => void }) {
+  return (
+    <motion.div
+      variants={cardVariants}
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      onClick={onClick}
+      className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 cursor-pointer transition-all duration-200 hover:border-white/[0.10] hover:shadow-xl group"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+            <FolderKanban className="w-5 h-5 text-accent" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">{project.projectName}</h3>
+            {project.description && (
+              <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5 line-clamp-1">{project.description}</p>
+            )}
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-gray-400 dark:text-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+      </div>
+      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-white/40">
+        <span className="flex items-center gap-1.5">
+          <KeyRound className="w-3 h-3" />{project.secretCount || 0} secrets
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Layers3 className="w-3 h-3" />{project.environmentCount || 0} envs
+        </span>
+      </div>
+      <div className="flex items-center justify-between pt-3 mt-4 border-t border-gray-200 dark:border-white/[0.06]">
+        <span className="text-[11px] text-gray-400 dark:text-white/30">
+          Updated {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : ""}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Projects() {
   const { success: showSuccess, error: showError } = useToast();
@@ -343,7 +394,7 @@ export default function Projects() {
 
   if (projectsLoading || detailLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center">
         <LoadingSpinner size={28} />
       </div>
     );
@@ -351,16 +402,16 @@ export default function Projects() {
 
   if (urlError || !isMember || (urlProjectId && (projectByIdError || !projectById))) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 rounded-2xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center mx-auto mb-5">
-            <FolderKanban className="w-8 h-8 text-black/50 dark:text-white/50" />
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
+            <FolderKanban className="w-8 h-8 text-accent" />
           </div>
-          <h1 className="text-xl font-semibold text-black dark:text-white mb-2">Project not found</h1>
-          <p className="text-sm text-black/50 dark:text-white/50 mb-6">The project you're looking for doesn't exist or you don't have access to it.</p>
-          <DashboardButton onClick={() => navigate("/dashboard/projects", { replace: true })} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
-            Back
-          </DashboardButton>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA] mb-2">Project not found</h1>
+          <p className="text-sm text-gray-500 dark:text-white/40 mb-6">The project you're looking for doesn't exist or you don't have access to it.</p>
+          <button type="button" onClick={() => navigate("/dashboard/projects", { replace: true })} className="cursor-pointer h-10 px-5 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-colors">
+            Back to Projects
+          </button>
         </div>
       </div>
     );
@@ -375,18 +426,29 @@ export default function Projects() {
   ];
 
   const projectDetail = selectedProject ? (
-    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 lg:p-8 pb-8 overflow-y-auto">
       <div className="flex items-center gap-3 mb-5">
-        <DashboardButton onClick={() => { setSelectedProject(null); setDetailTab("overview"); settingsFormik.resetForm(); navigate("/dashboard/projects"); }} className="p-2 rounded-[10px] text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]">
+        <button
+          type="button"
+          onClick={() => { setSelectedProject(null); setDetailTab("overview"); settingsFormik.resetForm(); navigate("/dashboard/projects"); }}
+          className="cursor-pointer p-2 rounded-xl text-gray-500 dark:text-white/40 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200"
+        >
           <ArrowLeft className="w-5 h-5" />
-        </DashboardButton>
+        </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-black dark:text-white truncate">{selectedProject.projectName}</h1>
-          <p className="text-sm text-black/50 dark:text-white/50 mt-0.5 truncate">{selectedProject.description}</p>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA] truncate">{selectedProject.projectName}</h1>
+          {selectedProject.description && (
+            <p className="text-sm text-gray-500 dark:text-white/40 mt-0.5 truncate">{selectedProject.description}</p>
+          )}
         </div>
-        <DashboardButton onClick={openSettingsForm} disabled={!canCreate} className="h-8 px-3 text-xs font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
-          <Settings className="w-3.5 h-3.5" />Project Settings
-        </DashboardButton>
+        <button
+          type="button"
+          onClick={openSettingsForm}
+          disabled={!canCreate}
+          className="h-9 px-4 text-xs font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2 flex-shrink-0"
+        >
+          <Settings className="w-3.5 h-3.5" />Settings
+        </button>
       </div>
 
       <FilterTabs
@@ -407,98 +469,110 @@ export default function Projects() {
 
       <div className="mt-6">
         {detailTab === "overview" && (
-          <div className="flex flex-col gap-6">
-
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col gap-6"
+          >
             {projectSecrets.length === 0 && projectEnvironments.length === 0 && !selectedProject.teamId ? (
-              <DashboardCard padding="lg">
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center mb-4">
-                    <FolderKanban className="w-7 h-7 text-black/50 dark:text-white/50" />
+              <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8">
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+                    <FolderKanban className="w-7 h-7 text-accent" />
                   </div>
-                  <h3 className="text-base font-semibold text-black dark:text-white mb-1">This project is empty</h3>
-                  <p className="text-sm text-black/50 dark:text-white/50 mb-6 max-w-sm">Add environments and secrets to get started with {selectedProject.projectName}.</p>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-[#FAFAFA] mb-1">This project is empty</h3>
+                  <p className="text-sm text-gray-500 dark:text-white/40 mb-6 max-w-sm">Add environments and secrets to get started with {selectedProject.projectName}.</p>
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     {canCreate && (
                       <>
-                        <DashboardButton onClick={openCreateEnv} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
+                        <button type="button" onClick={openCreateEnv} className="cursor-pointer h-10 px-5 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-colors inline-flex items-center gap-2">
                           <Layers3 className="w-4 h-4" />Add Environment
-                        </DashboardButton>
-                        <DashboardButton onClick={() => { setDetailTab("teams"); }} className="h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08]">
+                        </button>
+                        <button type="button" onClick={() => { setDetailTab("teams"); }} className="cursor-pointer h-10 px-5 text-sm font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-colors inline-flex items-center gap-2">
                           <Users className="w-4 h-4" />Assign Team
-                        </DashboardButton>
+                        </button>
                       </>
                     )}
                   </div>
                 </div>
-              </DashboardCard>
+              </motion.div>
             ) : null}
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <DashboardCard padding="sm">
-                <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide">Secrets</p>
-                <p className="text-2xl font-semibold text-black dark:text-white mt-1">{projectSecrets.length}</p>
-              </DashboardCard>
-              <DashboardCard padding="sm">
-                <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide">Environments</p>
-                <p className="text-2xl font-semibold text-black dark:text-white mt-1">{projectEnvironments.length}</p>
-              </DashboardCard>
-              <DashboardCard padding="sm">
-                <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide">Team</p>
-                <p className="text-sm font-medium text-black dark:text-white mt-2 leading-tight">{(() => { const team = allTeams.find((t: Team) => t._id === selectedProject.teamId); return team ? team.name : selectedProject.teamId ? "Unknown" : "Personal"; })()}</p>
-              </DashboardCard>
-              <DashboardCard padding="sm">
-                <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide">Created</p>
-                <p className="text-sm font-medium text-black dark:text-white mt-2 leading-tight">{new Date(selectedProject.createdAt ?? (parseInt(selectedProject._id.substring(0, 8), 16) * 1000)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</p>
-              </DashboardCard>
-            </div>
+            <motion.div variants={cardVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Secrets", value: projectSecrets.length, icon: KeyRound },
+                { label: "Environments", value: projectEnvironments.length, icon: Layers3 },
+                { label: "Team", value: (() => { const team = allTeams.find((t: Team) => t._id === selectedProject.teamId); return team ? team.name : selectedProject.teamId ? "Unknown" : "Personal"; })(), icon: Users, isText: true },
+                { label: "Created", value: new Date(selectedProject.createdAt ?? (parseInt(selectedProject._id.substring(0, 8), 16) * 1000)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), icon: Clock, isText: true },
+              ].map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className="w-3.5 h-3.5 text-gray-500 dark:text-white/40" />
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-white/40 tracking-wide uppercase">{stat.label}</p>
+                    </div>
+                    <p className={`${(stat as any).isText ? "text-sm" : "text-2xl"} font-semibold text-gray-900 dark:text-[#FAFAFA]`}>{stat.value}</p>
+                  </div>
+                );
+              })}
+            </motion.div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 flex flex-col gap-6">
-                <DashboardCard>
+              <div className="xl:col-span-2 space-y-6">
+                <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-sm font-semibold text-black dark:text-white">Project Information</h3>
-                      <p className="text-[11px] text-black/50 dark:text-white/50 mt-0.5">General details about this project.</p>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Project Information</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">General details about this project.</p>
                     </div>
-                    <DashboardButton onClick={openSettingsForm} disabled={!canCreate} className="h-8 px-3 text-xs font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black/[0.04] dark:disabled:hover:bg-white/[0.04]">
-                      <Settings className="w-3.5 h-3.5" />Edit
-                    </DashboardButton>
+                    <button type="button" onClick={openSettingsForm} disabled={!canCreate} className="h-8 px-3 text-xs font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+                      <Settings className="w-3 h-3" />Edit
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Name</p>
-                      <p className="text-sm text-black dark:text-white">{selectedProject.projectName}</p>
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-white/40 tracking-wide mb-1">Name</p>
+                      <p className="text-sm text-gray-900 dark:text-[#FAFAFA]">{selectedProject.projectName}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Description</p>
-                      <p className="text-sm text-black dark:text-white">{selectedProject.description || "—"}</p>
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-white/40 tracking-wide mb-1">Description</p>
+                      <p className="text-sm text-gray-700 dark:text-white/60">{selectedProject.description || "—"}</p>
                     </div>
                     <div className="sm:col-span-2">
-                      <p className="text-[11px] font-medium text-black/50 dark:text-white/50 tracking-wide mb-1">Repository</p>
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-white/40 tracking-wide mb-1">Repository</p>
                       {selectedProject.projectLink ? (
-                        <a href={selectedProject.projectLink} target="_blank" rel="noopener noreferrer" className="text-sm text-[#007AFF] hover:underline inline-flex items-center gap-1">
+                        <a href={selectedProject.projectLink} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline inline-flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
                           {selectedProject.projectLink}
                         </a>
                       ) : (
-                        <p className="text-sm text-black/50 dark:text-white/50">—</p>
+                        <p className="text-sm text-gray-400 dark:text-white/30">—</p>
                       )}
                     </div>
                   </div>
-                </DashboardCard>
+                </motion.div>
               </div>
 
-              <div className="xl:col-span-1 flex flex-col gap-6">
-                <DashboardCard>
-                  <h3 className="text-sm font-semibold text-black dark:text-white mb-4">Quick Actions</h3>
+              <div className="space-y-6">
+                <motion.div variants={cardVariants} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-4">Quick Actions</h3>
                   <div className="space-y-2">
-                    <DashboardButton onClick={() => { setDetailTab("secrets"); }} className="w-full h-9 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] justify-start"><KeyRound className="w-4 h-4" />Manage Secrets</DashboardButton>
-                    <DashboardButton onClick={() => { setDetailTab("environments"); }} className="w-full h-9 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] justify-start"><Layers3 className="w-4 h-4" />Manage Environments</DashboardButton>
-                    <DashboardButton onClick={() => { setDetailTab("teams"); }} className="w-full h-9 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] justify-start"><Users className="w-4 h-4" />Assigned Teams</DashboardButton>
+                    <button type="button" onClick={() => { setDetailTab("secrets"); }} className="cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white/70 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 justify-start">
+                      <KeyRound className="w-4 h-4" />Manage Secrets
+                    </button>
+                    <button type="button" onClick={() => { setDetailTab("environments"); }} className="cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white/70 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 justify-start">
+                      <Layers3 className="w-4 h-4" />Manage Environments
+                    </button>
+                    <button type="button" onClick={() => { setDetailTab("teams"); }} className="cursor-pointer w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 dark:text-white/70 hover:text-accent hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 justify-start">
+                      <Users className="w-4 h-4" />Assigned Teams
+                    </button>
                   </div>
-                </DashboardCard>
+                </motion.div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {detailTab === "secrets" && (
@@ -507,16 +581,25 @@ export default function Projects() {
               <div className="flex items-center gap-3 flex-1">
                 {selectedEnvId ? (
                   <div className="flex items-center gap-2">
-                    <DashboardButton onClick={() => { setSelectedEnvId(""); setEnvView("list"); setEnvFilter(""); setDetailTab("environments"); }} className="h-8 px-3 text-xs font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08]">
+                    <button type="button" onClick={() => { setSelectedEnvId(""); setEnvView("list"); setEnvFilter(""); setDetailTab("environments"); }} className="cursor-pointer h-8 px-3 text-xs font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200 inline-flex items-center gap-1.5">
                       <ArrowLeft className="w-3.5 h-3.5" />Back
-                    </DashboardButton>
-                    <span className="text-sm font-medium text-black dark:text-white">
+                    </button>
+                    <span className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">
                       {projectEnvironments.find((e) => e._id === selectedEnvId)?.name} secrets
                     </span>
                   </div>
                 ) : (
                   <>
-                    <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search secrets..." className="max-w-[260px]" />
+                    <div className="relative flex-1 max-w-xs">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-white/40" />
+                      <input
+                        type="text"
+                        value={projectSearch}
+                        onChange={(e) => setProjectSearch(e.target.value)}
+                        placeholder="Search secrets..."
+                        className="w-full h-9 pl-10 pr-3 text-sm bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.06] outline-none text-white placeholder-gray-400 dark:placeholder-white/30 transition-colors duration-200 focus:border-white/[0.12]"
+                      />
+                    </div>
                     {projectEnvironments.length > 0 && (
                       <Select
                         value={envFilter}
@@ -529,51 +612,51 @@ export default function Projects() {
                 )}
               </div>
               {canCreate && (
-                <DashboardButton onClick={openCreateSecret} disabled={projectEnvironments.length === 0} title={projectEnvironments.length === 0 ? "Create an environment first" : undefined} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-black dark:disabled:hover:bg-white">
+                <button type="button" onClick={openCreateSecret} disabled={projectEnvironments.length === 0} title={projectEnvironments.length === 0 ? "Create an environment first" : undefined} className="h-9 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2 glow-accent">
                   <Plus className="w-3.5 h-3.5" />Add Secret
-                </DashboardButton>
+                </button>
               )}
             </div>
 
             {secretsLoading || envsLoading ? (
-              <DashboardCard><LoadingSpinner size={24} /></DashboardCard>
+              <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8 flex items-center justify-center"><LoadingSpinner size={24} /></div>
             ) : projectEnvironments.length === 0 ? (
-              <DashboardCard>
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <Layers3 className="w-10 h-10 text-black/50 dark:text-white/50 mb-3" />
-                  <h3 className="text-sm font-semibold text-black dark:text-white mb-1">No environments yet</h3>
-                  <p className="text-xs text-black/50 dark:text-white/50 mb-4">
+              <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8">
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Layers3 className="w-10 h-10 text-gray-400 dark:text-white/30 mb-3" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-1">No environments yet</h3>
+                  <p className="text-xs text-gray-500 dark:text-white/40 mb-4">
                     You need at least one environment before adding secrets.{" "}
-                    {canCreate && <span className="underline cursor-pointer text-[#007AFF] hover:text-[#007AFF]/80" onClick={openCreateEnv}>Create one</span>}
+                    {canCreate && <span className="underline cursor-pointer text-accent hover:text-accent/80" onClick={openCreateEnv}>Create one</span>}
                   </p>
                 </div>
-              </DashboardCard>
+              </div>
             ) : filteredSecrets.length === 0 ? (
-              <DashboardCard>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <KeyRound className="w-10 h-10 text-black/50 dark:text-white/50 mb-3" />
-                  <h3 className="text-sm font-semibold text-black dark:text-white mb-1">No secrets yet</h3>
-                  <p className="text-xs text-black/50 dark:text-white/50 mb-4">Add your first secret to this project.</p>
+              <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8">
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <KeyRound className="w-10 h-10 text-gray-400 dark:text-white/30 mb-3" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-1">No secrets yet</h3>
+                  <p className="text-xs text-gray-500 dark:text-white/40 mb-4">Add your first secret to this project.</p>
                   {canCreate && (
-                    <DashboardButton onClick={openCreateSecret} disabled={projectEnvironments.length === 0} className="h-8 px-4 text-xs font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed">
-                      <Plus className="w-3.5 h-3.5" />Add Secret
-                    </DashboardButton>
+                    <button type="button" onClick={openCreateSecret} disabled={projectEnvironments.length === 0} className="h-8 px-4 text-xs font-medium text-white bg-accent rounded-xl disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+                      <Plus className="w-3 h-3" />Add Secret
+                    </button>
                   )}
                 </div>
-              </DashboardCard>
+              </div>
             ) : (
               <div className="space-y-2">
                 {filteredSecrets.map((s) => (
-                  <DashboardCard key={s._id} padding="sm">
+                  <div key={s._id} className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-4 hover:border-white/[0.10] transition-all duration-200">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-black dark:text-white truncate">{s.secName}</p>
-                        <p className="text-[11px] text-black/50 dark:text-white/50 font-mono mt-0.5 tracking-widest select-none">
+                        <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{s.secName}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-white/30 font-mono mt-0.5 tracking-widest select-none">
                           ••••••••••••••••
                         </p>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                        <div className="hidden sm:block w-px h-6 bg-black/[0.06] dark:bg-white/[0.08]" />
+                        <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-white/[0.06]" />
                         <div className="flex items-center gap-2">
                           <Select
                             value={s.environmentId || ""}
@@ -582,22 +665,22 @@ export default function Projects() {
                             className="min-w-[100px]"
                           />
                         </div>
-                        <div className="w-px h-6 bg-black/[0.06] dark:bg-white/[0.08]" />
+                        <div className="w-px h-6 bg-gray-200 dark:bg-white/[0.06]" />
                         <div className="flex items-center gap-1">
                           {canCreate && (
-                            <DashboardButton onClick={() => openEditSecret(s)} className="h-7 w-7 p-0 rounded-lg text-black/50 dark:text-white/50 hover:text-[#007AFF] hover:bg-[#007AFF]/10">
+                            <button type="button" onClick={() => openEditSecret(s)} className="cursor-pointer h-7 w-7 p-0 rounded-lg text-gray-500 dark:text-white/40 hover:text-accent hover:bg-accent/10 transition-all duration-200 inline-flex items-center justify-center">
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                            </DashboardButton>
+                            </button>
                           )}
                           {canDeleteResource(s.userId) && (
-                            <DashboardButton onClick={() => setConfirmSecretDelete(s._id)} className="h-7 w-7 p-0 rounded-lg text-black/50 dark:text-white/50 hover:text-[#FF3B30] hover:bg-[#FF3B30]/10">
+                            <button type="button" onClick={() => setConfirmSecretDelete(s._id)} className="cursor-pointer h-7 w-7 p-0 rounded-lg text-gray-500 dark:text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 inline-flex items-center justify-center">
                               <Trash2 className="w-3.5 h-3.5" />
-                            </DashboardButton>
+                            </button>
                           )}
                         </div>
                       </div>
                     </div>
-                  </DashboardCard>
+                  </div>
                 ))}
               </div>
             )}
@@ -607,61 +690,63 @@ export default function Projects() {
         {detailTab === "environments" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-black/50 dark:text-white/50">{projectEnvironments.length} environments</p>
-              </div>
+              <p className="text-xs text-gray-500 dark:text-white/40">{projectEnvironments.length} environments</p>
               {canCreate && (
-                <DashboardButton onClick={openCreateEnv} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
+                <button type="button" onClick={openCreateEnv} className="cursor-pointer h-9 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 inline-flex items-center gap-2 glow-accent">
                   <Plus className="w-4 h-4" />Add Environment
-                </DashboardButton>
+                </button>
               )}
             </div>
 
             {envsLoading ? (
-              <DashboardCard><LoadingSpinner size={24} /></DashboardCard>
+              <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8 flex items-center justify-center"><LoadingSpinner size={24} /></div>
             ) : projectEnvironments.length === 0 ? (
-              <DashboardCard>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Layers3 className="w-10 h-10 text-black/50 dark:text-white/50 mb-3" />
-                  <h3 className="text-sm font-semibold text-black dark:text-white mb-1">No environments yet</h3>
-                  <p className="text-xs text-black/50 dark:text-white/50 mb-4">Create environments like Development, Staging, and Production.</p>
+              <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8">
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Layers3 className="w-10 h-10 text-gray-400 dark:text-white/30 mb-3" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-1">No environments yet</h3>
+                  <p className="text-xs text-gray-500 dark:text-white/40 mb-4">Create environments like Development, Staging, and Production.</p>
                   {canCreate && (
-                    <DashboardButton onClick={openCreateEnv} className="h-8 px-4 text-xs font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px]">
-                      <Plus className="w-3.5 h-3.5" />Add Environment
-                    </DashboardButton>
+                    <button type="button" onClick={openCreateEnv} className="cursor-pointer h-8 px-4 text-xs font-medium text-white bg-accent rounded-xl inline-flex items-center gap-1.5">
+                      <Plus className="w-3 h-3" />Add Environment
+                    </button>
                   )}
                 </div>
-              </DashboardCard>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {projectEnvironments.map((env) => {
                   const envSecretCount = projectSecrets.filter((s) => s.environmentId === env._id).length;
                   return (
-                    <DashboardCard key={env._id} hover className="cursor-pointer" onClick={() => handleEnvClick(env._id)}>
+                    <div
+                      key={env._id}
+                      className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-4 cursor-pointer transition-all duration-200 hover:border-white/[0.10] hover:shadow-xl group"
+                      onClick={() => handleEnvClick(env._id)}
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
-                            <Layers3 className="w-4 h-4 text-black/50 dark:text-white/50" />
+                          <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center">
+                            <Layers3 className="w-4 h-4 text-gray-500 dark:text-white/40" />
                           </div>
-                          <p className="text-sm font-semibold text-black dark:text-white">{env.name}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">{env.name}</p>
                         </div>
                         <div className="flex items-center gap-1">
                           {canCreate && (
-                            <DashboardButton onClick={(e) => { e.stopPropagation(); openEditEnv(env); }} className="h-7 w-7 p-0 rounded-lg text-black/50 dark:text-white/50 hover:text-[#007AFF] hover:bg-[#007AFF]/10">
+                            <button type="button" onClick={(e) => { e.stopPropagation(); openEditEnv(env); }} className="cursor-pointer h-7 w-7 p-0 rounded-lg text-gray-500 dark:text-white/40 hover:text-accent hover:bg-accent/10 transition-all duration-200 inline-flex items-center justify-center">
                               <Settings className="w-3.5 h-3.5" />
-                            </DashboardButton>
+                            </button>
                           )}
                           {canDeleteResource(env.userId) && (
-                            <DashboardButton onClick={(e) => { e.stopPropagation(); setConfirmEnvDelete(env._id); }} className="h-7 w-7 p-0 rounded-lg text-black/50 dark:text-white/50 hover:text-[#FF3B30] hover:bg-[#FF3B30]/10">
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmEnvDelete(env._id); }} className="cursor-pointer h-7 w-7 p-0 rounded-lg text-gray-500 dark:text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 inline-flex items-center justify-center">
                               <Trash2 className="w-3.5 h-3.5" />
-                            </DashboardButton>
+                            </button>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-black/50 dark:text-white/50">
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-white/40">
                         <span>{envSecretCount} secrets</span>
                       </div>
-                    </DashboardCard>
+                    </div>
                   );
                 })}
               </div>
@@ -670,31 +755,32 @@ export default function Projects() {
         )}
 
         {detailTab === "teams" && (
-          <DashboardCard>
+          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-sm font-semibold text-black dark:text-white">Assigned Teams</h3>
-                <p className="text-[11px] text-black/50 dark:text-white/50 mt-0.5">{selectedProject.teamId ? `Assigned to a team` : "Not assigned to any team."}</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Assigned Teams</h3>
+                <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{selectedProject.teamId ? `Assigned to a team` : "Not assigned to any team."}</p>
               </div>
             </div>
             <div className="space-y-1">
               {allTeams.length === 0 ? (
-                <p className="text-sm text-black/50 dark:text-white/50 py-4 text-center">No teams available. Create a team first.</p>
+                <p className="text-sm text-gray-500 dark:text-white/40 py-4 text-center">No teams available. Create a team first.</p>
               ) : (
                 allTeams.map((team: Team) => {
                   const isAssigned = selectedProject.teamId === team._id;
                   return (
-                    <div key={team._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors duration-200">
+                    <div key={team._id} className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-200">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center text-xs font-semibold text-black/50 dark:text-white/50 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center text-xs font-semibold text-gray-500 dark:text-white/40 flex-shrink-0">
                           <Users className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-black dark:text-white truncate">{team.name}</p>
-                          <p className="text-[11px] text-black/50 dark:text-white/50">{team.slug}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{team.name}</p>
+                          <p className="text-[11px] text-gray-500 dark:text-white/40">{team.slug}</p>
                         </div>
                       </div>
-                      <DashboardButton
+                      <button
+                        type="button"
                         onClick={async () => {
                           if (isAssigned) {
                             try {
@@ -708,32 +794,32 @@ export default function Projects() {
                             } catch { showError("Failed to assign team"); }
                           }
                         }}
-                        className={`h-7 px-3 text-xs font-medium rounded-[8px] ${isAssigned ? "text-[#FF3B30] bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20" : "text-white bg-black dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white"}`}
+                        className={`cursor-pointer h-7 px-3 text-xs font-medium rounded-lg transition-all duration-200 ${isAssigned ? "text-red-400 bg-red-500/10 hover:bg-red-500/20" : "text-white bg-accent hover:bg-accent/90"}`}
                       >
                         {isAssigned ? "Remove" : "Assign"}
-                      </DashboardButton>
+                      </button>
                     </div>
                   );
                 })
               )}
             </div>
-          </DashboardCard>
+          </div>
         )}
 
         {detailTab === "settings" && (
-          <div className="max-w-2xl">
-            <DashboardCard>
-              <h3 className="text-sm font-semibold text-black dark:text-white mb-1">Project Settings</h3>
-              <p className="text-[11px] text-black/50 dark:text-white/50 mb-5">Modify your project details.</p>
+          <div className="max-w-2xl space-y-6">
+            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-1">Project Settings</h3>
+              <p className="text-[11px] text-gray-500 dark:text-white/40 mb-5">Modify your project details.</p>
               <form onSubmit={settingsFormik.handleSubmit} noValidate>
                 <div className="space-y-4">
                   <FormField label="Project Name" name="name" placeholder={settingsFormik.values.name || "e.g. Acme API"} value={settingsFormik.values.name} onChange={(v) => settingsFormik.setFieldValue("name", v)} onBlur={settingsFormik.handleBlur} error={settingsFormik.touched.name ? settingsFormik.errors.name : undefined} touched={!!settingsFormik.touched.name} required />
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <label className="block text-sm font-medium text-black dark:text-white">URL</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">URL</label>
                       <div className="relative group">
-                        <HelpCircle className="w-3.5 h-3.5 text-black/50 dark:text-white/50 cursor-help" />
-                        <div className="absolute bottom-full left-0 mb-2 px-3 py-2 text-[11px] text-white bg-black dark:bg-white/[0.08] rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                        <HelpCircle className="w-3.5 h-3.5 text-gray-500 dark:text-white/40 cursor-help" />
+                        <div className="absolute bottom-full left-0 mb-2 px-3 py-2 text-[11px] text-white bg-[#18181B] rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 border border-gray-200 dark:border-white/[0.06]">
                           Link to the project — live site, deployed app, or GitHub/GitLab repository URL.
                         </div>
                       </div>
@@ -742,26 +828,28 @@ export default function Projects() {
                   </div>
                   <FormTextarea label="Description" name="description" placeholder={settingsFormik.values.description || "Describe what this project is for..."} value={settingsFormik.values.description} onChange={(v) => settingsFormik.setFieldValue("description", v)} error={settingsFormik.touched.description ? settingsFormik.errors.description : undefined} touched={!!settingsFormik.touched.description} rows={3} />
                 </div>
-                <div className="flex items-center gap-3 mt-6 pt-5 border-t border-black/[0.04] dark:border-white/[0.08]">
-                  <DashboardButton type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed">
+                <div className="flex items-center gap-3 mt-6 pt-5 border-t border-gray-200 dark:border-white/[0.06]">
+                  <button type="submit" disabled={settingsFormik.isSubmitting} className="h-9 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2">
                     {settingsFormik.isSubmitting ? <CheckCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save Changes
-                  </DashboardButton>
+                  </button>
                 </div>
               </form>
-            </DashboardCard>
+            </div>
             {canDeleteResource(selectedProject?.userId) && (
-              <DashboardCard className="border border-[#FF3B30]/20 dark:border-[#FF3B30]/20">
-                <h3 className="text-sm font-semibold text-black dark:text-white mb-3">Danger Zone</h3>
-                <div className="flex items-start gap-3 p-3 bg-[#FF3B30]/5 rounded-xl mb-4">
-                  <AlertTriangle className="w-4 h-4 text-[#FF3B30] flex-shrink-0 mt-0.5" />
+              <div className="bg-white dark:bg-[#111113] rounded-2xl border border-red-500/20 p-5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-3">Danger Zone</h3>
+                <div className="flex items-start gap-3 p-3 bg-red-500/5 rounded-xl mb-4">
+                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-black dark:text-white">Delete Project</p>
-                    <p className="text-[11px] text-black/50 dark:text-white/50 mt-0.5">Permanently delete this project and all its data.</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">Delete Project</p>
+                    <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Permanently delete this project and all its data.</p>
                   </div>
                 </div>
-                <DashboardButton onClick={() => setShowDeleteModal(true)} className="w-full h-9 text-sm font-medium text-white bg-[#FF3B30] rounded-[10px] hover:bg-[#FF3B30]/90"><Trash2 className="w-4 h-4" />Delete Project</DashboardButton>
-              </DashboardCard>
+                <button type="button" onClick={() => setShowDeleteModal(true)} className="cursor-pointer w-full h-9 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-500/90 transition-all duration-200 inline-flex items-center justify-center gap-2">
+                  <Trash2 className="w-4 h-4" />Delete Project
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -773,10 +861,10 @@ export default function Projects() {
         title={editingSecret ? "Edit Secret" : "Create Secret"}
         footer={
           <div className="flex items-center justify-end gap-3">
-            <DashboardButton onClick={() => { setShowSecretModal(false); setEditingSecret(null); }} className="h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08]">Cancel</DashboardButton>
-            <DashboardButton onClick={() => secretFormik.handleSubmit()} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
+            <button type="button" onClick={() => { setShowSecretModal(false); setEditingSecret(null); }} className="cursor-pointer h-9 px-4 text-sm font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200">Cancel</button>
+            <button type="button" onClick={() => secretFormik.handleSubmit()} className="cursor-pointer h-9 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200">
               {editingSecret ? "Save" : "Create"}
-            </DashboardButton>
+            </button>
           </div>
         }
       >
@@ -785,7 +873,7 @@ export default function Projects() {
           <FormField label="Secret Value" name="secKey" placeholder={editingSecret ? "Leave blank to keep current value" : "e.g. postgres://..."} value={secretFormik.values.secKey} onChange={(v) => secretFormik.setFieldValue("secKey", v)} onBlur={secretFormik.handleBlur} error={secretFormik.touched.secKey ? secretFormik.errors.secKey : undefined} touched={!!secretFormik.touched.secKey} required={!editingSecret} />
           {projectEnvironments.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-black dark:text-white mb-1.5">Environment</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-[#FAFAFA] mb-1.5">Environment</label>
               <Select
                 value={secretFormik.values.environmentId || ""}
                 onChange={(v) => secretFormik.setFieldValue("environmentId", v || undefined)}
@@ -802,10 +890,10 @@ export default function Projects() {
         title={editingEnv ? "Edit Environment" : "Create Environment"}
         footer={
           <div className="flex items-center justify-end gap-3">
-            <DashboardButton onClick={() => { setShowEnvModal(false); setEditingEnv(null); }} className="h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08]">Cancel</DashboardButton>
-            <DashboardButton onClick={() => envFormik.handleSubmit()} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
+            <button type="button" onClick={() => { setShowEnvModal(false); setEditingEnv(null); }} className="cursor-pointer h-9 px-4 text-sm font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] transition-all duration-200">Cancel</button>
+            <button type="button" onClick={() => envFormik.handleSubmit()} className="cursor-pointer h-9 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200">
               {editingEnv ? "Save" : "Create"}
-            </DashboardButton>
+            </button>
           </div>
         }
       >
@@ -831,7 +919,7 @@ export default function Projects() {
         onClose={() => setConfirmEnvDelete(null)}
         variant="warning"
         title="Delete Environment"
-        message="Are you sure you want to delete this environment? Secrets in this environment will not be deleted."
+        message="Secrets in this environment will not be deleted."
         buttons={[
           { label: "Cancel", onClick: () => setConfirmEnvDelete(null), variant: "secondary" },
           { label: "Delete", onClick: handleConfirmEnvDelete, variant: "destructive" },
@@ -852,101 +940,92 @@ export default function Projects() {
     </div>
   ) : null;
 
-  function ProjectCard({ project }: { project: Project }) {
-    return (
-      <DashboardCard hover padding="md" className="cursor-pointer" onClick={() => navigate(`/dashboard/project/${project._id}`)}>
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
-              <FolderKanban className="w-5 h-5 text-black/50 dark:text-white/50" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-black dark:text-white">{project.projectName}</h3>
-              <p className="text-xs text-black/50 dark:text-white/50">{project.description}</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-black/50 dark:text-white/50 flex items-center gap-1"><KeyRound className="w-3 h-3" />{project.secretCount || 0}</span>
-          <span className="text-xs text-black/50 dark:text-white/50 flex items-center gap-1"><Layers3 className="w-3 h-3" />{project.environmentCount || 0}</span>
-        </div>
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-black/[0.04] dark:border-white/[0.08]">
-          <span className="text-[11px] text-black/50 dark:text-white/50">Updated {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : ""}</span>
-        </div>
-      </DashboardCard>
-    );
-  }
-
   return (
-    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
+    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 lg:p-8 pb-8 overflow-y-auto">
       {projectDetail || (
         <>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-xl font-semibold text-black dark:text-white">Projects</h1>
-              <p className="text-sm text-black/50 dark:text-white/50 mt-1">{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA]">Projects</h1>
+              <p className="text-sm text-gray-500 dark:text-white/40 mt-1">{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
             </div>
-            <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
+            <button type="button" onClick={() => setShowCreateModal(true)} className="cursor-pointer h-10 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 inline-flex items-center gap-2 glow-accent">
               <Plus className="w-4 h-4" />New Project
-            </DashboardButton>
+            </button>
           </div>
 
-          <div className="flex items-center gap-3 mb-5">
-            <SearchInput value={search} onChange={setSearch} placeholder="Search projects..." />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-white/40" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search projects..."
+                className="w-full h-10 pl-10 pr-4 text-sm bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.06] outline-none text-white placeholder-gray-400 dark:placeholder-white/30 transition-colors duration-200 focus:border-white/[0.12]"
+              />
+            </div>
           </div>
 
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <FolderKanban className="w-12 h-12 text-black/50 dark:text-white/50 mb-4" />
-              <h3 className="text-lg font-semibold text-black dark:text-white mb-1">{search ? "No results found" : "No projects yet"}</h3>
-              <p className="text-sm text-black/50 dark:text-white/50 mb-6 max-w-sm">
+            <div className="flex flex-col items-center justify-center py-20 text-center flex-1">
+              <FolderKanban className="w-12 h-12 text-gray-400 dark:text-white/30 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#FAFAFA] mb-1">{search ? "No results found" : "No projects yet"}</h3>
+              <p className="text-sm text-gray-500 dark:text-white/40 mb-6 max-w-sm">
                 {search ? "Try a different search term." : "You don't have any projects yet. Create one to start managing your secrets and environments."}
               </p>
               {!search && (
-                <DashboardButton onClick={() => setShowCreateModal(true)} className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white">
+                <button type="button" onClick={() => setShowCreateModal(true)} className="cursor-pointer h-10 px-5 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 inline-flex items-center gap-2 glow-accent">
                   <Plus className="w-4 h-4" />Create Your First Project
-                </DashboardButton>
+                </button>
               )}
             </div>
           ) : (
-          <>
-            {(() => {
-              const teamMap = new Map(allTeams.map((t: Team) => [t._id, t.name]));
-              const personal = filtered.filter((p) => !p.teamId);
-              const teamProjects = filtered.filter((p) => p.teamId);
-              const grouped = new Map<string, typeof teamProjects>();
-              teamProjects.forEach((p) => {
-                const name = teamMap.get(p.teamId!) || "Unknown Team";
-                if (!grouped.has(name)) grouped.set(name, []);
-                grouped.get(name)!.push(p);
-              });
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="flex-1"
+            >
+              {(() => {
+                const teamMap = new Map(allTeams.map((t: Team) => [t._id, t.name]));
+                const personal = filtered.filter((p) => !p.teamId);
+                const teamProjects = filtered.filter((p) => p.teamId);
+                const grouped = new Map<string, typeof teamProjects>();
+                teamProjects.forEach((p) => {
+                  const name = teamMap.get(p.teamId!) || "Unknown Team";
+                  if (!grouped.has(name)) grouped.set(name, []);
+                  grouped.get(name)!.push(p);
+                });
 
-              return (
-                <>
-                  {personal.length > 0 && (
-                    <div className="mb-8">
-                      <h2 className="text-sm font-semibold text-black/50 dark:text-white/50 mb-3 uppercase tracking-wider">Personal Projects</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {personal.map((p) => (
-                          <ProjectCard key={p._id} project={p} />
-                        ))}
+                return (
+                  <>
+                    {personal.length > 0 && (
+                      <div className="mb-8">
+                        <h2 className="text-sm font-semibold text-gray-500 dark:text-white/40 mb-4 uppercase tracking-wider">Personal Projects</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {personal.map((p) => (
+                            <ProjectCard key={p._id} project={p} onClick={() => navigate(`/dashboard/project/${p._id}`)} />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {Array.from(grouped.entries()).map(([teamName, projects]) => (
-                    <div key={teamName} className="mb-8">
-                      <h2 className="text-sm font-semibold text-black/50 dark:text-white/50 mb-3 uppercase tracking-wider flex items-center gap-2"><Users className="w-3.5 h-3.5" />{teamName}</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {projects.map((p) => (
-                          <ProjectCard key={p._id} project={p} />
-                        ))}
+                    )}
+                    {Array.from(grouped.entries()).map(([teamName, projects]) => (
+                      <div key={teamName} className="mb-8">
+                        <h2 className="text-sm font-semibold text-gray-500 dark:text-white/40 mb-4 uppercase tracking-wider flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5" />{teamName}
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                          {projects.map((p) => (
+                            <ProjectCard key={p._id} project={p} onClick={() => navigate(`/dashboard/project/${p._id}`)} />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </>
-              );
-            })()}
-          </>
+                    ))}
+                  </>
+                );
+              })()}
+            </motion.div>
           )}
         </>
       )}

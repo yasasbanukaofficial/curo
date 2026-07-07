@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useGetOverviewStatsQuery, useGetTeamsQuery, useGetProjectsQuery } from "../../store";
-import DashboardCard from "../../components/dashboard/DashboardCard";
-import DashboardButton from "../../components/dashboard/DashboardButton";
+import { motion } from "framer-motion";
+import { useGetOverviewStatsQuery, useGetTeamsQuery, useGetProjectsQuery, useVerifySessionQuery } from "../../store";
 import {
   FolderKanban,
   KeyRound,
@@ -12,12 +11,16 @@ import {
   AlertCircle,
   Clock,
   ChevronRight,
+  Activity,
+  UserPlus,
+  Key,
+  Globe,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 
 function formatDate(dateStr: string | undefined, id: string): string {
-  const ts = dateStr
-    ? new Date(dateStr).getTime()
-    : parseInt(id.substring(0, 8), 16) * 1000;
+  const ts = dateStr ? new Date(dateStr).getTime() : parseInt(id.substring(0, 8), 16) * 1000;
   return new Date(ts).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -40,11 +43,50 @@ function timeAgo(dateStr: string | undefined): string {
   return formatDate(dateStr, "");
 }
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } as const },
+};
+
+function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
+  return (
+    <motion.span
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+      className="text-2xl font-bold text-gray-900 dark:text-[#FAFAFA] tracking-tight font-button"
+    >
+      {value}{suffix}
+    </motion.span>
+  );
+}
+
+const quickActions = [
+  { label: "Create Project", description: "Start a new project", icon: Plus, path: "/dashboard/projects", action: "newProject" },
+  { label: "Invite Member", description: "Add someone to your team", icon: UserPlus, path: "/dashboard/teams" },
+  { label: "Generate API Key", description: "Create access token", icon: Key, path: "/dashboard/settings" },
+  { label: "View Teams", description: "Manage your teams", icon: Activity, path: "/dashboard/teams" },
+];
+
 export default function Overview() {
   const navigate = useNavigate();
+  const { data: userData } = useVerifySessionQuery();
   const { data: stats, isLoading, isError, refetch } = useGetOverviewStatsQuery();
   const { data: teams = [] } = useGetTeamsQuery();
   const { data: allProjects = [] } = useGetProjectsQuery();
+
+  const user = (userData as any) ?? {};
+  const userName = user?.displayName || user?.name || "";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   const totalProjects = stats?.projects ?? 0;
   const totalSecrets = stats?.secrets ?? 0;
@@ -56,28 +98,19 @@ export default function Overview() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
-        <div className="h-7 w-28 bg-black/[0.04] dark:bg-white/[0.04] rounded-lg mb-6 animate-pulse" />
-        <div className="flex flex-wrap gap-3 mb-8">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[72px] w-[160px] bg-black/[0.04] dark:bg-white/[0.04] rounded-xl animate-pulse" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {[1, 2].map((col) => (
-            <DashboardCard key={col} className="animate-pulse">
-              <div className="h-4 w-28 bg-black/[0.04] dark:bg-white/[0.04] rounded mb-5" />
-              {[1, 2, 3].map((row) => (
-                <div key={row} className="flex items-center gap-3 mb-3">
-                  <div className="w-7 h-7 rounded-lg bg-black/[0.04] dark:bg-white/[0.04]" />
-                  <div className="flex-1">
-                    <div className="h-3 w-32 bg-black/[0.04] dark:bg-white/[0.04] rounded mb-1.5" />
-                    <div className="h-2.5 w-20 bg-black/[0.04] dark:bg-white/[0.04] rounded" />
-                  </div>
-                </div>
-              ))}
-            </DashboardCard>
-          ))}
+      <div className="flex-1 p-6 md:p-8 lg:p-10">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 w-64 bg-gray-100 dark:bg-white/[0.04] rounded-xl" />
+          <div className="h-4 w-40 bg-gray-100 dark:bg-white/[0.04] rounded-xl" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-gray-100 dark:bg-white/[0.04] rounded-2xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 h-64 bg-gray-100 dark:bg-white/[0.04] rounded-2xl" />
+            <div className="h-64 bg-gray-100 dark:bg-white/[0.04] rounded-2xl" />
+          </div>
         </div>
       </div>
     );
@@ -85,28 +118,21 @@ export default function Overview() {
 
   if (isError) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
-        <div className="flex-1 flex items-center justify-center">
-          <DashboardCard className="max-w-sm w-full py-10">
-            <div className="flex flex-col items-center text-center px-6">
-              <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] dark:bg-[#3B1C1C] flex items-center justify-center mb-4">
-                <AlertCircle className="w-6 h-6 text-[#DC2626] dark:text-[#F87171]" />
-              </div>
-              <h2 className="text-base font-semibold text-black dark:text-white mb-2">
-                Failed to load overview
-              </h2>
-              <p className="text-sm text-black/50 dark:text-white/50 mb-6 leading-relaxed">
-                Something went wrong. Please try again.
-              </p>
-              <DashboardButton
-                onClick={() => refetch()}
-                className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Retry
-              </DashboardButton>
-            </div>
-          </DashboardCard>
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="flex flex-col items-center text-center max-w-sm">
+          <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
+            <AlertCircle className="w-7 h-7 text-accent" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-[#FAFAFA] mb-2">Failed to load overview</h2>
+          <p className="text-sm text-gray-500 dark:text-white/40 mb-6">Something went wrong. Please try again.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="cursor-pointer h-10 px-5 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-colors inline-flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -114,235 +140,308 @@ export default function Overview() {
 
   if (!hasData) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
-        <div className="flex items-center justify-between mb-6">
+      <div className="flex-1 p-6 md:p-8 lg:p-10">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-xl font-semibold text-black dark:text-white">Overview</h1>
-            <p className="text-sm text-black/50 dark:text-white/50 mt-1">Get started by creating your first project</p>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-[#FAFAFA]">
+              {greeting}{userName ? `, ${userName}` : ""}.
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-white/40 mt-1">Get started by creating your first project</p>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center">
-          <DashboardCard className="max-w-md w-full py-12">
-            <div className="flex flex-col items-center text-center px-6">
-              <div className="w-14 h-14 rounded-2xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center mb-5">
-                <FolderKanban className="w-7 h-7 text-black/50 dark:text-white/50" />
-              </div>
-              <h2 className="text-lg font-semibold text-black dark:text-white mb-2">
-                No projects yet
-              </h2>
-              <p className="text-sm text-black/50 dark:text-white/50 mb-6 leading-relaxed">
-                Create your first project to start managing secrets, environments, and teams.
-              </p>
-              <DashboardButton
-                onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
-                className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white"
-              >
-                <Plus className="w-4 h-4" />
-                New Project
-              </DashboardButton>
+        <div className="flex items-center justify-center flex-1 min-h-[400px]">
+          <div className="flex flex-col items-center text-center max-w-md px-6">
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
+              <Sparkles className="w-8 h-8 text-accent" />
             </div>
-          </DashboardCard>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA] mb-2">Welcome to Curo</h2>
+            <p className="text-sm text-gray-500 dark:text-white/40 mb-8 leading-relaxed">
+              Your secrets management platform. Create your first project to start managing secrets, environments, and teams securely.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
+              className="cursor-pointer h-11 px-6 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-colors inline-flex items-center gap-2 glow-accent"
+            >
+              <Plus className="w-4 h-4" />
+              Create Your First Project
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 p-4 md:p-6 xl:p-8 pb-8 overflow-y-auto bg-[#FAFAFA] dark:bg-[#0A0A0A] transition-colors duration-200">
-      <div className="flex items-center justify-between mb-6">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="flex-1 p-6 md:p-8 lg:p-10 space-y-8"
+    >
+      <motion.div variants={item} className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-black dark:text-white">Overview</h1>
-          <p className="text-sm text-black/50 dark:text-white/50 mt-1">
-            {totalProjects} project{totalProjects !== 1 ? "s" : ""} &middot; {totalSecrets} secret{totalSecrets !== 1 ? "s" : ""}
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-[#FAFAFA]">
+            {greeting}{userName ? `, ${userName}` : ""}.
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-white/40 mt-1">
+            Production Workspace &middot; {totalProjects} active project{totalProjects !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-3">
-          <DashboardButton
-            onClick={() => navigate("/dashboard/projects", { state: { openCreateSecret: true } })}
-            className="h-9 px-4 text-sm font-medium text-white bg-black dark:bg-white dark:text-black rounded-[10px] hover:bg-black/90 dark:hover:bg-white"
-          >
-            <Plus className="w-4 h-4" />
-            Add Secret
-          </DashboardButton>
-          <DashboardButton
+          <button
+            type="button"
             onClick={() => navigate("/dashboard/projects", { state: { openNewProject: true } })}
-            className="h-9 px-4 text-sm font-medium text-black dark:text-white bg-black/[0.04] dark:bg-white/[0.04] rounded-[10px] hover:bg-black/[0.08] dark:hover:bg-white/[0.08]"
+            className="cursor-pointer h-10 px-4 text-sm font-medium text-white bg-accent rounded-xl hover:bg-accent/90 transition-all duration-200 inline-flex items-center gap-2 glow-accent"
           >
             <Plus className="w-4 h-4" />
             New Project
-          </DashboardButton>
+          </button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="flex flex-wrap gap-3 mb-8">
-        <DashboardCard className="flex-1 min-w-[140px]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
-              <FolderKanban className="w-4 h-4 text-black/50 dark:text-white/50" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-black dark:text-white">{totalProjects}</p>
-              <p className="text-[11px] text-black/50 dark:text-white/50">Projects</p>
-            </div>
-          </div>
-        </DashboardCard>
-        <DashboardCard className="flex-1 min-w-[140px]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
-              <KeyRound className="w-4 h-4 text-black/50 dark:text-white/50" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-black dark:text-white">{totalSecrets}</p>
-              <p className="text-[11px] text-black/50 dark:text-white/50">Secrets</p>
-            </div>
-          </div>
-        </DashboardCard>
-        <DashboardCard className="flex-1 min-w-[140px]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
-              <LayoutGrid className="w-4 h-4 text-black/50 dark:text-white/50" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-black dark:text-white">{totalEnvironments}</p>
-              <p className="text-[11px] text-black/50 dark:text-white/50">Environments</p>
-            </div>
-          </div>
-        </DashboardCard>
-        <DashboardCard className="flex-1 min-w-[140px]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center">
-              <Users className="w-4 h-4 text-black/50 dark:text-white/50" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-black dark:text-white">{totalTeams}</p>
-              <p className="text-[11px] text-black/50 dark:text-white/50">Teams</p>
-            </div>
-          </div>
-        </DashboardCard>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8">
-        <DashboardCard>
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-black dark:text-white">Recent Projects</h3>
-            <DashboardButton
-              onClick={() => navigate("/dashboard/projects")}
-              className="text-[11px] text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white font-medium"
+      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Projects", value: totalProjects, icon: FolderKanban, change: `${totalProjects > 0 ? totalProjects : 0} total` },
+          { label: "Secrets", value: totalSecrets, icon: KeyRound, change: `${totalSecrets > 0 ? totalSecrets : 0} managed` },
+          { label: "Environments", value: totalEnvironments, icon: LayoutGrid, change: `${totalEnvironments > 0 ? totalEnvironments : 0} configured` },
+          { label: "Teams", value: totalTeams, icon: Users, change: `${totalTeams} team${totalTeams !== 1 ? "s" : ""}` },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div
+              key={stat.label}
+              whileHover={{ y: -2, transition: { duration: 0.2 } }}
+              className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5 transition-all duration-200 hover:border-white/[0.10] hover:shadow-xl"
             >
-              View all
-            </DashboardButton>
-          </div>
-          {recentProjects.length === 0 ? (
-            <p className="text-sm text-black/50 dark:text-white/50">No recent projects.</p>
-          ) : (
-            <div className="space-y-1">
-              {recentProjects.map((p) => (
-                <div
-                  key={p._id}
-                  onClick={() => navigate(`/dashboard/project/${p._id}`)}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                      <FolderKanban className="w-3.5 h-3.5 text-black/50 dark:text-white/50" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-black dark:text-white truncate">{p.projectName}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {p.teamId ? (
-                          <span className="text-[10px] font-medium text-black/50 dark:text-white/50 bg-black/[0.04] dark:bg-white/[0.04] px-1.5 py-0.5 rounded">
-                            {p.teamName || "Team"}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-black/50 dark:text-white/50">Personal</span>
-                        )}
-                        <span className="text-[10px] text-black/50 dark:text-white/50 flex items-center gap-0.5">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(p.updatedAt, p._id)}
-                        </span>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-medium text-gray-500 dark:text-white/40 tracking-wide uppercase">{stat.label}</p>
+                <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center">
+                  <Icon className="w-4 h-4 text-gray-500 dark:text-white/40" />
+                </div>
+              </div>
+              <AnimatedNumber value={stat.value} />
+              <p className="text-[11px] text-gray-400 dark:text-white/30 mt-1.5">{stat.change}</p>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={item} className="lg:col-span-2 space-y-6">
+          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Activity</h3>
+                <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">Recent projects and secrets</p>
+              </div>
+            </div>
+            <div className="space-y-0.5">
+              {recentProjects.length === 0 && recentSecrets.length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-white/30 py-2">No recent activity.</p>
+              ) : (
+                <>
+                  {recentProjects.slice(0, 3).map((p: any, i: number) => (
+                    <motion.div
+                      key={`proj-${p._id}`}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => navigate(`/dashboard/project/${p._id}`)}
+                      className="flex items-center gap-4 py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-150 group cursor-pointer"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 dark:text-white/70 truncate">
+                          Created project <span className="font-medium text-gray-900 dark:text-[#FAFAFA]">{p.projectName}</span>
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{p.teamName || "Personal"}</p>
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] text-black/50 dark:text-white/50 flex-shrink-0">
-                    <span>{p.secretCount} secret{p.secretCount !== 1 ? "s" : ""}</span>
-                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              ))}
+                      <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">{timeAgo(p.updatedAt)}</span>
+                    </motion.div>
+                  ))}
+                  {recentSecrets.slice(0, 3).map((s: any, i: number) => (
+                    <motion.div
+                      key={`sec-${s._id}`}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (recentProjects.slice(0, 3).length + i) * 0.05 }}
+                      onClick={() => navigate(`/dashboard/project/${s.projectId}`)}
+                      className="flex items-center gap-4 py-2.5 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors duration-150 group cursor-pointer"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-[#3B82F6] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 dark:text-white/70 truncate">
+                          Added secret <span className="font-medium text-gray-900 dark:text-[#FAFAFA]">{s.secName}</span>
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-white/40 mt-0.5">{s.projectName}</p>
+                      </div>
+                      <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">{timeAgo(s.createdAt)}</span>
+                    </motion.div>
+                  ))}
+                </>
+              )}
             </div>
-          )}
-        </DashboardCard>
-
-        <DashboardCard>
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-black dark:text-white">Recent Secrets</h3>
           </div>
-          {recentSecrets.length === 0 ? (
-            <p className="text-sm text-black/50 dark:text-white/50">No secrets yet.</p>
-          ) : (
-            <div className="space-y-1">
-              {recentSecrets.map((s) => (
-                <div
-                  key={s._id}
-                  onClick={() => navigate(`/dashboard/project/${s.projectId}`)}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] group"
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Recent Projects</h3>
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard/projects")}
+                  className="cursor-pointer text-[11px] font-medium text-gray-400 dark:text-white/30 hover:text-accent transition-colors"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                      <KeyRound className="w-3.5 h-3.5 text-black/50 dark:text-white/50" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-black dark:text-white truncate">{s.secName}</p>
-                      <p className="text-[11px] text-black/50 dark:text-white/50">{s.projectName}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] text-black/50 dark:text-white/50 flex-shrink-0">
-                    <Clock className="w-3 h-3" />
-                    <span>{timeAgo(s.createdAt)}</span>
-                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
+                  View all
+                </button>
+              </div>
+              {recentProjects.length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-white/30">No recent projects.</p>
+              ) : (
+                <div className="space-y-1">
+                  {recentProjects.map((p: any) => (
+                    <motion.div
+                      key={p._id}
+                      whileHover={{ x: 2 }}
+                      onClick={() => navigate(`/dashboard/project/${p._id}`)}
+                      className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                          <FolderKanban className="w-4 h-4 text-gray-500 dark:text-white/40" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{p.projectName}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {p.teamId ? (
+                              <span className="text-[10px] font-medium text-gray-400 dark:text-white/30 bg-gray-100 dark:bg-white/[0.04] px-1.5 py-0.5 rounded">
+                                {p.teamName || "Team"}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 dark:text-white/30">Personal</span>
+                            )}
+                            <span className="text-[10px] text-gray-400 dark:text-white/30 flex items-center gap-0.5">
+                              <Clock className="w-2.5 h-2.5" />
+                              {formatDate(p.updatedAt, p._id)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 dark:text-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </motion.div>
+                  ))}
                 </div>
-              ))}
+              )}
+            </div>
+
+            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Recent Secrets</h3>
+              </div>
+              {recentSecrets.length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-white/30">No secrets yet.</p>
+              ) : (
+                <div className="space-y-1">
+                  {recentSecrets.map((s: any) => (
+                    <motion.div
+                      key={s._id}
+                      whileHover={{ x: 2 }}
+                      onClick={() => navigate(`/dashboard/project/${s.projectId}`)}
+                      className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                          <KeyRound className="w-4 h-4 text-gray-500 dark:text-white/40" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{s.secName}</p>
+                          <p className="text-[11px] text-gray-400 dark:text-white/30">{s.projectName}</p>
+                        </div>
+                      </div>
+                      <span className="text-[11px] text-gray-400 dark:text-white/30">{timeAgo(s.createdAt)}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {teams.length > 0 && (
+            <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA]">Your Teams</h3>
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard/teams")}
+                  className="cursor-pointer text-[11px] font-medium text-gray-400 dark:text-white/30 hover:text-accent transition-colors"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {teams.map((team: any) => {
+                  const projectCount = allProjects.filter((p: any) => p.teamId === team._id).length;
+                  const memberCount = team.memberCount || 0;
+                  return (
+                    <motion.div
+                      key={team._id}
+                      whileHover={{ y: -1 }}
+                      onClick={() => navigate(`/dashboard/teams/${team._id}`)}
+                      className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] border border-transparent hover:border-gray-300 dark:hover:border-white/[0.06]"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                        <Users className="w-5 h-5 text-gray-500 dark:text-white/40" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{team.name}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-white/30">{memberCount} member{memberCount !== 1 ? "s" : ""} &middot; {projectCount} project{projectCount !== 1 ? "s" : ""}</p>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 dark:text-white/20 flex-shrink-0" />
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           )}
-        </DashboardCard>
+        </motion.div>
+
+        <motion.div variants={item} className="space-y-6">
+          <div className="bg-white dark:bg-[#111113] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-5">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-[#FAFAFA] mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={() => {
+                      if ((action as any).action === "newProject") {
+                        navigate(action.path, { state: { openNewProject: true } });
+                      } else {
+                        navigate(action.path);
+                      }
+                    }}
+                    className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-all duration-200 text-left group"
+                  >
+                    <Icon className="w-4 h-4 text-accent flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">{action.label}</p>
+                      <p className="text-[11px] text-gray-500 dark:text-white/40">{action.description}</p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 dark:text-white/20 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+
+
+
+        </motion.div>
       </div>
-
-      {teams.length > 0 && (
-        <DashboardCard>
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-black dark:text-white">Your Teams</h3>
-            <DashboardButton
-              onClick={() => navigate("/dashboard/teams")}
-              className="text-[11px] text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white font-medium"
-            >
-              View all
-            </DashboardButton>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {teams.map((team) => {
-              const projectCount = allProjects.filter((p: any) => p.teamId === team._id).length;
-              const memberCount = (team as any).memberCount || 0;
-              return (
-                <div
-                  key={team._id}
-                  onClick={() => navigate(`/dashboard/teams/${team._id}`)}
-                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-black/50 dark:text-white/50" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-black dark:text-white truncate">{team.name}</p>
-                    <p className="text-[11px] text-black/50 dark:text-white/50">{memberCount} member{memberCount !== 1 ? "s" : ""} &middot; {projectCount} project{projectCount !== 1 ? "s" : ""}</p>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-black/30 dark:text-white/30 flex-shrink-0" />
-                </div>
-              );
-            })}
-          </div>
-        </DashboardCard>
-      )}
-    </div>
+    </motion.div>
   );
 }
