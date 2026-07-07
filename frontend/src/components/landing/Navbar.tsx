@@ -13,7 +13,8 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const stored = localStorage.getItem("curo-theme");
-    return stored === "dark" ? "dark" : "light";
+    if (stored === "dark" || stored === "light") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function Navbar() {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="inline-flex items-center gap-1 p-2 text-sm text-[#636363] dark:text-[#9A9A9A] transition-colors hover:text-black dark:hover:text-white rounded-md"
+                    className="inline-flex items-center gap-1 p-2 text-sm text-[#636363] dark:text-[#9A9A9A] transition-colors hover:text-[#FF3333] dark:hover:text-[#FF3333] rounded-md"
                   >
                     {link.label}
                   </a>
@@ -68,7 +69,7 @@ export default function Navbar() {
               <a href="/login" className="text-sm font-medium text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors px-3">
                 Sign In
               </a>
-              <Button variant="outline" href="/register" size="sm" className="rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333]">Get Started</Button>
+              <Button variant="outline" href="/register" size="sm" className="rounded-full border-2 border-accent !bg-transparent !text-[#FF3333] !font-semibold hover:!bg-[#FF3333] hover:!text-white">Get Started</Button>
             </div>
 
             <div className="flex flex-row items-center ms-auto -me-1.5 lg:hidden">
@@ -91,7 +92,7 @@ export default function Navbar() {
               key={link.label}
               href={link.href}
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A] hover:text-black dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A] hover:text-[#FF3333] dark:hover:text-[#FF3333] transition-colors"
             >
               {link.label}
             </a>
@@ -119,7 +120,7 @@ export default function Navbar() {
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A]">
               Sign In
             </a>
-            <Button variant="outline" href="/register" onClick={() => setIsOpen(false)} size="sm" className="w-full text-base font-medium rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333]">
+            <Button variant="outline" href="/register" onClick={() => setIsOpen(false)} size="sm" className="w-full text-base rounded-full border-2 border-accent !bg-transparent !text-[#FF3333] !font-semibold hover:!bg-[#FF3333] hover:!text-white">
               Get Started
             </Button>
           </div>

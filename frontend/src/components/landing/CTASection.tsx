@@ -1,14 +1,12 @@
 import { motion } from "framer-motion";
-import Corner from "./Corner";
 import { Button } from "../ui/Button";
 
 const easeOut = [0.25, 0, 0, 1] as [number, number, number, number];
 
 export default function CTASection() {
   return (
-    <section className="relative bg-[#fcfcfc] dark:bg-black py-8 lg:py-12">
-      <div className="border-x border-[#efefef] dark:border-[#222] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
-        <Corner />
+    <section className="relative bg-white dark:bg-black py-8 lg:py-12">
+      <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -16,13 +14,13 @@ export default function CTASection() {
           transition={{ duration: 0.6, ease: easeOut }}
           className="text-center max-w-3xl mx-auto"
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-6xl font-normal tracking-tight text-[#1D1D1F] dark:text-[#E5E5E5] leading-[1.1] mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold tracking-tight text-black dark:text-white leading-[1.15] mb-6">
             Ready to centralize and sync?
           </h2>
-          <p className="text-sm sm:text-base text-[#6E6E73] dark:text-[#9A9A9A] leading-relaxed mb-10 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-black/70 dark:text-white/70 leading-relaxed mb-10 max-w-2xl mx-auto">
             Join thousands of teams that trust Curo for secure, consistent environment variable management.
           </p>
-          <Button variant="secondary" href="/register" size="md" className="px-8 py-4 text-lg shadow-lg rounded-[5px]">
+          <Button variant="outline" href="/register" size="md" className="rounded-full border-accent !bg-[#FF3333] !text-white !py-3 !px-8 hover:!bg-white hover:!text-[#FF3333]">
             Get Started for Free
           </Button>
         </motion.div>

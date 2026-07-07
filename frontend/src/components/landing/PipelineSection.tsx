@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Corner from "./Corner";
 import StaggerContainer, { scaleFadeIn } from "../animations/StaggerContainer";
 import { SiGithub, SiRailway, SiVercel } from "react-icons/si";
 import { FaAws } from "react-icons/fa";
@@ -57,16 +56,15 @@ export default function PipelineSection() {
   }, [reduced]);
 
   return (
-    <section id="deploy" className="relative bg-[#fcfcfc] dark:bg-black scroll-mt-24 py-8 lg:py-12">
-      <div className="border-x border-[#efefef] dark:border-[#222] mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
-        <Corner />
+    <section id="deploy" className="relative bg-white dark:bg-black scroll-mt-24 py-8 lg:py-12">
+      <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 relative">
         <StaggerContainer className="flex flex-col items-center text-center">
           <motion.div variants={scaleFadeIn()} className="max-w-lg mb-12">
-            <div className="text-[#1D1D1F] dark:text-[#E5E5E5] text-xs uppercase font-bold tracking-widest mb-3">Deploy</div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-[#1D1D1F] dark:text-[#E5E5E5] leading-[1.1] mb-4">
+            <div className="text-accent text-xs uppercase font-bold tracking-widest mb-3">Deploy</div>
+            <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold tracking-tight text-black dark:text-white leading-[1.15] mb-4">
               Sync everywhere<br />you deploy.
             </h2>
-            <p className="text-sm sm:text-base text-[#6E6E73] dark:text-[#9A9A9A] leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-black/70 dark:text-white/70 leading-relaxed">
               Connect Curo to your entire deployment pipeline. Push secrets from your vault to every platform automatically.
             </p>
           </motion.div>
