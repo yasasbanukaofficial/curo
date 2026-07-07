@@ -94,7 +94,7 @@ export default function RegisterPage() {
             type="button"
             variant="outline"
             size="md"
-            className="w-full rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333] !py-2.5"
+            className="w-full rounded-full border-accent !bg-[#FF3333] !text-white !py-2.5"
             onClick={handleVerifyOtp}
           >
             Verify Email
@@ -160,7 +160,7 @@ export default function RegisterPage() {
           type="submit"
           variant="outline"
           size="md"
-          className="w-full rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333] !py-2.5"
+          className="w-full rounded-full border-accent !bg-[#FF3333] !text-white !py-2.5"
           disabled={formik.isSubmitting}
         >
           {formik.isSubmitting ? "Creating account..." : "Create Account"}
