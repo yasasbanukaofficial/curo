@@ -17,8 +17,6 @@ export interface IUser extends Document {
   resetPasswordOTP?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  onboardingComplete: boolean;
-  onboardingSkipped: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

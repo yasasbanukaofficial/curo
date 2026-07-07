@@ -59,7 +59,6 @@ export default function Account() {
     googleId?: string;
     githubId?: string;
     emailVerified: boolean;
-    onboardingComplete: boolean;
     createdAt: string;
   } | undefined;
 

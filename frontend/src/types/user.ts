@@ -10,8 +10,6 @@ export interface User {
   githubAccessToken?: string;
   provider: string[];
   emailVerified: boolean;
-  onboardingComplete: boolean;
-  onboardingSkipped: boolean;
   createdAt: string;
   updatedAt: string;
 }
