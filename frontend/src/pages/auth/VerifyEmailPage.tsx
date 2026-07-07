@@ -84,7 +84,7 @@ export default function VerifyEmailPage() {
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
-              className="w-12 h-14 text-center text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#191919] dark:focus:ring-white border-[#E5E5E5] dark:border-[#333] bg-white dark:bg-[#1A1A1A] text-[#191919] dark:text-white"
+              className="w-12 h-14 text-center text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white border-black/[0.12] dark:border-white/[0.12] bg-white dark:bg-[#1A1A1A] text-black dark:text-white"
             />
           ))}
         </div>

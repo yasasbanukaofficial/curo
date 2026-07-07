@@ -57,13 +57,13 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-[#636363]"
+              className="block text-sm font-medium text-black/60 dark:text-white/60"
             >
               Password
             </label>
             <Link
               to="/forgot-password"
-              className="text-xs font-medium text-[#191919] hover:text-[#636363] transition-colors"
+              className="text-xs font-medium text-accent hover:text-accent/80 transition-colors"
             >
               Forgot password?
             </Link>
@@ -80,9 +80,9 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          variant="primary"
+          variant="outline"
           size="md"
-          className="w-full"
+          className="w-full rounded-full border-accent !bg-[#FF3333] !text-white hover:!bg-white hover:!text-[#FF3333] !py-2.5"
           disabled={formik.isSubmitting}
         >
           {formik.isSubmitting ? "Signing in..." : "Sign In"}
