@@ -276,7 +276,7 @@ export default function Account() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-100 dark:bg-white/[0.04] transition-all duration-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center">
                       <GitBranch className="w-5 h-5 text-accent" />
                     </div>
                     <div>
@@ -299,7 +299,7 @@ export default function Account() {
 
                 <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-100 dark:bg-white/[0.04] transition-all duration-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center">
                       <Globe className="w-5 h-5 text-accent" />
                     </div>
                     <div>

@@ -23,7 +23,7 @@ function SecretCard({ secret }: { secret: any }) {
     <div className="bg-gray-50 dark:bg-white/[0.03] rounded-xl border border-gray-200 dark:border-white/[0.06] p-3.5 hover:border-gray-300 dark:hover:border-white/[0.1] transition-all duration-200">
       <div className="flex items-start justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
+          <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0">
             <KeyRound className="w-3 h-3 text-accent" />
           </div>
           <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA] truncate">{secret.secName}</p>
@@ -62,7 +62,7 @@ function ProjectSecretsGroup({ project, defaultExpanded }: { project: any; defau
         className="cursor-pointer w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors duration-200"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center">
             <FolderKanban className="w-4 h-4 text-accent" />
           </div>
           <div className="text-left">

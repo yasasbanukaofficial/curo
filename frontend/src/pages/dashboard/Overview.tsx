@@ -120,7 +120,7 @@ export default function Overview() {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="flex flex-col items-center text-center max-w-sm">
-          <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5">
             <AlertCircle className="w-7 h-7 text-accent" />
           </div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-[#FAFAFA] mb-2">Failed to load overview</h2>
@@ -151,7 +151,7 @@ export default function Overview() {
         </div>
         <div className="flex items-center justify-center flex-1 min-h-[400px]">
           <div className="flex flex-col items-center text-center max-w-md px-6">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-5">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5">
               <Sparkles className="w-8 h-8 text-accent" />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA] mb-2">Welcome to Curo</h2>
@@ -216,7 +216,7 @@ export default function Overview() {
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] font-medium text-gray-500 dark:text-white/40 tracking-wide uppercase">{stat.label}</p>
-                <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center">
                   <Icon className="w-4 h-4 text-gray-500 dark:text-white/40" />
                 </div>
               </div>
@@ -308,7 +308,7 @@ export default function Overview() {
                       className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0">
                           <FolderKanban className="w-4 h-4 text-gray-500 dark:text-white/40" />
                         </div>
                         <div className="min-w-0">
@@ -351,7 +351,7 @@ export default function Overview() {
                       className="flex items-center justify-between py-2.5 px-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0">
                           <KeyRound className="w-4 h-4 text-gray-500 dark:text-white/40" />
                         </div>
                         <div className="min-w-0">
@@ -390,7 +390,7 @@ export default function Overview() {
                       onClick={() => navigate(`/dashboard/teams/${team._id}`)}
                       className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] border border-transparent hover:border-gray-300 dark:hover:border-white/[0.06]"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.04] flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
                         <Users className="w-5 h-5 text-gray-500 dark:text-white/40" />
                       </div>
                       <div className="min-w-0 flex-1">

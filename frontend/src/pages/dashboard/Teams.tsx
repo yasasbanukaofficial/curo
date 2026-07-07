@@ -87,7 +87,7 @@ function TeamCard({ team, onSelect }: { team: Team; onSelect: () => void }) {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center">
             <Users className="w-5 h-5 text-accent" />
           </div>
           <div>
@@ -366,7 +366,7 @@ export default function Teams() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Users className="w-8 h-8 text-accent" />
           </div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-[#FAFAFA] mb-2">Team not found</h1>
