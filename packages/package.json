@@ -1,6 +1,6 @@
 {
   "name": "@yasasbanukaofficial/curo-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Curo CLI - Secure environment and secrets manager for modern applications",
   "license": "MIT",
   "type": "module",
