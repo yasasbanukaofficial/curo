@@ -10,7 +10,7 @@ import Footer from "../components/landing/Footer";
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-[#fcfcfc] pt-24">
+    <div className="min-h-screen bg-white dark:bg-black">
       <Navbar />
       <Hero />
       <ScatteredSection />

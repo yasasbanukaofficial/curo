@@ -16,7 +16,7 @@ export default function Footer() {
       <StaggerContainer className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-8" margin="0px">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12 mb-12">
           <motion.div variants={fadeInUp(20, 0.5)} className="col-span-2 md:col-span-1">
-            <CuroLogo color="text-white" size="sm" className="mb-4" />
+            <CuroLogo size="sm" className="mb-4" />
             <p className="text-sm text-white/50 leading-relaxed max-w-xs">
               Centralized secrets management for teams that need secure, consistent environment variables at scale.
             </p>
