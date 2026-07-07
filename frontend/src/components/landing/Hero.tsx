@@ -48,14 +48,14 @@ export default function Hero() {
           speed={0.5}
         />
       </div>
-      <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 min-h-[600px] relative overflow-hidden">
+      <div className="mx-auto max-w-[1400px] px-8 sm:px-10 lg:px-14 py-16 lg:py-24 min-h-[600px] relative overflow-hidden pointer-events-none">
         <motion.div
           className="text-left max-w-6xl pb-16 relative z-10"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <div className="hero-aura-wrapper">
+          <div className="hero-aura-wrapper pointer-events-auto">
             <div className="hero-aura" />
             <motion.h1
               variants={itemVariants}
@@ -102,10 +102,10 @@ export default function Hero() {
               </span>
             </motion.h1>
           </div>
-          <motion.p variants={itemVariants} className="text-sm sm:text-base lg:text-lg text-black/70 dark:text-white/70 leading-relaxed mb-10 max-w-2xl">
+          <motion.p variants={itemVariants} className="text-sm sm:text-base lg:text-lg text-black/70 dark:text-white/70 leading-relaxed mb-10 max-w-2xl pointer-events-auto">
             Curo securely stores, manages, and syncs environment variables across your projects, teams, and environments.
           </motion.p>
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-start items-center gap-4">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-start items-center gap-4 pointer-events-auto">
             <Button variant="outline" href="/register" className="rounded-full border-accent !bg-[#FF3333] !text-white !py-2.5 !px-6 hover:!bg-white hover:!text-[#FF3333]">
               Get Started
               <PiArrowUpRight className="h-4 w-4" />
