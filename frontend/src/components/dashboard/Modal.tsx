@@ -92,7 +92,7 @@ export default function Modal({
               <DashboardButton
                 onClick={onSubmit}
                 disabled={submitDisabled || loading}
-                className="h-9 px-4 text-sm font-medium text-white bg-gray-900 dark:bg-white dark:text-gray-900 rounded-[10px] hover:bg-gray-800 dark:hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-9 px-4 text-sm font-medium text-white bg-accent rounded-[10px] hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Saving..." : submitLabel}
               </DashboardButton>

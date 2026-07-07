@@ -46,7 +46,7 @@ export default function InviteJoinModal({
           <DashboardButton
             onClick={onAccept}
             disabled={loading}
-            className="flex-1 h-10 text-sm font-medium text-white bg-[#191919] dark:bg-white dark:text-[#191919] rounded-[10px] hover:opacity-90"
+            className="flex-1 h-10 text-sm font-medium text-white bg-accent rounded-[10px] hover:bg-accent/90"
           >
             {loading ? "Joining..." : "Join team"}
           </DashboardButton>
@@ -55,8 +55,8 @@ export default function InviteJoinModal({
     >
       <div className="space-y-6">
         <div className="flex items-center gap-4 p-4 rounded-xl bg-[#F5F5F7] dark:bg-[#1A1A1A]">
-          <div className="w-12 h-12 rounded-xl bg-[#191919] dark:bg-white flex items-center justify-center">
-            <Users className="w-6 h-6 text-white dark:text-[#191919]" />
+          <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+            <Users className="w-6 h-6 text-accent" />
           </div>
           <div>
             <p className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5]">

@@ -67,7 +67,7 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, { success: false, status: 400, msg: "Team name and slug are required" });
     }
     if (error.message === "DUPLICATE_SLUG") {
-      return sendResponse(res, { success: false, status: 409, msg: `A team with slug "${body?.slug}" already exists` });
+      return sendResponse(res, { success: false, status: 409, msg: `${body?.slug} is already taken, try another one` });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while creating the team. Please try again." });
   }
@@ -90,7 +90,7 @@ export const updateTeam = async (req: AuthRequest, res: Response) => {
       return sendResponse(res, { success: false, status: 404, msg: "Team not found or insufficient permissions" });
     }
     if (error.message === "DUPLICATE_SLUG") {
-      return sendResponse(res, { success: false, status: 409, msg: `A team with slug "${body?.slug}" already exists` });
+      return sendResponse(res, { success: false, status: 409, msg: `${body?.slug} is already taken, try another one` });
     }
     return sendResponse(res, { success: false, status: 500, msg: "Something went wrong while updating the team. Please try again." });
   }

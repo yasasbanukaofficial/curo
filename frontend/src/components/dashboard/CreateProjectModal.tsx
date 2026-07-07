@@ -54,8 +54,8 @@ export default function CreateProjectModal({ open, onClose, onSubmit, teams = []
     >
       <form onSubmit={formik.handleSubmit} noValidate className="space-y-5 pt-1">
         <div className="flex items-start gap-4 p-4 bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50 rounded-xl border border-black/[0.04] dark:border-[#222]">
-          <div className="w-10 h-10 rounded-xl bg-[#1D1D1F]/10 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-            <FolderKanban className="w-5 h-5 text-[#1D1D1F] dark:text-[#E5E5E5]" />
+          <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+            <FolderKanban className="w-5 h-5 text-accent" />
           </div>
           <div className="text-sm text-[#8E8E93] dark:text-[#666] leading-relaxed">
             Projects group related secrets, environments, and access controls together. Each project gets its own isolated vault.
