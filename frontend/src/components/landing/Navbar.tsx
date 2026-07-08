@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { Sun, Moon, Menu, X } from "lucide-react";
+import { Sun, Moon, Menu, X, ExternalLink } from "lucide-react";
 import Logo from "../ui/Logo";
 import { Button } from "../ui/Button";
-import { GitHubIcon } from "../ui/Icons";
 
 const navLinks = [
   { label: "Docs", href: "#" },
-  { label: "Pricing", href: "/pricing" },
 ];
 
 export default function Navbar() {
@@ -38,9 +36,12 @@ export default function Navbar() {
                 <li key={link.label}>
                   <a
                     href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 p-2 text-sm text-[#636363] dark:text-[#9A9A9A] transition-colors hover:text-[#FF3333] dark:hover:text-[#FF3333] rounded-md"
                   >
                     {link.label}
+                    <ExternalLink className="h-3 w-3" />
                   </a>
                 </li>
               ))}
@@ -55,16 +56,6 @@ export default function Navbar() {
                 <Sun className={`size-7 p-1.5 text-[#636363] dark:text-accent rounded-full ${theme === "dark" ? "" : "bg-accent/10"}`} />
                 <Moon className={`size-7 p-1.5 text-accent dark:text-[#636363] rounded-full ${theme === "dark" ? "bg-accent/10" : ""}`} />
               </button>
-
-              <a
-                href="https://github.com/yasasbanukaofficial/curo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors"
-                aria-label="GitHub"
-              >
-                <GitHubIcon className="h-5 w-5" />
-              </a>
 
               <a href="/login" className="text-sm font-medium text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors px-3">
                 Sign In
@@ -91,10 +82,13 @@ export default function Navbar() {
             <a
               key={link.label}
               href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A] hover:text-[#FF3333] dark:hover:text-[#FF3333] transition-colors"
             >
               {link.label}
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           ))}
           <div className="pt-4 border-t border-black/[0.04] dark:border-[#222] flex flex-col gap-2">
@@ -107,15 +101,6 @@ export default function Navbar() {
                 <Sun className={`size-7 p-1.5 text-[#636363] dark:text-accent rounded-full ${theme === "dark" ? "" : "bg-accent/10"}`} />
                 <Moon className={`size-7 p-1.5 text-accent dark:text-[#636363] rounded-full ${theme === "dark" ? "bg-accent/10" : ""}`} />
               </button>
-              <a
-                href="https://github.com/yasasbanukaofficial/curo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors"
-                aria-label="GitHub"
-              >
-                <GitHubIcon className="h-5 w-5" />
-              </a>
             </div>
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A]">
               Sign In

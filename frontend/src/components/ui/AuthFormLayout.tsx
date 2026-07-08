@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Sun, Moon } from "lucide-react";
 import Logo from "./Logo";
-import { GitHubIcon } from "./Icons";
 import PixelBlast from "../animations/PixelBlast";
 
 interface AuthFormLayoutProps {
@@ -13,7 +12,6 @@ interface AuthFormLayoutProps {
   bottomLinkText: string;
   bottomLinkHref: string;
   onGoogleLogin?: () => void;
-  onGithubLogin?: () => void;
 }
 
 export default function AuthFormLayout({
@@ -25,7 +23,6 @@ export default function AuthFormLayout({
   bottomLinkText,
   bottomLinkHref,
   onGoogleLogin,
-  onGithubLogin,
 }: AuthFormLayoutProps) {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     const stored = localStorage.getItem("curo-theme");
@@ -103,22 +100,14 @@ export default function AuthFormLayout({
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="mt-6">
               <button
                 type="button"
                 onClick={onGoogleLogin}
-                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 border border-accent rounded-lg bg-transparent text-sm text-accent font-button cursor-pointer"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-3.5 border border-accent rounded-lg bg-transparent text-sm text-accent font-button cursor-pointer"
               >
                 <GoogleLogo className="h-4 w-4 sm:h-5 sm:w-5" />
                 Google
-              </button>
-              <button
-                type="button"
-                onClick={onGithubLogin}
-                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-3.5 border border-accent rounded-lg bg-transparent text-sm text-accent font-button cursor-pointer"
-              >
-                <GitHubIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                GitHub
               </button>
             </div>
           </div>

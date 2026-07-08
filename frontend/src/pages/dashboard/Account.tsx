@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   Send,
   Shield,
-  GitBranch,
   Globe,
 } from "lucide-react";
 import LoadingSpinner from "../../components/dashboard/LoadingSpinner";
@@ -81,7 +80,6 @@ export default function Account() {
 
   const connectedAccounts = useMemo(() => ({
     google: { connected: user?.provider.includes("google") ?? false },
-    github: { connected: user?.provider.includes("github") ?? false },
   }), [user?.provider]);
 
   const formInitialValues = useMemo(
@@ -153,15 +151,6 @@ export default function Account() {
       navigate("/login", { replace: true });
     } catch (err: any) {
       toast.error(err?.data?.msg || "Failed to disconnect Google account");
-    }
-  }
-  async function handleDisconnectGithub() {
-    try {
-      await disconnectOAuth({ provider: "github" }).unwrap();
-      dispatch(clearCredentials());
-      navigate("/login", { replace: true });
-    } catch (err: any) {
-      toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
     }
   }
 
@@ -274,29 +263,6 @@ export default function Account() {
               />
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-100 dark:bg-white/[0.04] transition-all duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center">
-                      <GitBranch className="w-5 h-5 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">GitHub</p>
-                      <p className="text-[11px] text-gray-500 dark:text-white/40">
-                        {connectedAccounts.github.connected ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
-                  {connectedAccounts.github.connected ? (
-                    <button type="button" onClick={handleDisconnectGithub} className="cursor-pointer h-8 px-3 text-[11px] font-medium text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-all duration-200">
-                      Disconnect
-                    </button>
-                  ) : (
-                    <button type="button" onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`} className="cursor-pointer h-8 px-3 text-[11px] font-medium text-gray-700 dark:text-white/70 bg-gray-100 dark:bg-white/[0.04] rounded-lg hover:bg-white/[0.08] transition-all duration-200">
-                      Connect
-                    </button>
-                  )}
-                </div>
-
                 <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-100 dark:bg-white/[0.04] transition-all duration-200">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center">

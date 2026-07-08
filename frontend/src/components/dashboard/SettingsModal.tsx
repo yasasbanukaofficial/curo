@@ -4,7 +4,6 @@ import {
   X, Settings as SettingsIcon, UserCircle,
   User, Mail, Calendar, KeyRound, Trash2, AlertTriangle, Send,
 } from "lucide-react";
-import { GitHubIcon } from "../ui/Icons";
 import DashboardButton from "./DashboardButton";
 import AlertModal from "./AlertModal";
 import { useToast } from "./Toast";
@@ -59,7 +58,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
 
   const connectedAccounts = useMemo(() => ({
     google: { connected: user?.provider.includes("google") ?? false },
-    github: { connected: user?.provider.includes("github") ?? false },
   }), [user?.provider]);
 
   function handleStartEdit() {
@@ -166,38 +164,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
               <div>
                 <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-4">Connected Accounts</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] dark:bg-white/10 flex items-center justify-center">
-                        <GitHubIcon className="w-5 h-5 text-white dark:text-[#E5E5E5]" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
-                          {connectedAccounts.github.connected ? "Connected" : "Not connected"}
-                        </p>
-                      </div>
-                    </div>
-                    {connectedAccounts.github.connected ? (
-                      <DashboardButton
-                        onClick={async () => {
-                          try {
-                            await disconnectOAuth({ provider: "github" }).unwrap();
-                            dispatch(clearCredentials());
-                            navigate("/login", { replace: true });
-                          } catch (err: any) {
-                            toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
-                          }
-                        }}
-                        className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
-                      >Disconnect</DashboardButton>
-                    ) : (
-                      <DashboardButton
-                        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
-                        className="h-8 px-3 text-[11px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20"
-                      >Connect</DashboardButton>
-                    )}
-                  </div>
                   <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-[#007AFF] flex items-center justify-center">
@@ -364,38 +330,6 @@ export default function SettingsModal({ open, onClose, initialTab = "general" }:
               <div>
                 <h3 className="text-sm font-semibold text-[#1D1D1F] dark:text-[#E5E5E5] mb-4">Connected Accounts</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] dark:bg-white/10 flex items-center justify-center">
-                        <GitHubIcon className="w-5 h-5 text-white dark:text-[#E5E5E5]" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#1D1D1F] dark:text-[#E5E5E5]">GitHub</p>
-                        <p className="text-[11px] text-[#8E8E93] dark:text-[#666]">
-                          {connectedAccounts.github.connected ? "Connected" : "Not connected"}
-                        </p>
-                      </div>
-                    </div>
-                    {connectedAccounts.github.connected ? (
-                      <DashboardButton
-                        onClick={async () => {
-                          try {
-                            await disconnectOAuth({ provider: "github" }).unwrap();
-                            dispatch(clearCredentials());
-                            navigate("/login", { replace: true });
-                          } catch (err: any) {
-                            toast.error(err?.data?.msg || "Failed to disconnect GitHub account");
-                          }
-                        }}
-                        className="h-8 px-3 text-[11px] font-medium text-[#FF3B30] bg-[#FF3B30]/10 rounded-lg hover:bg-[#FF3B30]/20"
-                      >Disconnect</DashboardButton>
-                    ) : (
-                      <DashboardButton
-                        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/github/connect`}
-                        className="h-8 px-3 text-[11px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20"
-                      >Connect</DashboardButton>
-                    )}
-                  </div>
                   <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#F5F5F7]/50 dark:bg-[#1A1A1A]/50">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-[#007AFF] flex items-center justify-center">
