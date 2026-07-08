@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { Sun, Moon, Menu, X, ExternalLink } from "lucide-react";
 import Logo from "../ui/Logo";
 import { Button } from "../ui/Button";
-import { GitHubIcon } from "../ui/Icons";
 
 const navLinks = [
-  { label: "Docs", href: "https://github.com/yasasbanukaofficial/curo" },
+  { label: "Docs", href: "#" },
 ];
 
 export default function Navbar() {
@@ -58,16 +57,6 @@ export default function Navbar() {
                 <Moon className={`size-7 p-1.5 text-accent dark:text-[#636363] rounded-full ${theme === "dark" ? "bg-accent/10" : ""}`} />
               </button>
 
-              <a
-                href="https://github.com/yasasbanukaofficial/curo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors"
-                aria-label="GitHub"
-              >
-                <GitHubIcon className="h-5 w-5" />
-              </a>
-
               <a href="/login" className="text-sm font-medium text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors px-3">
                 Sign In
               </a>
@@ -112,15 +101,6 @@ export default function Navbar() {
                 <Sun className={`size-7 p-1.5 text-[#636363] dark:text-accent rounded-full ${theme === "dark" ? "" : "bg-accent/10"}`} />
                 <Moon className={`size-7 p-1.5 text-accent dark:text-[#636363] rounded-full ${theme === "dark" ? "bg-accent/10" : ""}`} />
               </button>
-              <a
-                href="https://github.com/yasasbanukaofficial/curo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-[#FF3333] dark:text-[#FF3333] hover:text-black dark:hover:text-white transition-colors"
-                aria-label="GitHub"
-              >
-                <GitHubIcon className="h-5 w-5" />
-              </a>
             </div>
             <a href="/login" onClick={() => setIsOpen(false)} className="text-center py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A]">
               Sign In
