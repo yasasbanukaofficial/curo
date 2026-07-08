@@ -19,7 +19,8 @@ import OAuthCallbackPage from "./pages/auth/OAuthCallbackPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
-import PricingPage from "./pages/PricingPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
 import InviteAcceptPage from "./pages/InviteAcceptPage";
 import InviteExpiredPage from "./pages/InviteExpiredPage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -118,7 +119,8 @@ function App() {
         <Route path="/invite/:token" element={<InviteAcceptPage />} />
         <Route path="/invite/accept/:token" element={<InviteAcceptPage />} />
         <Route path="/invite/expired" element={<InviteExpiredPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Provider>

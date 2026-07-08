@@ -41,7 +41,6 @@ export default function LoginPage() {
       bottomLinkText="Register"
       bottomLinkHref="/register"
       onGoogleLogin={() => { window.location.href = import.meta.env.VITE_API_URL + "/auth/google"; }}
-      onGithubLogin={() => { window.location.href = import.meta.env.VITE_API_URL + "/auth/github"; }}
     >
       <form onSubmit={formik.handleSubmit} className="space-y-5" noValidate>
         <AuthField

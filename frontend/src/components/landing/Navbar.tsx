@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Sun, Moon, Menu, X } from "lucide-react";
+import { Sun, Moon, Menu, X, ExternalLink } from "lucide-react";
 import Logo from "../ui/Logo";
 import { Button } from "../ui/Button";
 import { GitHubIcon } from "../ui/Icons";
 
 const navLinks = [
-  { label: "Docs", href: "#" },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Docs", href: "https://github.com/yasasbanukaofficial/curo" },
 ];
 
 export default function Navbar() {
@@ -38,9 +37,12 @@ export default function Navbar() {
                 <li key={link.label}>
                   <a
                     href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 p-2 text-sm text-[#636363] dark:text-[#9A9A9A] transition-colors hover:text-[#FF3333] dark:hover:text-[#FF3333] rounded-md"
                   >
                     {link.label}
+                    <ExternalLink className="h-3 w-3" />
                   </a>
                 </li>
               ))}
@@ -91,10 +93,13 @@ export default function Navbar() {
             <a
               key={link.label}
               href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-2 py-2 text-base font-medium text-[#636363] dark:text-[#9A9A9A] hover:text-[#FF3333] dark:hover:text-[#FF3333] transition-colors"
             >
               {link.label}
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           ))}
           <div className="pt-4 border-t border-black/[0.04] dark:border-[#222] flex flex-col gap-2">
