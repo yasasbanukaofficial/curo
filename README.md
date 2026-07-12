@@ -14,8 +14,6 @@
 
 Curo is a full-stack platform for securely storing, managing, and synchronizing environment variables and secrets (API keys, database URLs, credentials, etc.) across projects, environments, and team members. It replaces insecure workflows like sharing secrets via email, Slack, or spreadsheets with a single source of truth backed by role-based access control and a full audit trail.
 
-[`curo.dev`](https://curo.dev)
-
 ---
 
 ## Architecture
