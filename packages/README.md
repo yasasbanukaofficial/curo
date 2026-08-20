@@ -215,7 +215,7 @@ Once a project is selected, press `Enter` to open it. Inside the project you'll 
 
 | Environment Variable | Default                        | Description                                                                        |
 | -------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
-| `CURO_API_URL`       | `http://localhost:5000/api/v1` | Override the backend API base URL (useful for self-hosted or staging environments) |
+| `CURO_API_URL`       | `https://curo.besuon.com/api`   | Override the backend API base URL (useful for self-hosted or staging environments) |
 
 ```bash
 # Example: point the CLI at a staging environment
